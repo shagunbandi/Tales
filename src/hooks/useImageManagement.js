@@ -114,26 +114,33 @@ export const useImageManagement = () => {
         const pageId = source.droppableId
         const imageIndex = source.index
 
+        // Get the current state to calculate updates
+        const currentPages = pages
+        const currentPage = currentPages.find((p) => p.id === pageId)
+
+        if (currentPage && currentPage.images[imageIndex]) {
+          const imageToRemove = currentPage.images[imageIndex]
+
+          // Update available images first
+          setAvailableImages((current) => {
+            const newAvailable = [...current]
+            // Find the correct position based on originalIndex
+            const insertIndex = findCorrectInsertPosition(
+              newAvailable,
+              imageToRemove.originalIndex,
+            )
+            newAvailable.splice(insertIndex, 0, imageToRemove)
+            return newAvailable
+          })
+        }
+
+        // Then update pages
         setPages((prev) =>
           prev.map((page) => {
             if (page.id === pageId) {
-              const imageToRemove = page.images[imageIndex]
               const newImages = page.images.filter(
                 (_, index) => index !== imageIndex,
               )
-
-              // Add back to available images in correct position
-              setAvailableImages((current) => {
-                const newAvailable = [...current]
-                // Find the correct position based on originalIndex
-                const insertIndex = findCorrectInsertPosition(
-                  newAvailable,
-                  imageToRemove.originalIndex,
-                )
-                newAvailable.splice(insertIndex, 0, imageToRemove)
-                return newAvailable
-              })
-
               return { ...page, images: newImages }
             }
             return page
@@ -141,7 +148,7 @@ export const useImageManagement = () => {
         )
       }
     },
-    [availableImages],
+    [availableImages, pages],
   )
 
   // Add a new page
@@ -154,39 +161,59 @@ export const useImageManagement = () => {
     setPages((prev) => [...prev, newPage])
   }, [])
 
+  // Add a page between existing pages
+  const addPageBetween = useCallback((afterPageId) => {
+    const newPage = {
+      id: `page-${Date.now()}`,
+      images: [],
+      color: getRandomColor(),
+    }
+    setPages((prev) => {
+      const afterIndex = prev.findIndex((p) => p.id === afterPageId)
+      if (afterIndex === -1) return [...prev, newPage]
+
+      const newPages = [...prev]
+      newPages.splice(afterIndex + 1, 0, newPage)
+      return newPages
+    })
+  }, [])
+
   // Remove a page and return images to sidebar in original order
   const removePage = useCallback(
     (pageId) => {
       if (pages.length <= 1) return // Keep at least one page
 
-      setPages((prev) => {
-        const pageToRemove = prev.find((p) => p.id === pageId)
-        if (pageToRemove && pageToRemove.images.length > 0) {
-          // Sort images by original index before adding back
-          const sortedImages = [...pageToRemove.images].sort(
-            (a, b) => a.originalIndex - b.originalIndex,
-          )
+      // Get the current state to calculate updates
+      const currentPages = pages
+      const pageToRemove = currentPages.find((p) => p.id === pageId)
 
-          // Add images back to available in correct positions
-          setAvailableImages((current) => {
-            let newAvailable = [...current]
+      if (pageToRemove && pageToRemove.images.length > 0) {
+        // Sort images by original index before adding back
+        const sortedImages = [...pageToRemove.images].sort(
+          (a, b) => a.originalIndex - b.originalIndex,
+        )
 
-            // Insert each image in the correct position
-            sortedImages.forEach((image) => {
-              const insertIndex = findCorrectInsertPosition(
-                newAvailable,
-                image.originalIndex,
-              )
-              newAvailable.splice(insertIndex, 0, image)
-            })
+        // Update available images first
+        setAvailableImages((current) => {
+          let newAvailable = [...current]
 
-            return newAvailable
+          // Insert each image in the correct position
+          sortedImages.forEach((image) => {
+            const insertIndex = findCorrectInsertPosition(
+              newAvailable,
+              image.originalIndex,
+            )
+            newAvailable.splice(insertIndex, 0, image)
           })
-        }
-        return prev.filter((p) => p.id !== pageId)
-      })
+
+          return newAvailable
+        })
+      }
+
+      // Then update pages
+      setPages((prev) => prev.filter((p) => p.id !== pageId))
     },
-    [pages.length],
+    [pages.length, pages],
   )
 
   // Change page background color
@@ -234,6 +261,7 @@ export const useImageManagement = () => {
     handleFiles,
     handleDragEnd,
     addPage,
+    addPageBetween,
     removePage,
     changePageColor,
     removeAvailableImage,
