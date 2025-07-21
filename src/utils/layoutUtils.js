@@ -379,3 +379,79 @@ export const findCorrectInsertPosition = (availableImages, originalIndex) => {
   }
   return availableImages.length // Insert at end if no larger index found
 }
+
+// Arrange images on a page with uniform height and horizontal stacking
+export const arrangeImagesOnPage = (images) => {
+  if (images.length === 0) return images
+
+  const pageMargin = 20
+  const imageGap = 20
+  const availableWidth = PREVIEW_WIDTH - pageMargin * 2
+  const availableHeight = PREVIEW_HEIGHT - pageMargin * 2
+
+  // If only one image, center it
+  if (images.length === 1) {
+    const image = images[0]
+    const centerX = (availableWidth - image.previewWidth) / 2 + pageMargin
+    const centerY = (availableHeight - image.previewHeight) / 2 + pageMargin
+    return [{ ...image, x: centerX, y: centerY }]
+  }
+
+  // For multiple images, arrange horizontally with uniform height
+  const totalWidth =
+    images.reduce((sum, img) => sum + img.previewWidth, 0) +
+    (images.length - 1) * imageGap
+
+  // Calculate uniform height for all images
+  const maxHeight = availableHeight
+  const uniformHeight = maxHeight
+
+  // Scale images to uniform height while maintaining aspect ratio
+  const scaledImages = images.map((image) => {
+    const scale = uniformHeight / image.previewHeight
+    const scaledWidth = image.previewWidth * scale
+    return {
+      ...image,
+      previewWidth: scaledWidth,
+      previewHeight: uniformHeight,
+    }
+  })
+
+  // Calculate total width after scaling
+  const scaledTotalWidth =
+    scaledImages.reduce((sum, img) => sum + img.previewWidth, 0) +
+    (scaledImages.length - 1) * imageGap
+
+  // If scaled images fit, arrange them horizontally
+  if (scaledTotalWidth <= availableWidth) {
+    let currentX = pageMargin
+    const centerY = (availableHeight - uniformHeight) / 2 + pageMargin
+
+    return scaledImages.map((image, index) => {
+      const x = currentX
+      currentX += image.previewWidth + imageGap
+      return { ...image, x, y: centerY }
+    })
+  }
+
+  // If images don't fit, scale them down proportionally
+  const scaleFactor =
+    (availableWidth - (images.length - 1) * imageGap) / scaledTotalWidth
+  const finalHeight = uniformHeight * scaleFactor
+
+  let currentX = pageMargin
+  const centerY = (availableHeight - finalHeight) / 2 + pageMargin
+
+  return scaledImages.map((image, index) => {
+    const finalWidth = image.previewWidth * scaleFactor
+    const x = currentX
+    currentX += finalWidth + imageGap
+    return {
+      ...image,
+      x,
+      y: centerY,
+      previewWidth: finalWidth,
+      previewHeight: finalHeight,
+    }
+  })
+}

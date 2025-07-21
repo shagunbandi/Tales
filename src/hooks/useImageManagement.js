@@ -4,6 +4,7 @@ import {
   autoArrangeImages,
   getRandomColor,
   findCorrectInsertPosition,
+  arrangeImagesOnPage,
 } from '../utils/layoutUtils.js'
 import { generatePDF } from '../utils/pdfUtils.js'
 import { COLOR_PALETTE } from '../constants.js'
@@ -70,17 +71,16 @@ export const useImageManagement = () => {
         )
         setAvailableImages(newAvailableImages)
 
-        // Add to page
+        // Add to page and arrange properly
         setPages((prev) =>
           prev.map((page) => {
             if (page.id === pageId) {
               const newImages = [...page.images]
-              newImages.splice(destination.index, 0, {
-                ...imageToMove,
-                x: 20 + destination.index * 10, // Basic positioning
-                y: 20 + destination.index * 10,
-              })
-              return { ...page, images: newImages }
+              newImages.splice(destination.index, 0, imageToMove)
+
+              // Arrange all images on the page properly
+              const arrangedImages = arrangeImagesOnPage(newImages)
+              return { ...page, images: arrangedImages }
             }
             return page
           }),
@@ -99,7 +99,10 @@ export const useImageManagement = () => {
               const newImages = [...page.images]
               const [moved] = newImages.splice(source.index, 1)
               newImages.splice(destination.index, 0, moved)
-              return { ...page, images: newImages }
+
+              // Re-arrange all images on the page properly
+              const arrangedImages = arrangeImagesOnPage(newImages)
+              return { ...page, images: arrangedImages }
             }
             return page
           }),

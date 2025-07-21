@@ -20,6 +20,7 @@ function App() {
     handleFiles,
     handleDragEnd,
     addPage,
+    addPageBetween,
     removePage,
     changePageColor,
     removeAvailableImage,
@@ -29,7 +30,18 @@ function App() {
 
   // Add more images option
   const addMoreImages = () => {
-    document.getElementById('folder-input').click()
+    // Create a temporary file input
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.accept = 'image/*'
+    input.onchange = async (event) => {
+      const files = Array.from(event.target.files)
+      if (files.length > 0) {
+        await handleFiles(files)
+      }
+    }
+    input.click()
   }
 
   return (
@@ -51,6 +63,7 @@ function App() {
             totalImages={totalImages}
             isProcessing={isProcessing}
             onAddPage={addPage}
+            onAddPageBetween={addPageBetween}
             onRemovePage={removePage}
             onChangePageColor={changePageColor}
             onRemoveAvailableImage={removeAvailableImage}

@@ -7,7 +7,9 @@ const PagePreview = ({
   pageIndex,
   onChangeColor,
   onRemovePage,
+  onAddPageBetween,
   canRemove,
+  isLastPage,
 }) => {
   return (
     <div className="page-container">
@@ -21,6 +23,13 @@ const PagePreview = ({
             title="Change background color"
           >
             🎨
+          </button>
+          <button
+            className="add-page-between-btn"
+            onClick={() => onAddPageBetween(page.id)}
+            title="Add page after this one"
+          >
+            +
           </button>
           {canRemove && (
             <button

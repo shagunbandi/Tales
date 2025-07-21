@@ -8,6 +8,7 @@ const DesignTab = ({
   totalImages,
   isProcessing,
   onAddPage,
+  onAddPageBetween,
   onRemovePage,
   onChangePageColor,
   onRemoveAvailableImage,
@@ -42,7 +43,9 @@ const DesignTab = ({
                 pageIndex={pageIndex}
                 onChangeColor={onChangePageColor}
                 onRemovePage={onRemovePage}
+                onAddPageBetween={onAddPageBetween}
                 canRemove={pages.length > 1}
+                isLastPage={pageIndex === pages.length - 1}
               />
             ))}
           </div>

@@ -86,6 +86,11 @@ body {
 .sidebar {
   width: 250px;
   flex-shrink: 0;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 
 .sidebar-header {
@@ -271,6 +276,27 @@ body {
 
 .remove-page-btn:hover {
   background: #ee5a52;
+  transform: scale(1.1);
+}
+
+.add-page-between-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #27ae60;
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.add-page-between-btn:hover {
+  background: #229954;
   transform: scale(1.1);
 }
 
@@ -462,6 +488,8 @@ body {
   .sidebar {
     width: 100%;
     margin-bottom: 20px;
+    position: static;
+    max-height: none;
   }
   
   .available-images {
