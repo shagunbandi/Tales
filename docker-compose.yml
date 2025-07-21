@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  tales-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tales-app
+    stop_grace_period: 1s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tales.rule=Host(`tales.geekynavigator.com`)"
+      - "traefik.http.routers.tales.tls=true"
+      - "traefik.http.services.tales.loadbalancer.server.port=80"
+      - "traefik.http.routers.tales.tls.certresolver=cloudflare"
+      - "traefik.docker.network=tales_network"
+    networks:
+      - tales_network
+    restart: always
+
+networks:
+  tales_network:
+    external: true 
