@@ -4,6 +4,7 @@ import {
   COLOR_PALETTE,
   getPreviewDimensions,
   PAGE_SIZES,
+  LAYOUT_CONSTRAINTS,
 } from '../constants.js'
 
 // Get random color from palette
@@ -389,11 +390,22 @@ export const arrangeImagesOnPage = (images, settings = null) => {
   if (images.length === 0) return images
 
   const pageMargin = settings?.pageMargin || 20
-  const imageGap = settings?.imageGap || 20
+  const imageGapRatio =
+    settings?.imageGapRatio || LAYOUT_CONSTRAINTS.IMAGE_GAP_RATIO
+  const imageGap = pageMargin * imageGapRatio
+  const maxImageHeightRatio =
+    settings?.maxImageHeightRatio || LAYOUT_CONSTRAINTS.MAX_IMAGE_HEIGHT_RATIO
+  const maxImageWidthRatio =
+    settings?.maxImageWidthRatio || LAYOUT_CONSTRAINTS.MAX_IMAGE_WIDTH_RATIO
+
   const { width: previewWidth, height: previewHeight } =
     getPreviewDimensions(settings)
   const availableWidth = previewWidth - pageMargin * 2
   const availableHeight = previewHeight - pageMargin * 2
+
+  // Calculate maximum allowed dimensions
+  const maxImageHeight = availableHeight * maxImageHeightRatio
+  const maxImageWidth = availableWidth * maxImageWidthRatio
 
   // If only one image, center it
   if (images.length === 1) {
@@ -408,9 +420,8 @@ export const arrangeImagesOnPage = (images, settings = null) => {
     images.reduce((sum, img) => sum + img.previewWidth, 0) +
     (images.length - 1) * imageGap
 
-  // Calculate uniform height for all images
-  const maxHeight = availableHeight
-  const uniformHeight = maxHeight
+  // Calculate uniform height for all images (limited by maxImageHeight)
+  const uniformHeight = Math.min(availableHeight, maxImageHeight)
 
   // Scale images to uniform height while maintaining aspect ratio
   const scaledImages = images.map((image) => {
@@ -428,9 +439,14 @@ export const arrangeImagesOnPage = (images, settings = null) => {
     scaledImages.reduce((sum, img) => sum + img.previewWidth, 0) +
     (scaledImages.length - 1) * imageGap
 
+  // Check if scaled images fit within width constraints
+  const fitsInWidth = scaledTotalWidth <= maxImageWidth
+
   // If scaled images fit, arrange them horizontally
-  if (scaledTotalWidth <= availableWidth) {
-    let currentX = pageMargin
+  if (fitsInWidth) {
+    // Center the group of images horizontally
+    const startX = (availableWidth - scaledTotalWidth) / 2 + pageMargin
+    let currentX = startX
     const centerY = (availableHeight - uniformHeight) / 2 + pageMargin
 
     return scaledImages.map((image, index) => {
@@ -441,11 +457,22 @@ export const arrangeImagesOnPage = (images, settings = null) => {
   }
 
   // If images don't fit, scale them down proportionally
-  const scaleFactor =
-    (availableWidth - (images.length - 1) * imageGap) / scaledTotalWidth
+  // Use the more restrictive constraint (width or height)
+  const widthScaleFactor =
+    (maxImageWidth - (images.length - 1) * imageGap) / scaledTotalWidth
+  const heightScaleFactor = maxImageHeight / uniformHeight
+  const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor, 1) // Don't scale up
+
   const finalHeight = uniformHeight * scaleFactor
 
-  let currentX = pageMargin
+  // Calculate final total width after scaling
+  const finalTotalWidth =
+    scaledImages.reduce((sum, img) => sum + img.previewWidth * scaleFactor, 0) +
+    (scaledImages.length - 1) * imageGap
+
+  // Center the group of images horizontally
+  const startX = (availableWidth - finalTotalWidth) / 2 + pageMargin
+  let currentX = startX
   const centerY = (availableHeight - finalHeight) / 2 + pageMargin
 
   return scaledImages.map((image, index) => {

@@ -25,13 +25,6 @@ const PagePreview = ({
           >
             🎨
           </button>
-          <button
-            className="add-page-between-btn"
-            onClick={() => onAddPageBetween(page.id)}
-            title="Add page after this one"
-          >
-            +
-          </button>
           {canRemove && (
             <button
               className="remove-page-btn"

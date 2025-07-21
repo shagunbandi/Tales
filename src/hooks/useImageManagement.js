@@ -164,6 +164,11 @@ export const useImageManagement = (settings = null) => {
       color: getRandomColor(),
     }
     setPages((prev) => {
+      // Special case: add at the beginning
+      if (afterPageId === 'start') {
+        return [newPage, ...prev]
+      }
+
       const afterIndex = prev.findIndex((p) => p.id === afterPageId)
       if (afterIndex === -1) return [...prev, newPage]
 
@@ -176,7 +181,8 @@ export const useImageManagement = (settings = null) => {
   // Remove a page and return images to sidebar in original order
   const removePage = useCallback(
     (pageId) => {
-      if (pages.length <= 1) return // Keep at least one page
+      // Allow removing any page, including the last one
+      // Don't create a new page automatically - let user add one when needed
 
       // Get the current state to calculate updates
       const currentPages = pages

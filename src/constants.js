@@ -17,6 +17,13 @@ export const PAGE_SIZES = {
   legal: { width: 356, height: 216, name: 'Legal' },
 }
 
+// Layout constraints
+export const LAYOUT_CONSTRAINTS = {
+  MAX_IMAGE_HEIGHT_RATIO: 0.8, // 80% of page height
+  MAX_IMAGE_WIDTH_RATIO: 0.9, // 90% of page width
+  IMAGE_GAP_RATIO: 0.5, // 50% of page margin (lesser than margin space)
+}
+
 // Default settings
 export const DEFAULT_SETTINGS = {
   pageSize: 'a4',
@@ -27,6 +34,9 @@ export const DEFAULT_SETTINGS = {
   imageQuality: 0.9,
   maxImageHeight: 80,
   maxImageWidth: 90,
+  maxImageHeightRatio: LAYOUT_CONSTRAINTS.MAX_IMAGE_HEIGHT_RATIO,
+  maxImageWidthRatio: LAYOUT_CONSTRAINTS.MAX_IMAGE_WIDTH_RATIO,
+  imageGapRatio: LAYOUT_CONSTRAINTS.IMAGE_GAP_RATIO,
 }
 
 // A4 landscape dimensions in mm and px (for preview)

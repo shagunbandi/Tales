@@ -47,19 +47,79 @@ const DesignTab = ({
           </div>
 
           <div className="pages-list">
-            {pages.map((page, pageIndex) => (
-              <PagePreview
-                key={page.id}
-                page={page}
-                pageIndex={pageIndex}
-                onChangeColor={onChangePageColor}
-                onRemovePage={onRemovePage}
-                onAddPageBetween={onAddPageBetween}
-                canRemove={pages.length > 1}
-                isLastPage={pageIndex === pages.length - 1}
-                settings={settings}
-              />
-            ))}
+            {/* Add page button above the first page */}
+            <div className="add-page-section">
+              <div className="add-page-line">
+                <div className="add-page-indicator">
+                  New page will be added here
+                </div>
+                <button
+                  className="add-page-btn"
+                  onClick={() => onAddPageBetween('start')}
+                  title="Add page at the beginning"
+                >
+                  + Add Page
+                </button>
+              </div>
+            </div>
+
+            {pages.length === 0 ? (
+              /* Show message when no pages exist */
+              <div className="no-pages-message">
+                <p>No pages yet. Add a page to get started!</p>
+              </div>
+            ) : (
+              pages.map((page, pageIndex) => (
+                <React.Fragment key={page.id}>
+                  <PagePreview
+                    page={page}
+                    pageIndex={pageIndex}
+                    onChangeColor={onChangePageColor}
+                    onRemovePage={onRemovePage}
+                    onAddPageBetween={onAddPageBetween}
+                    canRemove={true}
+                    isLastPage={pageIndex === pages.length - 1}
+                    settings={settings}
+                  />
+
+                  {/* Add page button below each page (except the last one) */}
+                  {pageIndex < pages.length - 1 && (
+                    <div className="add-page-section">
+                      <div className="add-page-line">
+                        <div className="add-page-indicator">
+                          New page will be added here
+                        </div>
+                        <button
+                          className="add-page-btn"
+                          onClick={() => onAddPageBetween(page.id)}
+                          title="Add page after this one"
+                        >
+                          + Add Page
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
+              ))
+            )}
+
+            {/* Add page button below the last page (only if pages exist) */}
+            {pages.length > 0 && (
+              <div className="add-page-section">
+                <div className="add-page-line">
+                  <div className="add-page-indicator">
+                    New page will be added here
+                  </div>
+                  <button
+                    className="add-page-btn"
+                    onClick={() => onAddPage()}
+                    title="Add page at the end"
+                  >
+                    + Add Page
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="actions">
