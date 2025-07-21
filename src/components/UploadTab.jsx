@@ -57,16 +57,18 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages }) => {
 
         {totalImages > 0 && (
           <div className="image-count">
-            ✓ {totalImages} images total - automatically arranged on pages
+            ✓ {totalImages} images uploaded successfully!
+            <br />
+            <small>
+              Proceed to the next step to configure your layout settings.
+            </small>
           </div>
         )}
       </div>
 
       {isProcessing && (
         <div className="progress-section">
-          <div className="progress-text">
-            Processing and arranging images...
-          </div>
+          <div className="progress-text">Processing images...</div>
         </div>
       )}
     </div>

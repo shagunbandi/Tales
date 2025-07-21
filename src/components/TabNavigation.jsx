@@ -1,20 +1,31 @@
 import React from 'react'
 
-const TabNavigation = ({ activeTab, setActiveTab, totalImages }) => {
+const TabNavigation = ({ activeTab, setActiveTab, totalImages, step }) => {
+  const tabs = [
+    { id: 'upload', label: '1. Upload Images', disabled: false },
+    {
+      id: 'settings',
+      label: '2. Configure & Auto-arrange',
+      disabled: totalImages === 0,
+    },
+    { id: 'design', label: '3. Design Layout', disabled: totalImages === 0 },
+  ]
+
   return (
     <div className="tab-navigation">
-      <button
-        className={`tab-button ${activeTab === 'design' ? 'active' : ''}`}
-        onClick={() => setActiveTab('design')}
-      >
-        Design Layout ({totalImages} images)
-      </button>
-      <button
-        className={`tab-button ${activeTab === 'upload' ? 'active' : ''}`}
-        onClick={() => setActiveTab('upload')}
-      >
-        Upload Images
-      </button>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          className={`tab-button ${activeTab === tab.id ? 'active' : ''} ${
+            tab.disabled ? 'disabled' : ''
+          }`}
+          onClick={() => !tab.disabled && setActiveTab(tab.id)}
+          disabled={tab.disabled}
+        >
+          {tab.label}
+          {tab.id === 'design' && totalImages > 0 && ` (${totalImages} images)`}
+        </button>
+      ))}
     </div>
   )
 }

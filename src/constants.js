@@ -10,6 +10,25 @@ export const COLOR_PALETTE = [
   { name: 'Powder Blue', color: '#B0E0E6' },
 ]
 
+// Page size configurations
+export const PAGE_SIZES = {
+  a4: { width: 297, height: 210, name: 'A4' },
+  letter: { width: 279, height: 216, name: 'Letter' },
+  legal: { width: 356, height: 216, name: 'Legal' },
+}
+
+// Default settings
+export const DEFAULT_SETTINGS = {
+  pageSize: 'a4',
+  orientation: 'landscape',
+  pageMargin: 20,
+  imageGap: 20,
+  maxImagesPerPage: 5,
+  imageQuality: 0.9,
+  maxImageHeight: 80,
+  maxImageWidth: 90,
+}
+
 // A4 landscape dimensions in mm and px (for preview)
 export const A4_WIDTH_MM = 297
 export const A4_HEIGHT_MM = 210

@@ -283,13 +283,14 @@ export const arrangeSimpleRowWithUniformHeight = (
 }
 
 // Auto-arrange images onto pages
-export const autoArrangeImages = (newImages, pages) => {
+export const autoArrangeImages = (newImages, pages, settings = null) => {
   const arrangedPages = [...pages]
   const remainingImages = []
 
-  // Page layout constants - maximized for 80% height, 90% width usage
-  const pageMargin = 20
-  const imageGap = 20
+  // Page layout constants - use settings if available
+  const pageMargin = settings?.pageMargin || 20
+  const imageGap = settings?.imageGap || 20
+  const maxImagesPerPage = settings?.maxImagesPerPage || 5
   const availableWidth = PREVIEW_WIDTH - pageMargin * 2
   const availableHeight = PREVIEW_HEIGHT - pageMargin * 2
 
@@ -320,13 +321,10 @@ export const autoArrangeImages = (newImages, pages) => {
           })
         }
 
-        // Arrange and center images on current page
-        const arrangedImagesOnPage = arrangeAndCenterImages(
+        // Arrange and center images on current page using new function
+        const arrangedImagesOnPage = arrangeImagesOnPage(
           imagesForCurrentPage,
-          availableWidth,
-          availableHeight,
-          pageMargin,
-          imageGap,
+          settings,
         )
         arrangedPages[currentPageIndex].images = [
           ...arrangedPages[currentPageIndex].images,
@@ -353,13 +351,10 @@ export const autoArrangeImages = (newImages, pages) => {
       })
     }
 
-    // Arrange and center images on last page
-    const arrangedImagesOnPage = arrangeAndCenterImages(
+    // Arrange and center images on last page using new function
+    const arrangedImagesOnPage = arrangeImagesOnPage(
       imagesForCurrentPage,
-      availableWidth,
-      availableHeight,
-      pageMargin,
-      imageGap,
+      settings,
     )
     arrangedPages[currentPageIndex].images = [
       ...arrangedPages[currentPageIndex].images,
@@ -381,11 +376,11 @@ export const findCorrectInsertPosition = (availableImages, originalIndex) => {
 }
 
 // Arrange images on a page with uniform height and horizontal stacking
-export const arrangeImagesOnPage = (images) => {
+export const arrangeImagesOnPage = (images, settings = null) => {
   if (images.length === 0) return images
 
-  const pageMargin = 20
-  const imageGap = 20
+  const pageMargin = settings?.pageMargin || 20
+  const imageGap = settings?.imageGap || 20
   const availableWidth = PREVIEW_WIDTH - pageMargin * 2
   const availableHeight = PREVIEW_HEIGHT - pageMargin * 2
 

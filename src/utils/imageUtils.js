@@ -5,7 +5,7 @@ import {
 } from '../constants.js'
 
 // Load image and get its dimensions
-export const loadImage = (file) => {
+export const loadImage = (file, settings = null) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (event) => {
@@ -16,11 +16,15 @@ export const loadImage = (file) => {
         canvas.width = img.naturalWidth
         canvas.height = img.naturalHeight
         ctx.drawImage(img, 0, 0)
-        const correctedSrc = canvas.toDataURL('image/jpeg', 0.9)
+        const correctedSrc = canvas.toDataURL(
+          'image/jpeg',
+          settings?.imageQuality || 0.9,
+        )
 
         // Calculate initial dimensions - these will be adjusted for uniform height later
-        const maxHeight = PREVIEW_HEIGHT * 0.8 // Use 80% of page height
-        const maxWidth = PREVIEW_WIDTH * 0.9 // Use 90% of page width total
+        const maxHeight =
+          PREVIEW_HEIGHT * ((settings?.maxImageHeight || 80) / 100) // Use configurable percentage of page height
+        const maxWidth = PREVIEW_WIDTH * ((settings?.maxImageWidth || 90) / 100) // Use configurable percentage of page width
         const scaleHeight = maxHeight / img.naturalHeight
         const scaleWidth = maxWidth / img.naturalWidth
         const scale = Math.min(scaleHeight, scaleWidth, 1)
@@ -49,7 +53,11 @@ export const loadImage = (file) => {
 }
 
 // Process uploaded files and return processed images
-export const processFiles = async (files, availableImagesLength) => {
+export const processFiles = async (
+  files,
+  availableImagesLength,
+  settings = null,
+) => {
   const imageFiles = files
     .filter((file) => SUPPORTED_FORMATS.includes(file.type))
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -63,7 +71,7 @@ export const processFiles = async (files, availableImagesLength) => {
   const processedImages = []
   for (const file of imageFiles) {
     try {
-      const imageData = await loadImage(file)
+      const imageData = await loadImage(file, settings)
       processedImages.push({
         ...imageData,
         id: `img-${Date.now()}-${Math.random()}`,

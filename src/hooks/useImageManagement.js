@@ -9,7 +9,7 @@ import {
 import { generatePDF } from '../utils/pdfUtils.js'
 import { COLOR_PALETTE } from '../constants.js'
 
-export const useImageManagement = () => {
+export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([
     { id: 'page-1', images: [], color: COLOR_PALETTE[0] },
   ])
@@ -27,26 +27,18 @@ export const useImageManagement = () => {
         const processedImages = await processFiles(
           files,
           availableImages.length,
+          settings,
         )
 
-        // Auto-arrange images onto pages
-        const { arrangedPages, remainingImages } = autoArrangeImages(
-          processedImages,
-          pages,
-        )
-
-        // Update pages with arranged images
-        setPages(arrangedPages)
-
-        // Add remaining images to available images
-        setAvailableImages((prev) => [...prev, ...remainingImages])
+        // Add all images to available images only
+        setAvailableImages((prev) => [...prev, ...processedImages])
       } catch (err) {
         setError(err.message)
       } finally {
         setIsProcessing(false)
       }
     },
-    [availableImages.length, pages],
+    [availableImages.length],
   )
 
   // Handle drag end for layout
@@ -79,7 +71,7 @@ export const useImageManagement = () => {
               newImages.splice(destination.index, 0, imageToMove)
 
               // Arrange all images on the page properly
-              const arrangedImages = arrangeImagesOnPage(newImages)
+              const arrangedImages = arrangeImagesOnPage(newImages, settings)
               return { ...page, images: arrangedImages }
             }
             return page
@@ -101,7 +93,7 @@ export const useImageManagement = () => {
               newImages.splice(destination.index, 0, moved)
 
               // Re-arrange all images on the page properly
-              const arrangedImages = arrangeImagesOnPage(newImages)
+              const arrangedImages = arrangeImagesOnPage(newImages, settings)
               return { ...page, images: arrangedImages }
             }
             return page
@@ -233,6 +225,31 @@ export const useImageManagement = () => {
     setAvailableImages((prev) => prev.filter((_, i) => i !== index))
   }, [])
 
+  // Auto-arrange images onto pages
+  const autoArrangeImagesToPages = useCallback(async () => {
+    if (availableImages.length === 0) return
+
+    setIsProcessing(true)
+    try {
+      // Auto-arrange images onto pages
+      const { arrangedPages, remainingImages } = autoArrangeImages(
+        availableImages,
+        pages,
+        settings,
+      )
+
+      // Update pages with arranged images
+      setPages(arrangedPages)
+
+      // Add remaining images to available images
+      setAvailableImages(remainingImages)
+    } catch (err) {
+      setError(`Failed to auto-arrange images: ${err.message}`)
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [availableImages, pages])
+
   // Generate PDF
   const handleGeneratePDF = useCallback(async () => {
     if (pages.length === 0) return
@@ -268,6 +285,7 @@ export const useImageManagement = () => {
     removePage,
     changePageColor,
     removeAvailableImage,
+    autoArrangeImagesToPages,
     handleGeneratePDF,
     setError,
   }

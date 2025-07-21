@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
 import { DragDropContext } from 'react-beautiful-dnd'
 import { useImageManagement } from './hooks/useImageManagement.js'
+import { DEFAULT_SETTINGS } from './constants.js'
 import TabNavigation from './components/TabNavigation.jsx'
 import UploadTab from './components/UploadTab.jsx'
+import SettingsTab from './components/SettingsTab.jsx'
 import DesignTab from './components/DesignTab.jsx'
 
 function App() {
-  const [activeTab, setActiveTab] = useState('design')
+  const [activeTab, setActiveTab] = useState('upload')
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
 
   const {
     // State
@@ -24,9 +27,10 @@ function App() {
     removePage,
     changePageColor,
     removeAvailableImage,
+    autoArrangeImagesToPages,
     handleGeneratePDF,
     setError,
-  } = useImageManagement()
+  } = useImageManagement(settings)
 
   // Add more images option
   const addMoreImages = () => {
@@ -57,6 +61,28 @@ function App() {
       />
 
       <DragDropContext onDragEnd={handleDragEnd}>
+        {activeTab === 'upload' && (
+          <UploadTab
+            handleFiles={handleFiles}
+            isProcessing={isProcessing}
+            totalImages={totalImages}
+          />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsTab
+            settings={settings}
+            onSettingsChange={setSettings}
+            totalImages={totalImages}
+            isProcessing={isProcessing}
+            onAutoGenerate={async () => {
+              await autoArrangeImagesToPages()
+              setActiveTab('design')
+            }}
+            onNextStep={() => setActiveTab('design')}
+          />
+        )}
+
         {activeTab === 'design' && (
           <DesignTab
             pages={pages}
@@ -70,14 +96,6 @@ function App() {
             onRemoveAvailableImage={removeAvailableImage}
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}
-          />
-        )}
-
-        {activeTab === 'upload' && (
-          <UploadTab
-            handleFiles={handleFiles}
-            isProcessing={isProcessing}
-            totalImages={totalImages}
           />
         )}
       </DragDropContext>
