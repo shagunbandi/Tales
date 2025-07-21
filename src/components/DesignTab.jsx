@@ -14,6 +14,7 @@ const DesignTab = ({
   onRemoveAvailableImage,
   onAddMoreImages,
   onGeneratePDF,
+  onAutoArrange,
   settings,
 }) => {
   return (
@@ -31,9 +32,18 @@ const DesignTab = ({
         <div className="pages-container">
           <div className="pages-header">
             <h3>PDF Pages Preview</h3>
-            <button className="btn btn-secondary" onClick={onAddPage}>
-              Add Page
-            </button>
+            <div className="page-controls">
+              <button
+                className="btn btn-secondary"
+                onClick={onAutoArrange}
+                disabled={isProcessing || availableImages.length === 0}
+              >
+                {isProcessing ? 'Auto-arranging...' : 'Auto-arrange Images'}
+              </button>
+              <button className="btn btn-secondary" onClick={onAddPage}>
+                Add Page
+              </button>
+            </div>
           </div>
 
           <div className="pages-list">

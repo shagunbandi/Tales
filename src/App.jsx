@@ -4,12 +4,11 @@ import { useImageManagement } from './hooks/useImageManagement.js'
 import { DEFAULT_SETTINGS } from './constants.js'
 import TabNavigation from './components/TabNavigation.jsx'
 import UploadTab from './components/UploadTab.jsx'
-import SettingsTab from './components/SettingsTab.jsx'
 import DesignTab from './components/DesignTab.jsx'
 
 function App() {
   const [activeTab, setActiveTab] = useState('upload')
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
+  const settings = DEFAULT_SETTINGS
 
   const {
     // State
@@ -66,20 +65,7 @@ function App() {
             handleFiles={handleFiles}
             isProcessing={isProcessing}
             totalImages={totalImages}
-          />
-        )}
-
-        {activeTab === 'settings' && (
-          <SettingsTab
-            settings={settings}
-            onSettingsChange={setSettings}
-            totalImages={totalImages}
-            isProcessing={isProcessing}
-            onAutoGenerate={async () => {
-              await autoArrangeImagesToPages()
-              setActiveTab('design')
-            }}
-            onNextStep={() => setActiveTab('design')}
+            setActiveTab={setActiveTab}
           />
         )}
 
@@ -96,6 +82,7 @@ function App() {
             onRemoveAvailableImage={removeAvailableImage}
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}
+            onAutoArrange={autoArrangeImagesToPages}
             settings={settings}
           />
         )}

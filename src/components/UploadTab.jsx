@@ -1,6 +1,11 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 
-const UploadTab = ({ handleFiles, isProcessing, totalImages }) => {
+const UploadTab = ({
+  handleFiles,
+  isProcessing,
+  totalImages,
+  setActiveTab,
+}) => {
   // Handle file input change
   const handleFileChange = useCallback(
     async (event) => {
@@ -28,6 +33,13 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages }) => {
   const handleDragLeave = useCallback((event) => {
     event.currentTarget.classList.remove('dragover')
   }, [])
+
+  // Auto-transition to design tab when images are uploaded
+  useEffect(() => {
+    if (totalImages > 0 && !isProcessing) {
+      setActiveTab('design')
+    }
+  }, [totalImages, isProcessing, setActiveTab])
 
   return (
     <div className="upload-tab">
@@ -59,9 +71,7 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages }) => {
           <div className="image-count">
             ✓ {totalImages} images uploaded successfully!
             <br />
-            <small>
-              Proceed to the next step to configure your layout settings.
-            </small>
+            <small>Automatically proceeding to design layout...</small>
           </div>
         )}
       </div>
