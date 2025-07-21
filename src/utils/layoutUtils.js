@@ -341,10 +341,7 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
           imagesForCurrentPage,
           settings,
         )
-        arrangedPages[currentPageIndex].images = [
-          ...arrangedPages[currentPageIndex].images,
-          ...arrangedImagesOnPage,
-        ]
+        arrangedPages[currentPageIndex].images = arrangedImagesOnPage
 
         currentPageIndex++
         imagesForCurrentPage = [image] // Start new page with current image
@@ -371,10 +368,7 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
       imagesForCurrentPage,
       settings,
     )
-    arrangedPages[currentPageIndex].images = [
-      ...arrangedPages[currentPageIndex].images,
-      ...arrangedImagesOnPage,
-    ]
+    arrangedPages[currentPageIndex].images = arrangedImagesOnPage
   }
 
   return { arrangedPages, remainingImages }

@@ -231,15 +231,15 @@ export const useImageManagement = (settings = null) => {
 
     setIsProcessing(true)
     try {
-      // Auto-arrange images onto pages
+      // Auto-arrange images onto new pages (preserve existing pages)
       const { arrangedPages, remainingImages } = autoArrangeImages(
         availableImages,
-        pages,
+        [], // Start with empty pages to create new ones
         settings,
       )
 
-      // Update pages with arranged images
-      setPages(arrangedPages)
+      // Add new pages to existing pages (preserve existing pages)
+      setPages((prevPages) => [...prevPages, ...arrangedPages])
 
       // Add remaining images to available images
       setAvailableImages(remainingImages)
