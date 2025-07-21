@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef } from 'react'
 import jsPDF from 'jspdf'
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
 // Sober color palette as specified
 const COLOR_PALETTE = [
@@ -13,19 +14,25 @@ const COLOR_PALETTE = [
   { name: 'Powder Blue', color: '#B0E0E6' },
 ]
 
-// A4 landscape dimensions in mm
+// A4 landscape dimensions in mm and px (for preview)
 const A4_WIDTH_MM = 297
 const A4_HEIGHT_MM = 210
-const MARGIN_PX = 30 // Balanced margin for good spacing while maximizing image area
-const IMAGE_GAP_PX = 12 // Increased gap between images for better visual separation
+const MARGIN_PX = 20
+const IMAGE_GAP_PX = 10
+
+// Preview dimensions (scaled down for UI)
+const PREVIEW_SCALE = 0.8
+const PREVIEW_WIDTH = 600 * PREVIEW_SCALE
+const PREVIEW_HEIGHT = (210 / 297) * PREVIEW_WIDTH
 
 function App() {
-  const [images, setImages] = useState([])
+  const [pages, setPages] = useState([
+    { id: 'page-1', images: [], color: COLOR_PALETTE[0] },
+  ])
+  const [availableImages, setAvailableImages] = useState([])
   const [isProcessing, setIsProcessing] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [pages, setPages] = useState([])
   const [error, setError] = useState('')
-  const [progressText, setProgressText] = useState('')
+  const [activeTab, setActiveTab] = useState('design')
 
   // Supported image formats
   const supportedFormats = [
@@ -36,11 +43,8 @@ function App() {
     'image/webp',
   ]
 
-  // Convert px to mm for jsPDF
-  const pxToMm = (px) => px * 0.264583
-
-  // Convert mm to px for calculations
-  const mmToPx = (mm) => mm / 0.264583
+  // Convert preview px to PDF mm
+  const previewToMm = (px) => (px / PREVIEW_WIDTH) * A4_WIDTH_MM
 
   // Get random color from palette
   const getRandomColor = () => {
@@ -53,7 +57,7 @@ function App() {
     await processFiles(files)
   }, [])
 
-  // Handle drag and drop
+  // Handle drag and drop for file upload
   const handleDrop = useCallback(async (event) => {
     event.preventDefault()
     const files = Array.from(event.dataTransfer.files)
@@ -69,15 +73,12 @@ function App() {
     event.currentTarget.classList.remove('dragover')
   }, [])
 
-  // Process uploaded files
+  // Process uploaded files and auto-arrange them
   const processFiles = async (files) => {
     setError('')
     setIsProcessing(true)
-    setProgress(0)
-    setProgressText('Processing images...')
 
     try {
-      // Filter for image files and sort by name
       const imageFiles = files
         .filter((file) => supportedFormats.includes(file.type))
         .sort((a, b) => a.name.localeCompare(b.name))
@@ -89,31 +90,28 @@ function App() {
       }
 
       const processedImages = []
-
-      for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i]
-        setProgressText(`Processing ${file.name}...`)
-
+      for (const file of imageFiles) {
         try {
           const imageData = await loadImage(file)
-          processedImages.push(imageData)
-          setProgress(((i + 1) / imageFiles.length) * 50) // First 50% for loading images
+          processedImages.push({
+            ...imageData,
+            id: `img-${Date.now()}-${Math.random()}`,
+            originalIndex: availableImages.length + processedImages.length, // Track original position
+          })
         } catch (err) {
           console.warn(`Failed to load image ${file.name}:`, err)
         }
       }
 
-      setImages(processedImages)
-      setProgressText('Calculating page layout...')
+      // Auto-arrange images onto pages
+      const { arrangedPages, remainingImages } =
+        autoArrangeImages(processedImages)
 
-      // Calculate page layout
-      const calculatedPages = calculatePageLayout(processedImages)
-      setPages(calculatedPages)
+      // Update pages with arranged images
+      setPages(arrangedPages)
 
-      setProgress(100)
-      setProgressText(
-        `Ready! ${processedImages.length} images arranged on ${calculatedPages.length} pages`,
-      )
+      // Add remaining images to available images
+      setAvailableImages((prev) => [...prev, ...remainingImages])
     } catch (err) {
       setError(err.message)
     } finally {
@@ -121,42 +119,99 @@ function App() {
     }
   }
 
-  // Load image and get its dimensions with EXIF orientation handling
+  // Auto-arrange images onto pages
+  const autoArrangeImages = (newImages) => {
+    const arrangedPages = [...pages]
+    const remainingImages = []
+    const availableWidth = PREVIEW_WIDTH - MARGIN_PX * 2
+    const availableHeight = PREVIEW_HEIGHT - MARGIN_PX * 2
+
+    let currentPageIndex = 0
+    let currentX = MARGIN_PX
+    let currentY = MARGIN_PX
+    let rowHeight = 0
+
+    for (const image of newImages) {
+      // Ensure we have a page to work with
+      while (currentPageIndex >= arrangedPages.length) {
+        arrangedPages.push({
+          id: `page-${Date.now()}-${currentPageIndex}`,
+          images: [],
+          color: getRandomColor(),
+        })
+      }
+
+      const currentPage = arrangedPages[currentPageIndex]
+
+      // Check if image fits on current row
+      const imageRight = currentX + image.previewWidth
+      const imageBottom = currentY + image.previewHeight
+
+      if (imageRight > PREVIEW_WIDTH - MARGIN_PX) {
+        // Move to next row
+        currentX = MARGIN_PX
+        currentY += rowHeight + IMAGE_GAP_PX
+        rowHeight = 0
+      }
+
+      // Check if image fits on current page
+      const newImageBottom = currentY + image.previewHeight
+      if (newImageBottom > PREVIEW_HEIGHT - MARGIN_PX) {
+        // Move to next page
+        currentPageIndex++
+        currentX = MARGIN_PX
+        currentY = MARGIN_PX
+        rowHeight = 0
+        continue // Re-process this image on the new page
+      }
+
+      // Place image on current page
+      const placedImage = {
+        ...image,
+        x: currentX,
+        y: currentY,
+      }
+
+      currentPage.images.push(placedImage)
+      currentX += image.previewWidth + IMAGE_GAP_PX
+      rowHeight = Math.max(rowHeight, image.previewHeight)
+    }
+
+    return { arrangedPages, remainingImages }
+  }
+
+  // Load image and get its dimensions
   const loadImage = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = (event) => {
         const img = new Image()
         img.onload = () => {
-          // Create canvas to handle EXIF orientation and ensure proper dimensions
           const canvas = document.createElement('canvas')
           const ctx = canvas.getContext('2d')
-
-          // Set canvas size to image size (this handles orientation automatically in most browsers)
           canvas.width = img.naturalWidth
           canvas.height = img.naturalHeight
-
-          // Draw image to canvas (this will auto-correct orientation in modern browsers)
           ctx.drawImage(img, 0, 0)
-
-          // Get the corrected image data
           const correctedSrc = canvas.toDataURL('image/jpeg', 0.9)
 
-          // Calculate scaled dimensions with flexible sizing for better page utilization
-          const availableHeight = mmToPx(A4_HEIGHT_MM) - MARGIN_PX * 2
-          const targetHeight = availableHeight * 0.75 // Use 75% of available height for more images per page
-          const scale = targetHeight / img.naturalHeight
+          // Calculate scaled dimensions for preview
+          const maxHeight = PREVIEW_HEIGHT * 0.4 // Smaller images for better auto-layout
+          const maxWidth = PREVIEW_WIDTH * 0.3
+          const scaleHeight = maxHeight / img.naturalHeight
+          const scaleWidth = maxWidth / img.naturalWidth
+          const scale = Math.min(scaleHeight, scaleWidth, 1)
           const scaledWidth = img.naturalWidth * scale
-          const scaledHeight = targetHeight
+          const scaledHeight = img.naturalHeight * scale
 
           resolve({
             file,
-            src: correctedSrc, // Use the orientation-corrected image
+            src: correctedSrc,
             originalWidth: img.naturalWidth,
             originalHeight: img.naturalHeight,
-            scaledWidth,
-            scaledHeight,
-            scale,
+            previewWidth: scaledWidth,
+            previewHeight: scaledHeight,
+            x: 0,
+            y: 0,
           })
         }
         img.onerror = () =>
@@ -169,84 +224,168 @@ function App() {
     })
   }
 
-  // Calculate how images should be arranged on pages with centering
-  const calculatePageLayout = (images) => {
-    const pages = []
-    const availableWidth = mmToPx(A4_WIDTH_MM) - MARGIN_PX * 2
+  // Handle drag end for the layout
+  const handleDragEnd = (result) => {
+    if (!result.destination) return
 
-    let currentPage = { images: [], color: getRandomColor() }
-    let currentRowWidth = 0
+    const { source, destination } = result
 
-    for (const image of images) {
-      // Calculate required width including gap (no gap for first image on page)
-      const gapWidth = currentPage.images.length > 0 ? IMAGE_GAP_PX : 0
-      const requiredWidth = currentRowWidth + gapWidth + image.scaledWidth
+    // Moving from available images to a page
+    if (
+      source.droppableId === 'available-images' &&
+      destination.droppableId.startsWith('page-')
+    ) {
+      const imageIndex = source.index
+      const pageId = destination.droppableId
+      const imageToMove = availableImages[imageIndex]
 
-      // Check if image fits on current page
-      if (requiredWidth <= availableWidth) {
-        currentPage.images.push({
-          ...image,
-          x: currentRowWidth + gapWidth, // Temporary position, will be adjusted for centering
-          y: 0,
-        })
-        currentRowWidth = requiredWidth
-      } else {
-        // Finish current page with centering
-        if (currentPage.images.length > 0) {
-          centerImagesOnPage(currentPage, availableWidth)
-          pages.push(currentPage)
-        }
+      // Remove from available images
+      const newAvailableImages = availableImages.filter(
+        (_, index) => index !== imageIndex,
+      )
+      setAvailableImages(newAvailableImages)
 
-        // Start new page
-        currentPage = {
-          images: [
-            {
-              ...image,
-              x: 0, // Temporary position
-              y: 0,
-            },
-          ],
-          color: getRandomColor(),
-        }
-        currentRowWidth = image.scaledWidth
-      }
+      // Add to page
+      setPages((prev) =>
+        prev.map((page) => {
+          if (page.id === pageId) {
+            const newImages = [...page.images]
+            newImages.splice(destination.index, 0, {
+              ...imageToMove,
+              x: 20 + destination.index * 10, // Basic positioning
+              y: 20 + destination.index * 10,
+            })
+            return { ...page, images: newImages }
+          }
+          return page
+        }),
+      )
     }
 
-    // Add the last page if it has images (with centering)
-    if (currentPage.images.length > 0) {
-      centerImagesOnPage(currentPage, availableWidth)
-      pages.push(currentPage)
+    // Moving within the same page
+    else if (
+      source.droppableId === destination.droppableId &&
+      source.droppableId.startsWith('page-')
+    ) {
+      const pageId = source.droppableId
+      setPages((prev) =>
+        prev.map((page) => {
+          if (page.id === pageId) {
+            const newImages = [...page.images]
+            const [moved] = newImages.splice(source.index, 1)
+            newImages.splice(destination.index, 0, moved)
+            return { ...page, images: newImages }
+          }
+          return page
+        }),
+      )
     }
 
-    return pages
+    // Moving from page back to available images
+    else if (
+      source.droppableId.startsWith('page-') &&
+      destination.droppableId === 'available-images'
+    ) {
+      const pageId = source.droppableId
+      const imageIndex = source.index
+
+      setPages((prev) =>
+        prev.map((page) => {
+          if (page.id === pageId) {
+            const imageToRemove = page.images[imageIndex]
+            const newImages = page.images.filter(
+              (_, index) => index !== imageIndex,
+            )
+
+            // Add back to available images in correct position
+            setAvailableImages((current) => {
+              const newAvailable = [...current]
+              // Find the correct position based on originalIndex
+              const insertIndex = findCorrectInsertPosition(
+                newAvailable,
+                imageToRemove.originalIndex,
+              )
+              newAvailable.splice(insertIndex, 0, imageToRemove)
+              return newAvailable
+            })
+
+            return { ...page, images: newImages }
+          }
+          return page
+        }),
+      )
+    }
   }
 
-  // Helper function to center images on a page (both horizontally and vertically)
-  const centerImagesOnPage = (page, availableWidth) => {
-    if (page.images.length === 0) return
+  // Find correct position to insert image back based on original index
+  const findCorrectInsertPosition = (availableImages, originalIndex) => {
+    for (let i = 0; i < availableImages.length; i++) {
+      if (availableImages[i].originalIndex > originalIndex) {
+        return i
+      }
+    }
+    return availableImages.length // Insert at end if no larger index found
+  }
 
-    // Calculate total width of all images including gaps
-    const totalImageWidth = page.images.reduce((sum, img, index) => {
-      const gapWidth = index > 0 ? IMAGE_GAP_PX : 0
-      return sum + gapWidth + img.scaledWidth
-    }, 0)
+  // Add a new page
+  const addPage = () => {
+    const newPage = {
+      id: `page-${Date.now()}`,
+      images: [],
+      color: getRandomColor(),
+    }
+    setPages((prev) => [...prev, newPage])
+  }
 
-    // Calculate horizontal offset to center the images
-    const horizontalOffset = (availableWidth - totalImageWidth) / 2
+  // Remove a page and return images to sidebar in original order
+  const removePage = (pageId) => {
+    if (pages.length <= 1) return // Keep at least one page
 
-    // Calculate vertical offset to center the images
-    const availableHeight = mmToPx(A4_HEIGHT_MM) - MARGIN_PX * 2
-    const imageHeight = page.images[0]?.scaledHeight || 0
-    const verticalOffset = (availableHeight - imageHeight) / 2
+    setPages((prev) => {
+      const pageToRemove = prev.find((p) => p.id === pageId)
+      if (pageToRemove && pageToRemove.images.length > 0) {
+        // Sort images by original index before adding back
+        const sortedImages = [...pageToRemove.images].sort(
+          (a, b) => a.originalIndex - b.originalIndex,
+        )
 
-    // Adjust all positions to center the images both horizontally and vertically
-    let currentX = horizontalOffset
-    page.images.forEach((img, index) => {
-      if (index > 0) currentX += IMAGE_GAP_PX
-      img.x = currentX
-      img.y = verticalOffset // Center vertically
-      currentX += img.scaledWidth
+        // Add images back to available in correct positions
+        setAvailableImages((current) => {
+          let newAvailable = [...current]
+
+          // Insert each image in the correct position
+          sortedImages.forEach((image) => {
+            const insertIndex = findCorrectInsertPosition(
+              newAvailable,
+              image.originalIndex,
+            )
+            newAvailable.splice(insertIndex, 0, image)
+          })
+
+          return newAvailable
+        })
+      }
+      return prev.filter((p) => p.id !== pageId)
     })
+  }
+
+  // Change page background color
+  const changePageColor = (pageId) => {
+    setPages((prev) =>
+      prev.map((page) =>
+        page.id === pageId ? { ...page, color: getRandomColor() } : page,
+      ),
+    )
+  }
+
+  // Remove image from available list
+  const removeAvailableImage = (index) => {
+    setAvailableImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // Add more images option
+  const addMoreImages = () => {
+    document.getElementById('folder-input').click()
   }
 
   // Generate PDF
@@ -254,11 +393,7 @@ function App() {
     if (pages.length === 0) return
 
     setIsProcessing(true)
-    setProgress(0)
-    setProgressText('Generating PDF...')
-
     try {
-      // Create jsPDF instance with A4 landscape
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -278,27 +413,21 @@ function App() {
 
         // Add images to the page
         for (const image of page.images) {
-          setProgressText(`Adding image to page ${pageIndex + 1}...`)
-
           try {
-            const imgWidth = pxToMm(image.scaledWidth)
-            const imgHeight = pxToMm(image.scaledHeight)
-            const imgX = pxToMm(MARGIN_PX + image.x)
-            const imgY = pxToMm(MARGIN_PX + image.y) // Use calculated y position for vertical centering
+            const imgWidth = previewToMm(image.previewWidth)
+            const imgHeight = previewToMm(image.previewHeight)
+            const imgX = previewToMm(image.x)
+            const imgY = previewToMm(image.y)
 
             pdf.addImage(image.src, 'JPEG', imgX, imgY, imgWidth, imgHeight)
           } catch (err) {
             console.warn(`Failed to add image to PDF:`, err)
           }
         }
-
-        setProgress(((pageIndex + 1) / pages.length) * 100)
       }
 
-      // Save the PDF
       const filename = `images-${new Date().toISOString().slice(0, 10)}.pdf`
       pdf.save(filename)
-      setProgressText(`PDF saved as ${filename}`)
     } catch (err) {
       setError(`Failed to generate PDF: ${err.message}`)
     } finally {
@@ -306,83 +435,254 @@ function App() {
     }
   }
 
+  // Count total images across all pages and available
+  const totalImages =
+    pages.reduce((sum, page) => sum + page.images.length, 0) +
+    availableImages.length
+
   return (
     <div className="app">
-      <h1 className="app-title">Image to PDF Generator</h1>
+      <h1 className="app-title">Interactive PDF Designer</h1>
 
-      <div className="upload-section">
-        <div
-          className="folder-picker"
-          onClick={() => document.getElementById('folder-input').click()}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-        >
-          <div className="folder-picker-text">
-            Click here or drag & drop image files
-          </div>
-          <div className="folder-picker-subtext">
-            Supports JPG, PNG, GIF, WebP formats
-          </div>
-          <input
-            id="folder-input"
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileChange}
-            className="folder-input"
-          />
-        </div>
-
-        {images.length > 0 && (
-          <div className="image-count">✓ {images.length} images selected</div>
-        )}
-      </div>
-
-      {error && <div className="error">{error}</div>}
-
-      {(isProcessing || progress > 0) && (
-        <div className="progress-section">
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="progress-text">{progressText}</div>
-        </div>
-      )}
-
-      {pages.length > 0 && (
-        <div className="pages-preview">
-          <h3>Page Preview ({pages.length} pages)</h3>
-          <div className="pages-grid">
-            {pages.map((page, index) => (
-              <div
-                key={index}
-                className="page-preview"
-                style={{ backgroundColor: page.color.color }}
-              >
-                Page {index + 1}
-                <br />
-                <small>{page.images.length} images</small>
-                <br />
-                <small>{page.color.name}</small>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="actions">
+      {/* Tab Navigation */}
+      <div className="tab-navigation">
         <button
-          className="btn btn-primary"
-          onClick={generatePDF}
-          disabled={pages.length === 0 || isProcessing}
+          className={`tab-button ${activeTab === 'design' ? 'active' : ''}`}
+          onClick={() => setActiveTab('design')}
         >
-          {isProcessing ? 'Generating...' : 'Generate PDF'}
+          Design Layout ({totalImages} images)
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'upload' ? 'active' : ''}`}
+          onClick={() => setActiveTab('upload')}
+        >
+          Upload Images
         </button>
       </div>
+
+      <DragDropContext onDragEnd={handleDragEnd}>
+        {activeTab === 'design' && (
+          <div className="design-tab">
+            <div className="layout-container">
+              {/* Available Images Panel */}
+              <div className="sidebar">
+                <div className="sidebar-header">
+                  <h3>Available Images</h3>
+                  <button className="btn btn-small" onClick={addMoreImages}>
+                    + Add More
+                  </button>
+                </div>
+                <Droppable droppableId="available-images">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="available-images"
+                    >
+                      {availableImages.map((image, index) => (
+                        <Draggable
+                          key={image.id}
+                          draggableId={image.id}
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`available-image ${
+                                snapshot.isDragging ? 'dragging' : ''
+                              }`}
+                            >
+                              <img src={image.src} alt={image.file.name} />
+                              <div className="image-name">
+                                {image.file.name}
+                              </div>
+                              <button
+                                className="remove-btn"
+                                onClick={() => removeAvailableImage(index)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                      {availableImages.length === 0 && totalImages === 0 && (
+                        <div className="no-images">
+                          No images available. Upload some images first!
+                        </div>
+                      )}
+                      {availableImages.length === 0 && totalImages > 0 && (
+                        <div className="no-images">
+                          All images are arranged on pages.
+                          <br />
+                          <button
+                            className="btn btn-small"
+                            onClick={addMoreImages}
+                          >
+                            Add More Images
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+
+              {/* Pages Preview */}
+              <div className="pages-container">
+                <div className="pages-header">
+                  <h3>PDF Pages Preview</h3>
+                  <button className="btn btn-secondary" onClick={addPage}>
+                    Add Page
+                  </button>
+                </div>
+
+                <div className="pages-list">
+                  {pages.map((page, pageIndex) => (
+                    <div key={page.id} className="page-container">
+                      <div className="page-header">
+                        <span>Page {pageIndex + 1}</span>
+                        <div className="page-controls">
+                          <button
+                            className="color-btn"
+                            style={{ backgroundColor: page.color.color }}
+                            onClick={() => changePageColor(page.id)}
+                            title="Change background color"
+                          >
+                            🎨
+                          </button>
+                          {pages.length > 1 && (
+                            <button
+                              className="remove-page-btn"
+                              onClick={() => removePage(page.id)}
+                              title="Remove page"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <Droppable droppableId={page.id}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={`page-preview ${
+                              snapshot.isDraggingOver ? 'drag-over' : ''
+                            }`}
+                            style={{
+                              backgroundColor: page.color.color,
+                              width: PREVIEW_WIDTH,
+                              height: PREVIEW_HEIGHT,
+                            }}
+                          >
+                            {page.images.map((image, index) => (
+                              <Draggable
+                                key={`${page.id}-${image.id}`}
+                                draggableId={`${page.id}-${image.id}`}
+                                index={index}
+                              >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`page-image ${
+                                      snapshot.isDragging ? 'dragging' : ''
+                                    }`}
+                                    style={{
+                                      left: image.x,
+                                      top: image.y,
+                                      width: image.previewWidth,
+                                      height: image.previewHeight,
+                                    }}
+                                  >
+                                    <img
+                                      src={image.src}
+                                      alt={image.file.name}
+                                    />
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                            {page.images.length === 0 && (
+                              <div className="empty-page">
+                                Drag images here to add them to this page
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Droppable>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="actions">
+                  <button
+                    className="btn btn-primary"
+                    onClick={generatePDF}
+                    disabled={
+                      pages.every((p) => p.images.length === 0) || isProcessing
+                    }
+                  >
+                    {isProcessing ? 'Generating PDF...' : 'Generate PDF'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'upload' && (
+          <div className="upload-tab">
+            <div className="upload-section">
+              <div
+                className="folder-picker"
+                onClick={() => document.getElementById('folder-input').click()}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+              >
+                <div className="folder-picker-text">
+                  Click here or drag & drop image files
+                </div>
+                <div className="folder-picker-subtext">
+                  Supports JPG, PNG, GIF, WebP formats
+                </div>
+                <input
+                  id="folder-input"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="folder-input"
+                />
+              </div>
+
+              {totalImages > 0 && (
+                <div className="image-count">
+                  ✓ {totalImages} images total - automatically arranged on pages
+                </div>
+              )}
+            </div>
+
+            {isProcessing && (
+              <div className="progress-section">
+                <div className="progress-text">
+                  Processing and arranging images...
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </DragDropContext>
+
+      {error && <div className="error">{error}</div>}
     </div>
   )
 }
