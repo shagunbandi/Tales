@@ -6,7 +6,6 @@ const UploadTab = ({
   totalImages,
   setActiveTab,
 }) => {
-  // Handle file input change
   const handleFileChange = useCallback(
     async (event) => {
       const files = Array.from(event.target.files)
@@ -15,7 +14,6 @@ const UploadTab = ({
     [handleFiles],
   )
 
-  // Handle drag and drop for file upload
   const handleDrop = useCallback(
     async (event) => {
       event.preventDefault()
@@ -34,7 +32,6 @@ const UploadTab = ({
     event.currentTarget.classList.remove('dragover')
   }, [])
 
-  // Auto-transition to design tab when images are uploaded
   useEffect(() => {
     if (totalImages > 0 && !isProcessing) {
       setActiveTab('design')

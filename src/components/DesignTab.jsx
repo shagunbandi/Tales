@@ -20,7 +20,6 @@ const DesignTab = ({
   return (
     <div className="design-tab">
       <div className="layout-container">
-        {/* Available Images Panel */}
         <AvailableImages
           availableImages={availableImages}
           removeAvailableImage={onRemoveAvailableImage}
@@ -28,7 +27,6 @@ const DesignTab = ({
           onAddMoreImages={onAddMoreImages}
         />
 
-        {/* Pages Preview */}
         <div className="pages-container">
           <div className="pages-header">
             <h3>PDF Pages Preview</h3>
@@ -47,7 +45,6 @@ const DesignTab = ({
           </div>
 
           <div className="pages-list">
-            {/* Add page button above the first page */}
             <div className="add-page-section">
               <div className="add-page-line">
                 <div className="add-page-indicator">
@@ -64,7 +61,6 @@ const DesignTab = ({
             </div>
 
             {pages.length === 0 ? (
-              /* Show message when no pages exist */
               <div className="no-pages-message">
                 <p>No pages yet. Add a page to get started!</p>
               </div>
@@ -82,7 +78,6 @@ const DesignTab = ({
                     settings={settings}
                   />
 
-                  {/* Add page button below each page (except the last one) */}
                   {pageIndex < pages.length - 1 && (
                     <div className="add-page-section">
                       <div className="add-page-line">
@@ -103,7 +98,6 @@ const DesignTab = ({
               ))
             )}
 
-            {/* Add page button below the last page (only if pages exist) */}
             {pages.length > 0 && (
               <div className="add-page-section">
                 <div className="add-page-line">

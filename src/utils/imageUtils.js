@@ -5,7 +5,6 @@ import {
   getPreviewDimensions,
 } from '../constants.js'
 
-// Load image and get its dimensions
 export const loadImage = (file, settings = null) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -22,12 +21,11 @@ export const loadImage = (file, settings = null) => {
           settings?.imageQuality || 0.9,
         )
 
-        // Calculate initial dimensions - these will be adjusted for uniform height later
         const { width: previewWidth, height: previewHeight } =
           getPreviewDimensions(settings)
         const maxHeight =
-          previewHeight * ((settings?.maxImageHeight || 80) / 100) // Use configurable percentage of page height
-        const maxWidth = previewWidth * ((settings?.maxImageWidth || 90) / 100) // Use configurable percentage of page width
+          previewHeight * ((settings?.maxImageHeight || 80) / 100)
+        const maxWidth = previewWidth * ((settings?.maxImageWidth || 90) / 100)
         const scaleHeight = maxHeight / img.naturalHeight
         const scaleWidth = maxWidth / img.naturalWidth
         const scale = Math.min(scaleHeight, scaleWidth, 1)
@@ -55,7 +53,6 @@ export const loadImage = (file, settings = null) => {
   })
 }
 
-// Process uploaded files and return processed images
 export const processFiles = async (
   files,
   availableImagesLength,
@@ -78,7 +75,7 @@ export const processFiles = async (
       processedImages.push({
         ...imageData,
         id: `img-${Date.now()}-${Math.random()}`,
-        originalIndex: availableImagesLength + processedImages.length, // Track original position
+        originalIndex: availableImagesLength + processedImages.length,
       })
     } catch (err) {
       console.warn(`Failed to load image ${file.name}:`, err)

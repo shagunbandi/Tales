@@ -11,14 +11,11 @@ function App() {
   const settings = DEFAULT_SETTINGS
 
   const {
-    // State
     pages,
     availableImages,
     isProcessing,
     error,
     totalImages,
-
-    // Actions
     handleFiles,
     handleDragEnd,
     addPage,
@@ -31,9 +28,7 @@ function App() {
     setError,
   } = useImageManagement(settings)
 
-  // Add more images option
   const addMoreImages = () => {
-    // Create a temporary file input
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
@@ -52,7 +47,6 @@ function App() {
       <h1 className="app-title">Tales</h1>
       <h2 className="app-subtitle">Your story told in pictures</h2>
 
-      {/* Tab Navigation */}
       <TabNavigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}

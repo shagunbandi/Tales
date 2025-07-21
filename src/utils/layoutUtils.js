@@ -7,12 +7,10 @@ import {
   LAYOUT_CONSTRAINTS,
 } from '../constants.js'
 
-// Get random color from palette
 export const getRandomColor = () => {
   return COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)]
 }
 
-// Convert preview px to PDF mm
 export const previewToMm = (px, settings = null) => {
   const { width: previewWidth } = getPreviewDimensions(settings)
   const pageSize = PAGE_SIZES[settings?.pageSize || 'a4']
@@ -22,7 +20,6 @@ export const previewToMm = (px, settings = null) => {
   return (px / previewWidth) * pageWidth
 }
 
-// Check if an image can fit on the current page with existing images
 export const canImageFitOnPage = (
   existingImages,
   newImage,
@@ -40,7 +37,6 @@ export const canImageFitOnPage = (
   return layout.fits
 }
 
-// Calculate optimal layout for images
 export const calculateOptimalLayout = (
   images,
   availableWidth,
@@ -49,12 +45,10 @@ export const calculateOptimalLayout = (
 ) => {
   if (images.length === 0) return { fits: true, rows: [] }
 
-  // Try different row configurations to find the best fit
   const totalImages = images.length
   let bestLayout = null
 
-  // Try layouts from 1 column up to reasonable maximum (prefer fewer columns for larger images)
-  const maxColumns = Math.min(totalImages, 3) // Allow up to 3 columns but prefer fewer
+  const maxColumns = Math.min(totalImages, 3)
   for (let maxCols = 1; maxCols <= maxColumns; maxCols++) {
     const layout = tryLayout(
       images,
@@ -64,8 +58,7 @@ export const calculateOptimalLayout = (
       imageGap,
     )
     if (layout.fits) {
-      // Prefer layouts with fewer columns (larger images) by weighting efficiency
-      const columnPenalty = maxCols > 2 ? 0.7 : 1 // Penalize 3+ columns
+      const columnPenalty = maxCols > 2 ? 0.7 : 1
       const adjustedEfficiency = layout.efficiency * columnPenalty
 
       if (!bestLayout || adjustedEfficiency > bestLayout.adjustedEfficiency) {
@@ -77,7 +70,6 @@ export const calculateOptimalLayout = (
   return bestLayout || { fits: false, rows: [] }
 }
 
-// Try a specific layout configuration
 export const tryLayout = (
   images,
   maxCols,
@@ -109,7 +101,6 @@ export const tryLayout = (
     }
   }
 
-  // Add the last row
   if (currentRow.length > 0) {
     rows.push({
       images: [...currentRow],
@@ -118,7 +109,6 @@ export const tryLayout = (
     })
   }
 
-  // Calculate total height
   const totalHeight = rows.reduce((sum, row, index) => {
     return sum + row.height + (index > 0 ? imageGap : 0)
   }, 0)
@@ -131,7 +121,6 @@ export const tryLayout = (
   return { fits, rows, efficiency, totalHeight }
 }
 
-// Normalize image heights and calculate new dimensions
 export const normalizeImageHeights = (
   images,
   availableWidth,
@@ -140,14 +129,11 @@ export const normalizeImageHeights = (
 ) => {
   if (images.length <= 1) return images
 
-  // Calculate the optimal uniform height that allows all images to fit
-  const maxAvailableHeight = availableHeight * 0.8 // Use 80% of available height
+  const maxAvailableHeight = availableHeight * 0.8
 
-  // Calculate total width needed if all images had the same height
   let bestHeight = 0
   let bestFit = null
 
-  // Try different heights to find the best fit
   for (
     let testHeight = maxAvailableHeight;
     testHeight > maxAvailableHeight * 0.3;
@@ -168,7 +154,7 @@ export const normalizeImageHeights = (
       })
 
       totalWidth += newWidth
-      if (i > 0) totalWidth += imageGap // Add gaps between images
+      if (i > 0) totalWidth += imageGap
     }
 
     if (totalWidth <= availableWidth) {
@@ -178,10 +164,9 @@ export const normalizeImageHeights = (
     }
   }
 
-  return bestFit || images // Return normalized images or original if no fit found
+  return bestFit || images
 }
 
-// Arrange and center images on a page
 export const arrangeAndCenterImages = (
   images,
   availableWidth,
@@ -189,7 +174,6 @@ export const arrangeAndCenterImages = (
   pageMargin,
   imageGap,
 ) => {
-  // First normalize heights if multiple images
   const normalizedImages = normalizeImageHeights(
     images,
     availableWidth,
@@ -205,7 +189,6 @@ export const arrangeAndCenterImages = (
   )
 
   if (!layout.fits) {
-    // Fallback: arrange in a single row with uniform height
     return arrangeSimpleRowWithUniformHeight(
       normalizedImages,
       availableWidth,
@@ -218,12 +201,10 @@ export const arrangeAndCenterImages = (
   const arrangedImages = []
   let currentY = pageMargin
 
-  // Calculate vertical centering offset
   const totalContentHeight = layout.totalHeight
   const verticalCenterOffset = (availableHeight - totalContentHeight) / 2
 
   for (const row of layout.rows) {
-    // Calculate horizontal centering offset for this row
     const horizontalCenterOffset = (availableWidth - row.width) / 2
 
     let currentX = pageMargin + horizontalCenterOffset
@@ -232,12 +213,10 @@ export const arrangeAndCenterImages = (
     for (let i = 0; i < row.images.length; i++) {
       const image = row.images[i]
 
-      // Add gap before image (except for first image in row)
       if (i > 0) {
         currentX += imageGap
       }
 
-      // All images in normalized set should have same height, so no need for vertical centering in row
       arrangedImages.push({
         ...image,
         x: currentX,
@@ -253,7 +232,6 @@ export const arrangeAndCenterImages = (
   return arrangedImages
 }
 
-// Fallback simple row arrangement with uniform height
 export const arrangeSimpleRowWithUniformHeight = (
   images,
   availableWidth,
@@ -263,15 +241,11 @@ export const arrangeSimpleRowWithUniformHeight = (
 ) => {
   const arrangedImages = []
 
-  // Calculate total width needed
   const totalWidth = images.reduce((sum, img, index) => {
     return sum + img.previewWidth + (index > 0 ? imageGap : 0)
   }, 0)
 
-  // Center horizontally
   const startX = pageMargin + (availableWidth - totalWidth) / 2
-
-  // Center vertically - use the height of first image (they should all be same height)
   const imageHeight = images[0]?.previewHeight || 0
   const startY = pageMargin + (availableHeight - imageHeight) / 2
 
@@ -296,12 +270,10 @@ export const arrangeSimpleRowWithUniformHeight = (
   return arrangedImages
 }
 
-// Auto-arrange images onto pages
 export const autoArrangeImages = (newImages, pages, settings = null) => {
   const arrangedPages = [...pages]
   const remainingImages = []
 
-  // Page layout constants - use settings if available
   const pageMargin = settings?.pageMargin || 20
   const imageGap = settings?.imageGap || 20
   const maxImagesPerPage = settings?.maxImagesPerPage || 5
@@ -314,7 +286,6 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
   let imagesForCurrentPage = []
 
   for (const image of newImages) {
-    // Try to fit image on current page
     const canFitOnPage = canImageFitOnPage(
       imagesForCurrentPage,
       image,
@@ -326,9 +297,7 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
     if (canFitOnPage) {
       imagesForCurrentPage.push(image)
     } else {
-      // Finalize current page if it has images
       if (imagesForCurrentPage.length > 0) {
-        // Ensure we have a page to work with
         while (currentPageIndex >= arrangedPages.length) {
           arrangedPages.push({
             id: `page-${Date.now()}-${currentPageIndex}`,
@@ -337,7 +306,6 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
           })
         }
 
-        // Arrange and center images on current page using new function
         const arrangedImagesOnPage = arrangeImagesOnPage(
           imagesForCurrentPage,
           settings,
@@ -345,17 +313,14 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
         arrangedPages[currentPageIndex].images = arrangedImagesOnPage
 
         currentPageIndex++
-        imagesForCurrentPage = [image] // Start new page with current image
+        imagesForCurrentPage = [image]
       } else {
-        // If even a single image doesn't fit, add to remaining
         remainingImages.push(image)
       }
     }
   }
 
-  // Handle remaining images on the last page
   if (imagesForCurrentPage.length > 0) {
-    // Ensure we have a page to work with
     while (currentPageIndex >= arrangedPages.length) {
       arrangedPages.push({
         id: `page-${Date.now()}-${currentPageIndex}`,
@@ -364,7 +329,6 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
       })
     }
 
-    // Arrange and center images on last page using new function
     const arrangedImagesOnPage = arrangeImagesOnPage(
       imagesForCurrentPage,
       settings,
@@ -375,17 +339,15 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
   return { arrangedPages, remainingImages }
 }
 
-// Find correct position to insert image back based on original index
 export const findCorrectInsertPosition = (availableImages, originalIndex) => {
   for (let i = 0; i < availableImages.length; i++) {
     if (availableImages[i].originalIndex > originalIndex) {
       return i
     }
   }
-  return availableImages.length // Insert at end if no larger index found
+  return availableImages.length
 }
 
-// Arrange images on a page with uniform height and horizontal stacking
 export const arrangeImagesOnPage = (images, settings = null) => {
   if (images.length === 0) return images
 
@@ -403,11 +365,9 @@ export const arrangeImagesOnPage = (images, settings = null) => {
   const availableWidth = previewWidth - pageMargin * 2
   const availableHeight = previewHeight - pageMargin * 2
 
-  // Calculate maximum allowed dimensions
   const maxImageHeight = availableHeight * maxImageHeightRatio
   const maxImageWidth = availableWidth * maxImageWidthRatio
 
-  // If only one image, center it
   if (images.length === 1) {
     const image = images[0]
     const centerX = (availableWidth - image.previewWidth) / 2 + pageMargin
@@ -415,15 +375,12 @@ export const arrangeImagesOnPage = (images, settings = null) => {
     return [{ ...image, x: centerX, y: centerY }]
   }
 
-  // For multiple images, arrange horizontally with uniform height
   const totalWidth =
     images.reduce((sum, img) => sum + img.previewWidth, 0) +
     (images.length - 1) * imageGap
 
-  // Calculate uniform height for all images (limited by maxImageHeight)
   const uniformHeight = Math.min(availableHeight, maxImageHeight)
 
-  // Scale images to uniform height while maintaining aspect ratio
   const scaledImages = images.map((image) => {
     const scale = uniformHeight / image.previewHeight
     const scaledWidth = image.previewWidth * scale
@@ -434,17 +391,13 @@ export const arrangeImagesOnPage = (images, settings = null) => {
     }
   })
 
-  // Calculate total width after scaling
   const scaledTotalWidth =
     scaledImages.reduce((sum, img) => sum + img.previewWidth, 0) +
     (scaledImages.length - 1) * imageGap
 
-  // Check if scaled images fit within width constraints
   const fitsInWidth = scaledTotalWidth <= maxImageWidth
 
-  // If scaled images fit, arrange them horizontally
   if (fitsInWidth) {
-    // Center the group of images horizontally
     const startX = (availableWidth - scaledTotalWidth) / 2 + pageMargin
     let currentX = startX
     const centerY = (availableHeight - uniformHeight) / 2 + pageMargin
@@ -456,21 +409,17 @@ export const arrangeImagesOnPage = (images, settings = null) => {
     })
   }
 
-  // If images don't fit, scale them down proportionally
-  // Use the more restrictive constraint (width or height)
   const widthScaleFactor =
     (maxImageWidth - (images.length - 1) * imageGap) / scaledTotalWidth
   const heightScaleFactor = maxImageHeight / uniformHeight
-  const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor, 1) // Don't scale up
+  const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor, 1)
 
   const finalHeight = uniformHeight * scaleFactor
 
-  // Calculate final total width after scaling
   const finalTotalWidth =
     scaledImages.reduce((sum, img) => sum + img.previewWidth * scaleFactor, 0) +
     (scaledImages.length - 1) * imageGap
 
-  // Center the group of images horizontally
   const startX = (availableWidth - finalTotalWidth) / 2 + pageMargin
   let currentX = startX
   const centerY = (availableHeight - finalHeight) / 2 + pageMargin

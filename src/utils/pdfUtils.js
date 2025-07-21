@@ -2,7 +2,6 @@ import jsPDF from 'jspdf'
 import { A4_WIDTH_MM, A4_HEIGHT_MM, PAGE_SIZES } from '../constants.js'
 import { previewToMm } from './layoutUtils.js'
 
-// Generate PDF from pages
 export const generatePDF = async (pages, settings = null) => {
   if (pages.length === 0) {
     throw new Error('No pages to generate PDF from')
@@ -24,7 +23,6 @@ export const generatePDF = async (pages, settings = null) => {
       pdf.addPage()
     }
 
-    // Set background color
     pdf.setFillColor(page.color.color)
     const pageWidth =
       orientation === 'landscape' ? pageSize.width : pageSize.height
@@ -32,7 +30,6 @@ export const generatePDF = async (pages, settings = null) => {
       orientation === 'landscape' ? pageSize.height : pageSize.width
     pdf.rect(0, 0, pageWidth, pageHeight, 'F')
 
-    // Add images to the page
     for (const image of page.images) {
       try {
         const imgWidth = previewToMm(image.previewWidth, settings)

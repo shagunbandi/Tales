@@ -1,6 +1,6 @@
 import React from 'react'
 
-const TabNavigation = ({ activeTab, setActiveTab, totalImages, step }) => {
+const TabNavigation = ({ activeTab, setActiveTab, totalImages }) => {
   const tabs = [
     { id: 'upload', label: '1. Upload Images', disabled: totalImages > 0 },
     { id: 'design', label: '2. Design Layout', disabled: totalImages === 0 },
