@@ -256,13 +256,13 @@ export const useImageManagement = (settings = null) => {
 
     setIsProcessing(true)
     try {
-      await generatePDF(pages)
+      await generatePDF(pages, settings)
     } catch (err) {
       setError(`Failed to generate PDF: ${err.message}`)
     } finally {
       setIsProcessing(false)
     }
-  }, [pages])
+  }, [pages, settings])
 
   // Count total images across all pages and available
   const totalImages =

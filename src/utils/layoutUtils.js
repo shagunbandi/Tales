@@ -1,4 +1,10 @@
-import { PREVIEW_WIDTH, PREVIEW_HEIGHT, COLOR_PALETTE } from '../constants.js'
+import {
+  PREVIEW_WIDTH,
+  PREVIEW_HEIGHT,
+  COLOR_PALETTE,
+  getPreviewDimensions,
+  PAGE_SIZES,
+} from '../constants.js'
 
 // Get random color from palette
 export const getRandomColor = () => {
@@ -6,7 +12,14 @@ export const getRandomColor = () => {
 }
 
 // Convert preview px to PDF mm
-export const previewToMm = (px) => (px / PREVIEW_WIDTH) * 297 // A4_WIDTH_MM
+export const previewToMm = (px, settings = null) => {
+  const { width: previewWidth } = getPreviewDimensions(settings)
+  const pageSize = PAGE_SIZES[settings?.pageSize || 'a4']
+  const orientation = settings?.orientation || 'landscape'
+  const pageWidth =
+    orientation === 'landscape' ? pageSize.width : pageSize.height
+  return (px / previewWidth) * pageWidth
+}
 
 // Check if an image can fit on the current page with existing images
 export const canImageFitOnPage = (
@@ -291,8 +304,10 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
   const pageMargin = settings?.pageMargin || 20
   const imageGap = settings?.imageGap || 20
   const maxImagesPerPage = settings?.maxImagesPerPage || 5
-  const availableWidth = PREVIEW_WIDTH - pageMargin * 2
-  const availableHeight = PREVIEW_HEIGHT - pageMargin * 2
+  const { width: previewWidth, height: previewHeight } =
+    getPreviewDimensions(settings)
+  const availableWidth = previewWidth - pageMargin * 2
+  const availableHeight = previewHeight - pageMargin * 2
 
   let currentPageIndex = 0
   let imagesForCurrentPage = []
@@ -381,8 +396,10 @@ export const arrangeImagesOnPage = (images, settings = null) => {
 
   const pageMargin = settings?.pageMargin || 20
   const imageGap = settings?.imageGap || 20
-  const availableWidth = PREVIEW_WIDTH - pageMargin * 2
-  const availableHeight = PREVIEW_HEIGHT - pageMargin * 2
+  const { width: previewWidth, height: previewHeight } =
+    getPreviewDimensions(settings)
+  const availableWidth = previewWidth - pageMargin * 2
+  const availableHeight = previewHeight - pageMargin * 2
 
   // If only one image, center it
   if (images.length === 1) {

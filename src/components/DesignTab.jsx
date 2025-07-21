@@ -14,6 +14,7 @@ const DesignTab = ({
   onRemoveAvailableImage,
   onAddMoreImages,
   onGeneratePDF,
+  settings,
 }) => {
   return (
     <div className="design-tab">
@@ -46,6 +47,7 @@ const DesignTab = ({
                 onAddPageBetween={onAddPageBetween}
                 canRemove={pages.length > 1}
                 isLastPage={pageIndex === pages.length - 1}
+                settings={settings}
               />
             ))}
           </div>

@@ -96,6 +96,7 @@ function App() {
             onRemoveAvailableImage={removeAvailableImage}
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}
+            settings={settings}
           />
         )}
       </DragDropContext>

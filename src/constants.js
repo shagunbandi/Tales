@@ -40,6 +40,27 @@ export const PREVIEW_SCALE = 0.8
 export const PREVIEW_WIDTH = 600 * PREVIEW_SCALE
 export const PREVIEW_HEIGHT = (210 / 297) * PREVIEW_WIDTH
 
+// Get preview dimensions based on settings
+export const getPreviewDimensions = (settings) => {
+  const pageSize = PAGE_SIZES[settings?.pageSize || 'a4']
+  const isLandscape = settings?.orientation !== 'portrait'
+
+  let width, height
+  if (isLandscape) {
+    width = pageSize.width
+    height = pageSize.height
+  } else {
+    width = pageSize.height
+    height = pageSize.width
+  }
+
+  // Convert to preview scale
+  const previewWidth = 600 * PREVIEW_SCALE
+  const previewHeight = (height / width) * previewWidth
+
+  return { width: previewWidth, height: previewHeight }
+}
+
 // Supported image formats
 export const SUPPORTED_FORMATS = [
   'image/jpeg',

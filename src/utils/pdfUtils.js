@@ -1,17 +1,20 @@
 import jsPDF from 'jspdf'
-import { A4_WIDTH_MM, A4_HEIGHT_MM } from '../constants.js'
+import { A4_WIDTH_MM, A4_HEIGHT_MM, PAGE_SIZES } from '../constants.js'
 import { previewToMm } from './layoutUtils.js'
 
 // Generate PDF from pages
-export const generatePDF = async (pages) => {
+export const generatePDF = async (pages, settings = null) => {
   if (pages.length === 0) {
     throw new Error('No pages to generate PDF from')
   }
 
+  const pageSize = PAGE_SIZES[settings?.pageSize || 'a4']
+  const orientation = settings?.orientation || 'landscape'
+
   const pdf = new jsPDF({
-    orientation: 'landscape',
+    orientation: orientation,
     unit: 'mm',
-    format: 'a4',
+    format: settings?.pageSize || 'a4',
   })
 
   for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
@@ -23,15 +26,19 @@ export const generatePDF = async (pages) => {
 
     // Set background color
     pdf.setFillColor(page.color.color)
-    pdf.rect(0, 0, A4_WIDTH_MM, A4_HEIGHT_MM, 'F')
+    const pageWidth =
+      orientation === 'landscape' ? pageSize.width : pageSize.height
+    const pageHeight =
+      orientation === 'landscape' ? pageSize.height : pageSize.width
+    pdf.rect(0, 0, pageWidth, pageHeight, 'F')
 
     // Add images to the page
     for (const image of page.images) {
       try {
-        const imgWidth = previewToMm(image.previewWidth)
-        const imgHeight = previewToMm(image.previewHeight)
-        const imgX = previewToMm(image.x)
-        const imgY = previewToMm(image.y)
+        const imgWidth = previewToMm(image.previewWidth, settings)
+        const imgHeight = previewToMm(image.previewHeight, settings)
+        const imgX = previewToMm(image.x, settings)
+        const imgY = previewToMm(image.y, settings)
 
         pdf.addImage(image.src, 'JPEG', imgX, imgY, imgWidth, imgHeight)
       } catch (err) {

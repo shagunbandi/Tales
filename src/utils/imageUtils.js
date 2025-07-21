@@ -2,6 +2,7 @@ import {
   PREVIEW_HEIGHT,
   PREVIEW_WIDTH,
   SUPPORTED_FORMATS,
+  getPreviewDimensions,
 } from '../constants.js'
 
 // Load image and get its dimensions
@@ -22,9 +23,11 @@ export const loadImage = (file, settings = null) => {
         )
 
         // Calculate initial dimensions - these will be adjusted for uniform height later
+        const { width: previewWidth, height: previewHeight } =
+          getPreviewDimensions(settings)
         const maxHeight =
-          PREVIEW_HEIGHT * ((settings?.maxImageHeight || 80) / 100) // Use configurable percentage of page height
-        const maxWidth = PREVIEW_WIDTH * ((settings?.maxImageWidth || 90) / 100) // Use configurable percentage of page width
+          previewHeight * ((settings?.maxImageHeight || 80) / 100) // Use configurable percentage of page height
+        const maxWidth = previewWidth * ((settings?.maxImageWidth || 90) / 100) // Use configurable percentage of page width
         const scaleHeight = maxHeight / img.naturalHeight
         const scaleWidth = maxWidth / img.naturalWidth
         const scale = Math.min(scaleHeight, scaleWidth, 1)

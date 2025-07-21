@@ -1,6 +1,6 @@
 import React from 'react'
 import { Droppable, Draggable } from 'react-beautiful-dnd'
-import { PREVIEW_WIDTH, PREVIEW_HEIGHT } from '../constants.js'
+import { getPreviewDimensions } from '../constants.js'
 
 const PagePreview = ({
   page,
@@ -10,6 +10,7 @@ const PagePreview = ({
   onAddPageBetween,
   canRemove,
   isLastPage,
+  settings,
 }) => {
   return (
     <div className="page-container">
@@ -53,8 +54,8 @@ const PagePreview = ({
             }`}
             style={{
               backgroundColor: page.color.color,
-              width: PREVIEW_WIDTH,
-              height: PREVIEW_HEIGHT,
+              width: getPreviewDimensions(settings).width,
+              height: getPreviewDimensions(settings).height,
             }}
           >
             {page.images.map((image, index) => (
