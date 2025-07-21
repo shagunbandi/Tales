@@ -46,7 +46,8 @@ function App() {
 
   return (
     <div className="app">
-      <h1 className="app-title">Interactive PDF Designer</h1>
+      <h1 className="app-title">Tales</h1>
+      <h2 className="app-subtitle">Your story told in pictures</h2>
 
       {/* Tab Navigation */}
       <TabNavigation
