@@ -20,23 +20,6 @@ export const previewToMm = (px, settings = null) => {
   return (px / previewWidth) * pageWidth
 }
 
-export const canImageFitOnPage = (
-  existingImages,
-  newImage,
-  availableWidth,
-  availableHeight,
-  imageGap,
-) => {
-  const allImages = [...existingImages, newImage]
-  const layout = calculateOptimalLayout(
-    allImages,
-    availableWidth,
-    availableHeight,
-    imageGap,
-  )
-  return layout.fits
-}
-
 export const calculateOptimalLayout = (
   images,
   availableWidth,
@@ -48,7 +31,8 @@ export const calculateOptimalLayout = (
   const totalImages = images.length
   let bestLayout = null
 
-  const maxColumns = Math.min(totalImages, 3)
+  // Try 1 column first, then 2 columns maximum
+  const maxColumns = Math.min(totalImages, 2)
   for (let maxCols = 1; maxCols <= maxColumns; maxCols++) {
     const layout = tryLayout(
       images,
@@ -58,11 +42,14 @@ export const calculateOptimalLayout = (
       imageGap,
     )
     if (layout.fits) {
-      const columnPenalty = maxCols > 2 ? 0.7 : 1
-      const adjustedEfficiency = layout.efficiency * columnPenalty
+      // Simple criteria: prefer layouts with more images per page
+      const imagesPerPage = layout.rows.reduce(
+        (sum, row) => sum + row.images.length,
+        0,
+      )
 
-      if (!bestLayout || adjustedEfficiency > bestLayout.adjustedEfficiency) {
-        bestLayout = { ...layout, adjustedEfficiency }
+      if (!bestLayout || imagesPerPage > bestLayout.imagesPerPage) {
+        bestLayout = { ...layout, imagesPerPage }
       }
     }
   }
@@ -114,11 +101,9 @@ export const tryLayout = (
   }, 0)
 
   const fits = totalHeight <= availableHeight
-  const efficiency = fits
-    ? (rows.length * maxCols) / (totalHeight * availableWidth)
-    : 0
+  const totalImages = rows.reduce((sum, row) => sum + row.images.length, 0)
 
-  return { fits, rows, efficiency, totalHeight }
+  return { fits, rows, totalHeight, totalImages }
 }
 
 export const normalizeImageHeights = (
@@ -285,18 +270,21 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
   let currentPageIndex = 0
   let imagesForCurrentPage = []
 
+  // Try to fit images on the current page
   for (const image of newImages) {
-    const canFitOnPage = canImageFitOnPage(
-      imagesForCurrentPage,
-      image,
+    // Check if adding this image would still fit on the page
+    const testImages = [...imagesForCurrentPage, image]
+    const layout = calculateOptimalLayout(
+      testImages,
       availableWidth,
       availableHeight,
       imageGap,
     )
 
-    if (canFitOnPage) {
+    if (layout.fits && testImages.length <= maxImagesPerPage) {
       imagesForCurrentPage.push(image)
     } else {
+      // Create a new page with the current images
       if (imagesForCurrentPage.length > 0) {
         while (currentPageIndex >= arrangedPages.length) {
           arrangedPages.push({
@@ -315,11 +303,13 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
         currentPageIndex++
         imagesForCurrentPage = [image]
       } else {
+        // If we can't fit even one image, add it to remaining
         remainingImages.push(image)
       }
     }
   }
 
+  // Handle any remaining images on the last page
   if (imagesForCurrentPage.length > 0) {
     while (currentPageIndex >= arrangedPages.length) {
       arrangedPages.push({
