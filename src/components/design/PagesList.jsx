@@ -1,5 +1,5 @@
 import React from 'react'
-import PagePreview from '../PagePreview.jsx'
+import PagePreview from './PagePreview.jsx'
 import AddPageSection from './AddPageSection.jsx'
 
 const PagesList = ({

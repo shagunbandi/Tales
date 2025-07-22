@@ -1,5 +1,5 @@
 import React from 'react'
-import AvailableImages from './AvailableImages.jsx'
+import AvailableImages from './design/AvailableImages.jsx'
 import PagesHeader from './design/PagesHeader.jsx'
 import PagesList from './design/PagesList.jsx'
 import GeneratePDFButton from './design/GeneratePDFButton.jsx'

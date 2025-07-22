@@ -1,6 +1,6 @@
 import React from 'react'
 import { Droppable, Draggable } from 'react-beautiful-dnd'
-import { getPreviewDimensions } from '../constants.js'
+import { getPreviewDimensions } from '../../constants.js'
 
 const PagePreview = ({
   page,
