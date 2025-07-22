@@ -30,7 +30,6 @@ const PagesList = ({
               onChangeColor={onChangePageColor}
               onRemovePage={onRemovePage}
               onAddPageBetween={onAddPageBetween}
-              canRemove={true}
               isLastPage={pageIndex === pages.length - 1}
               settings={settings}
             />

@@ -7,7 +7,6 @@ const PagePreview = ({
   pageIndex,
   onChangeColor,
   onRemovePage,
-  canRemove,
   settings,
 }) => {
   return (
@@ -23,15 +22,14 @@ const PagePreview = ({
           >
             🎨
           </button>
-          {canRemove && (
-            <button
-              className="remove-page-btn"
-              onClick={() => onRemovePage(page.id)}
-              title="Remove page"
-            >
-              ×
-            </button>
-          )}
+
+          <button
+            className="remove-page-btn"
+            onClick={() => onRemovePage(page.id)}
+            title="Remove page"
+          >
+            ×
+          </button>
         </div>
       </div>
 
