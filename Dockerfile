@@ -1,30 +1,28 @@
-# Build stage
-FROM node:18-alpine as build
+# Stage 1: Build the application
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install all dependencies (including dev dependencies needed for build)
 RUN npm ci
 
-# Copy source code
+# Copy the rest of the application code
 COPY . .
 
 # Build the application
 RUN npm run build
 
-# Production stage
+# Stage 2: Create the production image
 FROM nginx:alpine
 
-# Copy built files from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy the build output from the previous stage
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy nginx configuration if it exists
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
+# Expose port 80 (nginx default)
 EXPOSE 80
 
 # Start nginx
