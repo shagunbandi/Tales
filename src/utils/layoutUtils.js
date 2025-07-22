@@ -1,10 +1,9 @@
 import {
-  PREVIEW_WIDTH,
-  PREVIEW_HEIGHT,
   COLOR_PALETTE,
   getPreviewDimensions,
   PAGE_SIZES,
   LAYOUT_CONSTRAINTS,
+  DEFAULT_SETTINGS,
 } from '../constants.js'
 
 export const getRandomColor = () => {
@@ -31,8 +30,7 @@ export const calculateOptimalLayout = (
   const totalImages = images.length
   let bestLayout = null
 
-  // Try 1 column first, then 2 columns maximum
-  const maxColumns = Math.min(totalImages, 2)
+  const maxColumns = Math.min(totalImages, LAYOUT_CONSTRAINTS.MAX_COLUMNS)
   for (let maxCols = 1; maxCols <= maxColumns; maxCols++) {
     const layout = tryLayout(
       images,
@@ -259,9 +257,10 @@ export const autoArrangeImages = (newImages, pages, settings = null) => {
   const arrangedPages = [...pages]
   const remainingImages = []
 
-  const pageMargin = settings?.pageMargin || 20
-  const imageGap = settings?.imageGap || 20
-  const maxImagesPerPage = settings?.maxImagesPerPage || 5
+  const pageMargin = settings?.pageMargin || DEFAULT_SETTINGS.pageMargin
+  const imageGap = settings?.imageGap || DEFAULT_SETTINGS.imageGap
+  const maxImagesPerPage =
+    settings?.maxImagesPerPage || DEFAULT_SETTINGS.maxImagesPerPage
   const { width: previewWidth, height: previewHeight } =
     getPreviewDimensions(settings)
   const availableWidth = previewWidth - pageMargin * 2
