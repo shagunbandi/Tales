@@ -60,7 +60,6 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
                   )
                 }
                 min="1"
-                max="6"
               />
             </div>
 
@@ -77,7 +76,6 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
                   )
                 }
                 min="1"
-                max="4"
               />
             </div>
 
@@ -94,7 +92,6 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
                   )
                 }
                 min="1"
-                max="6"
               />
             </div>
 
@@ -111,7 +108,6 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
                   )
                 }
                 min="1"
-                max="4"
               />
             </div>
 

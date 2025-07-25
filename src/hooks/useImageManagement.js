@@ -67,13 +67,11 @@ export const useImageManagement = (settings = null) => {
               const imageGap = settings?.imageGap
               const { width: previewWidth, height: previewHeight } =
                 getPreviewDimensions(settings)
-              const availableWidth = previewWidth - pageMargin * 2
-              const availableHeight = previewHeight - pageMargin * 2
 
               const arrangedImages = arrangeAndCenterImages(
                 newImages,
-                availableWidth,
-                availableHeight,
+                previewWidth,
+                previewHeight,
                 pageMargin,
                 imageGap,
                 settings,
@@ -100,13 +98,11 @@ export const useImageManagement = (settings = null) => {
               const imageGap = settings?.imageGap
               const { width: previewWidth, height: previewHeight } =
                 getPreviewDimensions(settings)
-              const availableWidth = previewWidth - pageMargin * 2
-              const availableHeight = previewHeight - pageMargin * 2
 
               const arrangedImages = arrangeAndCenterImages(
                 newImages,
-                availableWidth,
-                availableHeight,
+                previewWidth,
+                previewHeight,
                 pageMargin,
                 imageGap,
                 settings,
