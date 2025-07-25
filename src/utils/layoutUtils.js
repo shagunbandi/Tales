@@ -124,7 +124,17 @@ export function arrangeAndCenterImages(
   settings,
   sameHeight = true,
 ) {
+  console.log('🚀 arrangeAndCenterImages - Starting layout calculation:')
+  console.log('  - Input images:', images.length)
+  console.log('  - Page dimensions:', {
+    width: totalWidth,
+    height: totalHeight,
+  })
+  console.log('  - Settings:', settings)
+  console.log('  - Same height:', sameHeight)
+
   if (!images || images.length === 0) {
+    console.log('  - No images to arrange, returning empty array')
     return []
   }
 
@@ -133,9 +143,18 @@ export function arrangeAndCenterImages(
   const minImagesPerRow = settings.minImagesPerRow
   const minNumberOfRows = settings.minNumberOfRows
 
+  console.log('  - Layout constraints:', {
+    maxImagesPerRow,
+    maxNumberOfRows,
+    minImagesPerRow,
+    minNumberOfRows,
+  })
+
   // Calculate usable area (excluding margins)
   const usableWidth = totalWidth - 2 * pageMargin
   const usableHeight = totalHeight - 2 * pageMargin
+
+  console.log('  - Usable area:', { width: usableWidth, height: usableHeight })
 
   // Generate all possible combinations of rows and images per row
   const combinations = generateLayoutCombinations(
@@ -145,6 +164,8 @@ export function arrangeAndCenterImages(
     minImagesPerRow,
     maxImagesPerRow,
   )
+
+  console.log('  - Generated combinations:', combinations.length)
 
   let bestLayout = null
   let maxAreaCovered = 0
@@ -166,14 +187,26 @@ export function arrangeAndCenterImages(
       usableHeight,
     )
 
+    console.log(
+      `  - Combination ${combination.layout}: area covered = ${(
+        areaCovered * 100
+      ).toFixed(1)}%`,
+    )
+
     if (areaCovered > maxAreaCovered) {
       maxAreaCovered = areaCovered
       bestLayout = layoutResult
     }
   }
 
+  console.log(
+    '  - Best layout area coverage:',
+    (maxAreaCovered * 100).toFixed(1) + '%',
+  )
+
   // If no valid layout found, use a simple single-row layout
   if (!bestLayout) {
+    console.log('  - No valid layout found, using single-row fallback')
     return arrangeImagesInSingleRow(
       images,
       usableWidth,
@@ -184,13 +217,16 @@ export function arrangeAndCenterImages(
   }
 
   // Apply the best layout with proper positioning
-  return applyLayoutWithPositioning(
+  const finalResult = applyLayoutWithPositioning(
     bestLayout,
     pageMargin,
     imageGap,
     totalWidth,
     totalHeight,
   )
+
+  console.log('  - Final result:', finalResult.length, 'images positioned')
+  return finalResult
 }
 
 /**
@@ -314,6 +350,10 @@ function calculateLayoutForCombination(
   const result = []
   let imageIndex = 0
 
+  console.log(
+    `  📐 calculateLayoutForCombination - Layout: ${layout.join('x')}`,
+  )
+
   for (let rowIndex = 0; rowIndex < layout.length; rowIndex++) {
     const imagesInRow = layout[rowIndex]
 
@@ -329,6 +369,8 @@ function calculateLayoutForCombination(
 
     if (rowImages.length === 0) continue
 
+    console.log(`    Row ${rowIndex}: ${rowImages.length} images`)
+
     // Calculate dimensions for this row
     let rowHeight, imageWidths
 
@@ -338,6 +380,8 @@ function calculateLayoutForCombination(
       const totalGapsBetweenRows = imageGap * (layout.length - 1)
       const availableHeightForImages = usableHeight - totalGapsBetweenRows
       rowHeight = availableHeightForImages / layout.length
+
+      console.log(`    Same height mode - Row height: ${rowHeight.toFixed(1)}`)
 
       // Calculate total width needed for all images at this height
       let totalWidthNeeded = 0
@@ -353,10 +397,19 @@ function calculateLayoutForCombination(
       // Add gaps
       totalWidthNeeded += imageGap * (rowImages.length - 1)
 
+      console.log(
+        `    Total width needed: ${totalWidthNeeded.toFixed(
+          1,
+        )} (usable: ${usableWidth})`,
+      )
+
       // If total width exceeds available width, scale down proportionally
       if (totalWidthNeeded > usableWidth) {
         const scaleFactor = usableWidth / totalWidthNeeded
         rowHeight *= scaleFactor
+
+        console.log(`    Scaling down by factor: ${scaleFactor.toFixed(3)}`)
+        console.log(`    New row height: ${rowHeight.toFixed(1)}`)
 
         // Recalculate widths with new height
         imageWidths = []
@@ -372,6 +425,12 @@ function calculateLayoutForCombination(
         (usableWidth - imageGap * (imagesInRow - 1)) / imagesInRow
       rowHeight = imageWidth
       imageWidths = Array(rowImages.length).fill(imageWidth)
+
+      console.log(
+        `    Individual aspect ratio mode - Image width: ${imageWidth.toFixed(
+          1,
+        )}`,
+      )
     }
 
     // Assign dimensions to images
@@ -381,6 +440,12 @@ function calculateLayoutForCombination(
       image.previewHeight = rowHeight
       image.rowIndex = rowIndex
       image.colIndex = colIndex
+
+      console.log(
+        `    Image ${image.originalIndex}: ${image.previewWidth.toFixed(
+          1,
+        )}x${image.previewHeight.toFixed(1)}`,
+      )
 
       result.push(image)
       imageIndex++
@@ -434,9 +499,32 @@ function applyLayoutWithPositioning(
   totalWidth,
   totalHeight,
 ) {
+  console.log('🔍 applyLayoutWithPositioning - Debug Info:')
+  console.log('  - Total images:', layoutImages.length)
+  console.log('  - Page dimensions:', {
+    width: totalWidth,
+    height: totalHeight,
+  })
+  console.log('  - Page margin:', pageMargin)
+  console.log('  - Image gap:', imageGap)
+
   // Calculate consistent row height for all rows
   // TODO: SHAGUN try with number of rows logic
   const maxRowHeight = Math.max(...layoutImages.map((img) => img.previewHeight))
+  console.log('  - Max row height:', maxRowHeight)
+
+  // Calculate total number of rows for vertical centering
+  const maxRowIndex = Math.max(...layoutImages.map((img) => img.rowIndex))
+  const totalRows = maxRowIndex + 1
+  const totalRowsHeight = totalRows * maxRowHeight + (totalRows - 1) * imageGap
+  const usableHeight = totalHeight - 2 * pageMargin
+  const verticalOffset = (usableHeight - totalRowsHeight) / 2
+
+  console.log('  - Max row index:', maxRowIndex)
+  console.log('  - Total rows:', totalRows)
+  console.log('  - Total rows height:', totalRowsHeight)
+  console.log('  - Usable height:', usableHeight)
+  console.log('  - Vertical offset:', verticalOffset)
 
   const result = []
   let currentRow = 0
@@ -456,6 +544,7 @@ function applyLayoutWithPositioning(
             totalWidth,
             totalHeight,
             maxRowHeight,
+            verticalOffset,
           ),
         )
       }
@@ -476,10 +565,12 @@ function applyLayoutWithPositioning(
         totalWidth,
         totalHeight,
         maxRowHeight,
+        verticalOffset,
       ),
     )
   }
 
+  console.log('  - Final positioned images:', result.length)
   return result
 }
 
@@ -500,7 +591,19 @@ function positionImagesInRow(
   totalWidth,
   totalHeight,
   consistentRowHeight,
+  verticalOffset,
 ) {
+  console.log(`🔍 positionImagesInRow - Row ${rowIndex}:`)
+  console.log(`  - Images in row:`, rowImages.length)
+  console.log(
+    `  - Row images:`,
+    rowImages.map((img) => ({
+      width: img.previewWidth,
+      height: img.previewHeight,
+      originalIndex: img.originalIndex,
+    })),
+  )
+
   const result = []
 
   // Calculate total width of all images in this row plus gaps
@@ -509,6 +612,8 @@ function positionImagesInRow(
     totalRowWidth += image.previewWidth
   }
   totalRowWidth += imageGap * (rowImages.length - 1)
+
+  console.log(`  - Total row width:`, totalRowWidth)
 
   // TODO: SHAGUN: check if this is correct I think we can simplify this
   // For single image, center it within the total page width
@@ -520,15 +625,22 @@ function positionImagesInRow(
     currentX = (totalWidth - totalRowWidth) / 2
   }
 
+  console.log(`  - Starting X position:`, currentX)
+
   // Calculate vertical positioning for the row
   const rowHeight = rowImages[0].previewHeight
 
+  console.log(`  - Row height:`, rowHeight)
+  console.log(`  - Vertical offset:`, verticalOffset)
+
   let rowY
 
-  // Use consistent row-based positioning for all rows
-  // Use the consistent row height for spacing calculations
+  // Center all rows vertically within the page using the pre-calculated offset
   const previousRowsHeight = rowIndex * (consistentRowHeight + imageGap)
-  rowY = pageMargin + previousRowsHeight
+  rowY = pageMargin + verticalOffset + previousRowsHeight
+
+  console.log(`  - Previous rows height:`, previousRowsHeight)
+  console.log(`  - Final row Y position:`, rowY)
 
   for (const image of rowImages) {
     const finalImage = {
@@ -537,6 +649,10 @@ function positionImagesInRow(
       y: rowY,
     }
 
+    console.log(`  - Image ${image.originalIndex} positioned at:`, {
+      x: currentX,
+      y: rowY,
+    })
     result.push(finalImage)
     currentX += image.previewWidth + imageGap
   }
