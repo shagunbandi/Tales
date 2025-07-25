@@ -112,7 +112,7 @@ export function findCorrectInsertPosition(availableImages, originalIndex) {
  * @param {number} availableHeight - Available height for images
  * @param {number} pageMargin - Page margin
  * @param {number} imageGap - Gap between images
- * @param {Object} settings - Layout settings including imagesPerRow
+ * @param {Object} settings - Layout settings including maxImagesPerRow
  * @returns {Array} Array of images with updated positions and dimensions
  */
 export function arrangeAndCenterImages(

@@ -48,30 +48,16 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
             </div>
 
             <div className="setting-group">
-              <label htmlFor="maxImagesPerPage">Max Images Per Page:</label>
+              <label htmlFor="maxImagesPerRow">Max Images Per Row:</label>
               <input
                 type="number"
-                id="maxImagesPerPage"
-                value={settings.maxImagesPerPage}
+                id="maxImagesPerRow"
+                value={settings.maxImagesPerRow}
                 onChange={(e) =>
                   handleSettingChange(
-                    'maxImagesPerPage',
+                    'maxImagesPerRow',
                     parseInt(e.target.value),
                   )
-                }
-                min="1"
-                max="12"
-              />
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="imagesPerRow">Images Per Row:</label>
-              <input
-                type="number"
-                id="imagesPerRow"
-                value={settings.imagesPerRow}
-                onChange={(e) =>
-                  handleSettingChange('imagesPerRow', parseInt(e.target.value))
                 }
                 min="1"
                 max="6"
@@ -79,13 +65,50 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
             </div>
 
             <div className="setting-group">
-              <label htmlFor="numberOfRows">Number of Rows:</label>
+              <label htmlFor="maxNumberOfRows">Max Number of Rows:</label>
               <input
                 type="number"
-                id="numberOfRows"
-                value={settings.numberOfRows}
+                id="maxNumberOfRows"
+                value={settings.maxNumberOfRows}
                 onChange={(e) =>
-                  handleSettingChange('numberOfRows', parseInt(e.target.value))
+                  handleSettingChange(
+                    'maxNumberOfRows',
+                    parseInt(e.target.value),
+                  )
+                }
+                min="1"
+                max="4"
+              />
+            </div>
+
+            <div className="setting-group">
+              <label htmlFor="minImagesPerRow">Min Images Per Row:</label>
+              <input
+                type="number"
+                id="minImagesPerRow"
+                value={settings.minImagesPerRow}
+                onChange={(e) =>
+                  handleSettingChange(
+                    'minImagesPerRow',
+                    parseInt(e.target.value),
+                  )
+                }
+                min="1"
+                max="6"
+              />
+            </div>
+
+            <div className="setting-group">
+              <label htmlFor="minNumberOfRows">Min Number of Rows:</label>
+              <input
+                type="number"
+                id="minNumberOfRows"
+                value={settings.minNumberOfRows}
+                onChange={(e) =>
+                  handleSettingChange(
+                    'minNumberOfRows',
+                    parseInt(e.target.value),
+                  )
                 }
                 min="1"
                 max="4"
