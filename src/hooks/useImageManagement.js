@@ -35,7 +35,7 @@ export const useImageManagement = (settings = null) => {
         setIsProcessing(false)
       }
     },
-    [availableImages.length],
+    [availableImages.length, settings],
   )
 
   const handleDragEnd = useCallback(
@@ -229,7 +229,7 @@ export const useImageManagement = (settings = null) => {
     try {
       const { arrangedPages, remainingImages } = autoArrangeImages(
         availableImages,
-        [],
+        pages,
         settings,
       )
 
@@ -240,7 +240,7 @@ export const useImageManagement = (settings = null) => {
     } finally {
       setIsProcessing(false)
     }
-  }, [availableImages, pages])
+  }, [availableImages, pages, settings])
 
   const handleGeneratePDF = useCallback(async () => {
     if (pages.length === 0) return

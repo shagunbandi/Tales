@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS } from './constants.js'
 import TabNavigation from './components/TabNavigation.jsx'
 import UploadTab from './components/UploadTab.jsx'
 import DesignTab from './components/DesignTab.jsx'
+import SettingsTab from './components/SettingsTab.jsx'
 
 function App() {
   const [activeTab, setActiveTab] = useState('upload')
@@ -42,6 +43,17 @@ function App() {
     input.click()
   }
 
+  // Redirect to settings when images are uploaded
+  React.useEffect(() => {
+    if (totalImages > 0 && activeTab === 'upload') {
+      setActiveTab('settings')
+    }
+  }, [totalImages, activeTab])
+
+  const handleNextToDesign = () => {
+    setActiveTab('design')
+  }
+
   return (
     <div className="app">
       <h1 className="app-title">Tales</h1>
@@ -60,6 +72,14 @@ function App() {
             isProcessing={isProcessing}
             totalImages={totalImages}
             setActiveTab={setActiveTab}
+          />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsTab
+            settings={settings}
+            onSettingsChange={setSettings}
+            onNext={handleNextToDesign}
           />
         )}
 

@@ -35,8 +35,6 @@ const DesignTab = ({
             isProcessing={isProcessing}
             availableImages={availableImages}
             onAutoArrange={onAutoArrange}
-            settings={settings}
-            onSettingsChange={onSettingsChange}
           />
 
           <PagesList
