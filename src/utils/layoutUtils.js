@@ -1,3 +1,5 @@
+import { COLOR_PALETTE } from '../constants.js'
+
 /**
  * Layout utility functions for image arrangement and page management
  */
@@ -16,7 +18,10 @@ export function previewToMm(previewValue, settings) {
  * Generates a random color from the color palette
  * @returns {Object} Color object with color property
  */
-export function getRandomColor() {}
+export function getRandomColor() {
+  const randomIndex = Math.floor(Math.random() * COLOR_PALETTE.length)
+  return COLOR_PALETTE[randomIndex]
+}
 
 /**
  * Automatically arranges images across pages using optimal layout algorithms

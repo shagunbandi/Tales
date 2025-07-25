@@ -8,7 +8,7 @@ import DesignTab from './components/DesignTab.jsx'
 
 function App() {
   const [activeTab, setActiveTab] = useState('upload')
-  const settings = DEFAULT_SETTINGS
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
 
   const {
     pages,
@@ -78,6 +78,7 @@ function App() {
             onGeneratePDF={handleGeneratePDF}
             onAutoArrange={autoArrangeImagesToPages}
             settings={settings}
+            onSettingsChange={setSettings}
           />
         )}
       </DragDropContext>

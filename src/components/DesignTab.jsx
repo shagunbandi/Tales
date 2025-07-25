@@ -18,6 +18,7 @@ const DesignTab = ({
   onGeneratePDF,
   onAutoArrange,
   settings,
+  onSettingsChange,
 }) => {
   return (
     <div className="design-tab">
@@ -34,6 +35,8 @@ const DesignTab = ({
             isProcessing={isProcessing}
             availableImages={availableImages}
             onAutoArrange={onAutoArrange}
+            settings={settings}
+            onSettingsChange={onSettingsChange}
           />
 
           <PagesList
