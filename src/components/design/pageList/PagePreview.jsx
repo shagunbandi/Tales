@@ -1,7 +1,7 @@
 import React from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
-import { Button, Badge } from "flowbite-react";
-import { HiTrash } from "react-icons/hi";
+import { Button } from "flowbite-react";
+import { HiTrash, HiColorSwatch } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
 
 const PagePreview = ({
@@ -23,63 +23,65 @@ const PagePreview = ({
   const imageCount = page.images.length;
 
   return (
-    <div className="rounded-lg bg-white p-3 shadow-md transition-shadow hover:shadow-lg">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Badge pill color="light" size="sm">
+    <div className="mb-6">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-700">
             Page {pageIndex + 1}
-          </Badge>
-          <Badge pill color="success" size="sm">
+          </span>
+          <span className="text-xs text-gray-500">
             {imageCount} {imageCount === 1 ? "image" : "images"}
-          </Badge>
+          </span>
         </div>
-        <div className="flex items-center gap-1">
-          <Badge
-            pill
-            color="purple"
-            size="sm"
+        <div className="flex gap-2">
+          <Button
+            size="xs"
+            color="gray"
             onClick={() => onChangeColor(page.id)}
-            className="cursor-pointer"
+            className="flex items-center gap-1"
           >
-            Change color
-          </Badge>
-          <Badge
-            pill
+            <HiColorSwatch className="h-3 w-3" />
+            Color
+          </Button>
+          <Button
+            size="xs"
             color="red"
-            size="sm"
             onClick={() => onRemovePage(page.id)}
-            className="cursor-pointer"
+            className="flex items-center gap-1"
           >
-            Remove Page
-          </Badge>
+            <HiTrash className="h-3 w-3" />
+            Remove
+          </Button>
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <div
-          ref={setDroppableRef}
-          className={`relative rounded border-2 border-dashed ${
-            isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
-          }`}
-          style={{
-            backgroundColor: page.color.color,
-            width: previewDimensions.width,
-            height: previewDimensions.height,
-          }}
-        >
-          {page.images.map((image, index) => (
-            <DraggablePageImage
-              key={`${page.id}-${image.id}`}
-              image={image}
-              pageId={page.id}
-              index={index}
-            />
-          ))}
-          {page.images.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
-              Drag images here
-            </div>
-          )}
+      <div className="border-t border-gray-200 pt-4">
+        <div className="flex justify-center">
+          <div
+            ref={setDroppableRef}
+            className={`relative rounded border-2 border-dashed ${
+              isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
+            }`}
+            style={{
+              backgroundColor: page.color.color,
+              width: previewDimensions.width,
+              height: previewDimensions.height,
+            }}
+          >
+            {page.images.map((image, index) => (
+              <DraggablePageImage
+                key={`${page.id}-${image.id}`}
+                image={image}
+                pageId={page.id}
+                index={index}
+              />
+            ))}
+            {page.images.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
+                Drag images here
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
