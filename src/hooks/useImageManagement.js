@@ -4,10 +4,14 @@ import {
   autoArrangeImages,
   getRandomColor,
   findCorrectInsertPosition,
-  arrangeImagesOnPage,
+  arrangeAndCenterImages,
 } from '../utils/layoutUtils.js'
 import { generatePDF } from '../utils/pdfUtils.js'
-import { COLOR_PALETTE } from '../constants.js'
+import {
+  COLOR_PALETTE,
+  getPreviewDimensions,
+  DEFAULT_SETTINGS,
+} from '../constants.js'
 
 export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([
@@ -61,7 +65,23 @@ export const useImageManagement = (settings = null) => {
             if (page.id === pageId) {
               const newImages = [...page.images]
               newImages.splice(destination.index, 0, imageToMove)
-              const arrangedImages = arrangeImagesOnPage(newImages, settings)
+
+              // Use arrangeAndCenterImages for multi-row layout
+              const pageMargin =
+                settings?.pageMargin || DEFAULT_SETTINGS.pageMargin
+              const imageGap = settings?.imageGap || DEFAULT_SETTINGS.imageGap
+              const { width: previewWidth, height: previewHeight } =
+                getPreviewDimensions(settings)
+              const availableWidth = previewWidth - pageMargin * 2
+              const availableHeight = previewHeight - pageMargin * 2
+
+              const arrangedImages = arrangeAndCenterImages(
+                newImages,
+                availableWidth,
+                availableHeight,
+                pageMargin,
+                imageGap,
+              )
               return { ...page, images: arrangedImages }
             }
             return page
@@ -78,7 +98,23 @@ export const useImageManagement = (settings = null) => {
               const newImages = [...page.images]
               const [moved] = newImages.splice(source.index, 1)
               newImages.splice(destination.index, 0, moved)
-              const arrangedImages = arrangeImagesOnPage(newImages, settings)
+
+              // Use arrangeAndCenterImages for multi-row layout
+              const pageMargin =
+                settings?.pageMargin || DEFAULT_SETTINGS.pageMargin
+              const imageGap = settings?.imageGap || DEFAULT_SETTINGS.imageGap
+              const { width: previewWidth, height: previewHeight } =
+                getPreviewDimensions(settings)
+              const availableWidth = previewWidth - pageMargin * 2
+              const availableHeight = previewHeight - pageMargin * 2
+
+              const arrangedImages = arrangeAndCenterImages(
+                newImages,
+                availableWidth,
+                availableHeight,
+                pageMargin,
+                imageGap,
+              )
               return { ...page, images: arrangedImages }
             }
             return page
@@ -120,7 +156,7 @@ export const useImageManagement = (settings = null) => {
         )
       }
     },
-    [availableImages, pages],
+    [availableImages, pages, settings],
   )
 
   const addPage = useCallback(() => {

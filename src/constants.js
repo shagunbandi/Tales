@@ -20,14 +20,16 @@ export const LAYOUT_CONSTRAINTS = {
   MAX_IMAGE_WIDTH_RATIO: 0.9,
   IMAGE_GAP_RATIO: 0.5,
   MAX_COLUMNS: 2,
+  IMAGES_PER_ROW: 3,
+  NUMBER_OF_ROWS: 2,
 }
 
 export const DEFAULT_SETTINGS = {
   pageSize: 'a4',
   orientation: 'landscape',
   pageMargin: 20,
-  imageGap: 20,
-  maxImagesPerPage: 5,
+  imageGap: 10,
+  maxImagesPerPage: 6,
   imageQuality: 0.9,
   maxImageHeight: 80,
   maxImageWidth: 90,
