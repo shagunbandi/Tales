@@ -1,5 +1,7 @@
 import React from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { Button, Badge } from "flowbite-react";
+import { HiTrash } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
 
 const PagePreview = ({
@@ -17,52 +19,55 @@ const PagePreview = ({
     },
   });
 
-  return (
-    <div className="page-container">
-      <div className="page-header">
-        <span>Page {pageIndex + 1}</span>
-        <div className="page-controls">
-          <button
-            className="color-btn"
-            style={{ backgroundColor: page.color.color }}
-            onClick={() => onChangeColor(page.id)}
-            title="Change background color"
-          >
-            🎨
-          </button>
+  const previewDimensions = getPreviewDimensions(settings);
+  const imageCount = page.images.length;
 
-          <button
-            className="remove-page-btn"
-            onClick={() => onRemovePage(page.id)}
-            title="Remove page"
-          >
-            ×
-          </button>
+  return (
+    <div className="rounded-lg p-3 bg-white shadow-md hover:shadow-lg transition-shadow">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Badge pill color="light" size="sm">Page {pageIndex + 1}</Badge>
+          <Badge pill color="success" size="sm">
+            {imageCount} {imageCount === 1 ? 'image' : 'images'}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-1">
+          <Badge pill color="purple" size="sm" onClick={() => onChangeColor(page.id)} className="cursor-pointer">
+            Change color
+          </Badge>
+          <Badge pill color="red" size="sm" onClick={() => onRemovePage(page.id)} className="cursor-pointer">
+            Remove Page
+          </Badge>
+
         </div>
       </div>
 
-      <div
-        ref={setDroppableRef}
-        className={`page-preview ${isOver ? "drag-over" : ""}`}
-        style={{
-          backgroundColor: page.color.color,
-          width: getPreviewDimensions(settings).width,
-          height: getPreviewDimensions(settings).height,
-        }}
-      >
-        {page.images.map((image, index) => (
-          <DraggablePageImage
-            key={`${page.id}-${image.id}`}
-            image={image}
-            pageId={page.id}
-            index={index}
-          />
-        ))}
-        {page.images.length === 0 && (
-          <div className="empty-page">
-            Drag images here to add them to this page
-          </div>
-        )}
+      <div className="flex justify-center">
+        <div
+          ref={setDroppableRef}
+          className={`border-2 border-dashed rounded relative ${
+            isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
+          }`}
+          style={{
+            backgroundColor: page.color.color,
+            width: previewDimensions.width,
+            height: previewDimensions.height,
+          }}
+        >
+          {page.images.map((image, index) => (
+            <DraggablePageImage
+              key={`${page.id}-${image.id}`}
+              image={image}
+              pageId={page.id}
+              index={index}
+            />
+          ))}
+          {page.images.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
+              Drag images here
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -96,10 +101,14 @@ const DraggablePageImage = ({ image, pageId, index }) => {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`page-image ${isDragging ? "dragging" : ""}`}
+      className={`absolute cursor-move ${isDragging ? "opacity-50 z-50" : ""}`}
       style={style}
     >
-      <img src={image.src} alt={image.file.name} />
+      <img 
+        src={image.src} 
+        alt={image.file.name} 
+        className="w-full h-full object-cover rounded"
+      />
     </div>
   );
 };

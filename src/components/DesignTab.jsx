@@ -21,16 +21,20 @@ const DesignTab = ({
   onSettingsChange,
 }) => {
   return (
-    <div className="design-tab">
-      <div className="layout-container">
-        <AvailableImages
-          availableImages={availableImages}
-          removeAvailableImage={onRemoveAvailableImage}
-          totalImages={totalImages}
-          onAddMoreImages={onAddMoreImages}
-        />
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sidebar: Available Images */}
+        <div className="lg:w-1/3">
+          <AvailableImages
+            availableImages={availableImages}
+            removeAvailableImage={onRemoveAvailableImage}
+            totalImages={totalImages}
+            onAddMoreImages={onAddMoreImages}
+          />
+        </div>
 
-        <div className="pages-container">
+        {/* Main: Pages Design & PDF Button */}
+        <div className="lg:w-2/3 space-y-6">
           <PagesHeader
             isProcessing={isProcessing}
             availableImages={availableImages}

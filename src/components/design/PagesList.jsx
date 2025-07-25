@@ -11,14 +11,14 @@ const PagesList = ({
   settings,
 }) => {
   return (
-    <div className="pages-list">
+    <div className="space-y-1">
       <AddPageSection
         onAddPage={() => onAddPageBetween("start")}
         title="Add page at the beginning"
       />
 
       {pages.length === 0 ? (
-        <div className="no-pages-message">
+        <div className="text-center text-gray-500 py-8 border rounded bg-gray-50">
           <p>No pages yet. Add a page to get started!</p>
         </div>
       ) : (
@@ -33,7 +33,6 @@ const PagesList = ({
               isLastPage={pageIndex === pages.length - 1}
               settings={settings}
             />
-
             {pageIndex < pages.length - 1 && (
               <AddPageSection
                 onAddPage={() => onAddPageBetween(page.id)}

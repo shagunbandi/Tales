@@ -15,14 +15,21 @@ const AvailableImages = ({
   });
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        <h3>Available Images</h3>
-        <button className="btn btn-small" onClick={onAddMoreImages}>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-800">Available Images</h3>
+        <button
+          onClick={onAddMoreImages}
+          className="px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
+        >
           + Add More
         </button>
       </div>
-      <div ref={setDroppableRef} className="available-images">
+
+      <div
+        ref={setDroppableRef}
+        className="grid grid-cols-2 sm:grid-cols-3 gap-4 border rounded p-4 min-h-[100px] bg-gray-50"
+      >
         {availableImages.map((image, index) => (
           <DraggableImage
             key={image.id}
@@ -31,16 +38,20 @@ const AvailableImages = ({
             onRemove={() => removeAvailableImage(index)}
           />
         ))}
+
         {availableImages.length === 0 && totalImages === 0 && (
-          <div className="no-images">
+          <div className="col-span-full text-sm text-gray-500 text-center">
             No images available. Upload some images first!
           </div>
         )}
+
         {availableImages.length === 0 && totalImages > 0 && (
-          <div className="no-images">
-            All images are arranged on pages.
-            <br />
-            <button className="btn btn-small" onClick={onAddMoreImages}>
+          <div className="col-span-full text-center space-y-2">
+            <p className="text-sm text-gray-500">All images are arranged on pages.</p>
+            <button
+              onClick={onAddMoreImages}
+              className="px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
+            >
               Add More Images
             </button>
           </div>
@@ -72,12 +83,24 @@ const DraggableImage = ({ image, index, onRemove }) => {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`available-image ${isDragging ? "dragging" : ""}`}
       style={style}
+      className={`relative border rounded overflow-hidden bg-white shadow-sm ${
+        isDragging ? "opacity-50 ring-2 ring-blue-400" : ""
+      }`}
     >
-      <img src={image.src} alt={image.file.name} />
-      <div className="image-name">{image.file.name}</div>
-      <button className="remove-btn" onClick={onRemove}>
+      <img
+        src={image.src}
+        alt={image.file.name}
+        className="w-full h-24 object-cover"
+      />
+      <div className="text-xs text-gray-600 truncate px-2 py-1">
+        {image.file.name}
+      </div>
+      <button
+        onClick={onRemove}
+        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+        title="Remove"
+      >
         ×
       </button>
     </div>
