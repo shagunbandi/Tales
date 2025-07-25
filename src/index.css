@@ -95,6 +95,10 @@ body {
   padding: 20px;
 }
 
+.settings-form {
+  width: 100%;
+}
+
 .settings-container h3 {
   color: #2c3e50;
   font-size: 1.5rem;
@@ -144,6 +148,31 @@ body {
 
 .setting-group input:hover {
   border-color: #3498db;
+}
+
+.setting-group input.error {
+  border-color: #e74c3c;
+  background-color: #fdf2f2;
+}
+
+.setting-group input.error:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.validation-summary {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  font-weight: 500;
+  text-align: center;
 }
 
 .setting-group small {

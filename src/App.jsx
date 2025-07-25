@@ -29,6 +29,80 @@ function App() {
     setError,
   } = useImageManagement(settings)
 
+  // Validation function to check if settings are valid
+  const validateSettings = () => {
+    const errors = {}
+
+    // Helper function to check if value is valid number
+    const isValidNumber = (value, min, max) => {
+      return !isNaN(value) && value !== '' && value >= min && value <= max
+    }
+
+    // Page margin validation
+    if (!isValidNumber(settings.pageMargin, 5, 50)) {
+      errors.pageMargin = 'Page margin must be between 5 and 50 pixels'
+    }
+
+    // Image gap validation
+    if (!isValidNumber(settings.imageGap, 0, 30)) {
+      errors.imageGap = 'Image gap must be between 0 and 30 pixels'
+    }
+
+    // Max images per row validation
+    if (!isValidNumber(settings.maxImagesPerRow, 1, Infinity)) {
+      errors.maxImagesPerRow = 'Max images per row must be at least 1'
+    }
+
+    // Max number of rows validation
+    if (!isValidNumber(settings.maxNumberOfRows, 1, Infinity)) {
+      errors.maxNumberOfRows = 'Max number of rows must be at least 1'
+    }
+
+    // Min images per row validation
+    if (!isValidNumber(settings.minImagesPerRow, 1, Infinity)) {
+      errors.minImagesPerRow = 'Min images per row must be at least 1'
+    }
+
+    // Min number of rows validation
+    if (!isValidNumber(settings.minNumberOfRows, 1, Infinity)) {
+      errors.minNumberOfRows = 'Min number of rows must be at least 1'
+    }
+
+    // Max number of pages validation
+    if (!isValidNumber(settings.maxNumberOfPages, 1, 100)) {
+      errors.maxNumberOfPages = 'Max number of pages must be between 1 and 100'
+    }
+
+    // Image quality validation
+    if (!isValidNumber(settings.imageQuality, 0.1, 1.0)) {
+      errors.imageQuality = 'Image quality must be between 0.1 and 1.0'
+    }
+
+    // Cross-field validation (only if both values are valid)
+    if (
+      isValidNumber(settings.minImagesPerRow, 1, Infinity) &&
+      isValidNumber(settings.maxImagesPerRow, 1, Infinity) &&
+      settings.minImagesPerRow > settings.maxImagesPerRow
+    ) {
+      errors.minImagesPerRow =
+        'Min images per row cannot be greater than max images per row'
+    }
+
+    if (
+      isValidNumber(settings.minNumberOfRows, 1, Infinity) &&
+      isValidNumber(settings.maxNumberOfRows, 1, Infinity) &&
+      settings.minNumberOfRows > settings.maxNumberOfRows
+    ) {
+      errors.minNumberOfRows =
+        'Min number of rows cannot be greater than max number of rows'
+    }
+
+    return errors
+  }
+
+  const settingsErrors = validateSettings()
+  const hasSettingsErrors = Object.keys(settingsErrors).length > 0
+
   const addMoreImages = () => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -63,6 +137,7 @@ function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         totalImages={totalImages}
+        hasSettingsErrors={hasSettingsErrors}
       />
 
       <DragDropContext onDragEnd={handleDragEnd}>
