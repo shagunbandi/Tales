@@ -1,5 +1,7 @@
 import React from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { Button, Badge } from "flowbite-react";
+import { HiPlus, HiX } from "react-icons/hi";
 
 const AvailableImages = ({
   availableImages,
@@ -15,47 +17,47 @@ const AvailableImages = ({
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800">Available Images</h3>
-        <button
-          onClick={onAddMoreImages}
-          className="px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
-        >
-          + Add More
-        </button>
+    <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white shadow-sm">
+      <Badge color="gray" size="sm">
+        {availableImages.length}{" "}
+        {availableImages.length === 1 ? "image" : "images"}
+      </Badge>
+      <div className="flex items-center justify-between border-b border-gray-200 p-4">
+        <h3 className="text-lg font-semibold text-gray-800">
+          Available Images
+        </h3>
+        <Button size="sm" color="blue" onClick={onAddMoreImages}>
+          <HiPlus className="mr-1 h-4 w-4" />
+          Add More
+        </Button>
       </div>
 
-      <div
-        ref={setDroppableRef}
-        className="grid grid-cols-2 sm:grid-cols-3 gap-4 border rounded p-4 min-h-[100px] bg-gray-50"
-      >
-        {availableImages.map((image, index) => (
-          <DraggableImage
-            key={image.id}
-            image={image}
-            index={index}
-            onRemove={() => removeAvailableImage(index)}
-          />
-        ))}
+      <div ref={setDroppableRef} className="flex-1 overflow-y-auto p-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
+          {availableImages.map((image, index) => (
+            <DraggableImage
+              key={image.id}
+              image={image}
+              index={index}
+              onRemove={() => removeAvailableImage(index)}
+            />
+          ))}
 
-        {availableImages.length === 0 && totalImages === 0 && (
-          <div className="col-span-full text-sm text-gray-500 text-center">
-            No images available. Upload some images first!
-          </div>
-        )}
+          {availableImages.length === 0 && totalImages === 0 && (
+            <div className="col-span-full flex flex-col items-center justify-center py-8 text-gray-500">
+              <div className="text-center text-sm">
+                <p className="mb-2">No images available</p>
+                <p className="text-xs">Upload some images to get started!</p>
+              </div>
+            </div>
+          )}
 
-        {availableImages.length === 0 && totalImages > 0 && (
-          <div className="col-span-full text-center space-y-2">
-            <p className="text-sm text-gray-500">All images are arranged on pages.</p>
-            <button
-              onClick={onAddMoreImages}
-              className="px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
-            >
-              Add More Images
-            </button>
-          </div>
-        )}
+          {availableImages.length === 0 && totalImages > 0 && (
+            <div className="col-span-full flex items-center justify-center py-8 text-center text-sm text-gray-500">
+              All images are arranged on pages
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -84,25 +86,32 @@ const DraggableImage = ({ image, index, onRemove }) => {
       {...attributes}
       {...listeners}
       style={style}
-      className={`relative border rounded overflow-hidden bg-white shadow-sm ${
-        isDragging ? "opacity-50 ring-2 ring-blue-400" : ""
+      className={`relative cursor-move overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md ${
+        isDragging ? "z-50 opacity-50 ring-2 ring-blue-400" : ""
       }`}
     >
-      <img
-        src={image.src}
-        alt={image.file.name}
-        className="w-full h-24 object-cover"
-      />
-      <div className="text-xs text-gray-600 truncate px-2 py-1">
-        {image.file.name}
+      <div className="relative aspect-square">
+        <img
+          src={image.src}
+          alt={image.file.name}
+          className="h-full w-full object-cover"
+        />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white transition-colors hover:bg-red-600"
+          title="Remove image"
+        >
+          <HiX className="h-3 w-3" />
+        </button>
       </div>
-      <button
-        onClick={onRemove}
-        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
-        title="Remove"
-      >
-        ×
-      </button>
+      <div className="p-2">
+        <p className="truncate text-xs font-medium text-gray-600">
+          {image.file.name}
+        </p>
+      </div>
     </div>
   );
 };

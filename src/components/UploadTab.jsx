@@ -6,7 +6,12 @@ import {
   HiInformationCircle,
 } from "react-icons/hi2";
 
-const UploadTab = ({ handleFiles, isProcessing, totalImages, setActiveTab }) => {
+const UploadTab = ({
+  handleFiles,
+  isProcessing,
+  totalImages,
+  setActiveTab,
+}) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleFileChange = useCallback(
@@ -14,7 +19,7 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages, setActiveTab }) => 
       const files = Array.from(event.target.files);
       await handleFiles(files);
     },
-    [handleFiles]
+    [handleFiles],
   );
 
   const handleDrop = useCallback(
@@ -24,7 +29,7 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages, setActiveTab }) => 
       const files = Array.from(event.dataTransfer.files);
       await handleFiles(files);
     },
-    [handleFiles]
+    [handleFiles],
   );
 
   const handleDragOver = useCallback((event) => {
@@ -43,7 +48,7 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages, setActiveTab }) => 
   }, [totalImages, isProcessing, setActiveTab]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <Card
         className={`cursor-pointer transition-colors duration-200 ${
           isDragOver ? "bg-blue-50" : "hover:bg-gray-50"
@@ -54,11 +59,11 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages, setActiveTab }) => 
         onDragLeave={handleDragLeave}
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <HiOutlineCloudArrowUp className="w-12 h-12 text-gray-400 mb-4" />
+          <HiOutlineCloudArrowUp className="mb-4 h-12 w-12 text-gray-400" />
           <p className="text-lg font-semibold text-gray-700">
             Click here or drag & drop image files
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-gray-500">
             Supports JPG, PNG, GIF, WebP formats
           </p>
           <Button color="gray" size="sm" className="mt-4">
@@ -81,7 +86,9 @@ const UploadTab = ({ handleFiles, isProcessing, totalImages, setActiveTab }) => 
             ✓ {totalImages} images uploaded successfully!
           </span>
           <br />
-          <span className="text-sm">Automatically proceeding to design layout...</span>
+          <span className="text-sm">
+            Automatically proceeding to design layout...
+          </span>
         </Alert>
       )}
 

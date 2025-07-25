@@ -3,7 +3,7 @@ import { Button } from "flowbite-react";
 
 const GeneratePDFButton = ({ onGeneratePDF, pages, isProcessing }) => {
   return (
-    <div className="flex justify-center mt-8">
+    <div className="mt-8 flex justify-center">
       <Button
         size="lg"
         color="blue"

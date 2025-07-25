@@ -142,12 +142,10 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="text-center my-8">
+    <div className="min-h-screen mx-auto max-w-4xl">
+      <div className="my-8 text-center">
         <p className="text-4xl font-bold">Tales</p>
-        <p className="text-lg">
-          Your story told in pictures
-        </p>
+        <p className="text-lg">Your story told in pictures</p>
       </div>
 
       <TabNavigation
@@ -196,7 +194,7 @@ function App() {
       </DndContext>
 
       {error && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+        <div className="fixed top-4 right-4 z-50 rounded-lg bg-red-500 px-4 py-2 text-white shadow-lg">
           {error}
         </div>
       )}

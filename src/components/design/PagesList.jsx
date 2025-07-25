@@ -18,7 +18,7 @@ const PagesList = ({
       />
 
       {pages.length === 0 ? (
-        <div className="text-center text-gray-500 py-8 border rounded bg-gray-50">
+        <div className="rounded border bg-gray-50 py-8 text-center text-gray-500">
           <p>No pages yet. Add a page to get started!</p>
         </div>
       ) : (

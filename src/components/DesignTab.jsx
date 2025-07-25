@@ -21,10 +21,10 @@ const DesignTab = ({
   onSettingsChange,
 }) => {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-      <div className="flex flex-col lg:flex-row gap-6">
+    <div className="space-y-6 px-6 py-8">
+      <div className="flex flex-col gap-6 lg:flex-row">
         {/* Sidebar: Available Images */}
-        <div className="lg:w-1/3">
+        <div className="lg:sticky lg:top-8 lg:h-[75vh] lg:w-1/3">
           <AvailableImages
             availableImages={availableImages}
             removeAvailableImage={onRemoveAvailableImage}
@@ -33,8 +33,11 @@ const DesignTab = ({
           />
         </div>
 
+        {/* Sticky Divider */}
+        <div className="sticky top-8 hidden h-[70vh] w-px bg-gray-200 lg:block"></div>
+
         {/* Main: Pages Design & PDF Button */}
-        <div className="lg:w-2/3 space-y-6">
+        <div className="space-y-6 lg:w-2/3">
           <PagesHeader
             isProcessing={isProcessing}
             availableImages={availableImages}

@@ -3,7 +3,7 @@ import { Button } from "flowbite-react";
 
 const PagesHeader = ({ isProcessing, availableImages, onAutoArrange }) => {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="mb-6 flex items-center justify-between">
       <h3 className="text-lg font-semibold text-gray-800">PDF Pages Preview</h3>
       <div className="flex items-center gap-2">
         <Button

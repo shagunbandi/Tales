@@ -23,29 +23,42 @@ const PagePreview = ({
   const imageCount = page.images.length;
 
   return (
-    <div className="rounded-lg p-3 bg-white shadow-md hover:shadow-lg transition-shadow">
-      <div className="flex items-center justify-between mb-3">
+    <div className="rounded-lg bg-white p-3 shadow-md transition-shadow hover:shadow-lg">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge pill color="light" size="sm">Page {pageIndex + 1}</Badge>
+          <Badge pill color="light" size="sm">
+            Page {pageIndex + 1}
+          </Badge>
           <Badge pill color="success" size="sm">
-            {imageCount} {imageCount === 1 ? 'image' : 'images'}
+            {imageCount} {imageCount === 1 ? "image" : "images"}
           </Badge>
         </div>
         <div className="flex items-center gap-1">
-          <Badge pill color="purple" size="sm" onClick={() => onChangeColor(page.id)} className="cursor-pointer">
+          <Badge
+            pill
+            color="purple"
+            size="sm"
+            onClick={() => onChangeColor(page.id)}
+            className="cursor-pointer"
+          >
             Change color
           </Badge>
-          <Badge pill color="red" size="sm" onClick={() => onRemovePage(page.id)} className="cursor-pointer">
+          <Badge
+            pill
+            color="red"
+            size="sm"
+            onClick={() => onRemovePage(page.id)}
+            className="cursor-pointer"
+          >
             Remove Page
           </Badge>
-
         </div>
       </div>
 
       <div className="flex justify-center">
         <div
           ref={setDroppableRef}
-          className={`border-2 border-dashed rounded relative ${
+          className={`relative rounded border-2 border-dashed ${
             isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
           }`}
           style={{
@@ -101,13 +114,13 @@ const DraggablePageImage = ({ image, pageId, index }) => {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`absolute cursor-move ${isDragging ? "opacity-50 z-50" : ""}`}
+      className={`absolute cursor-move ${isDragging ? "z-50 opacity-50" : ""}`}
       style={style}
     >
-      <img 
-        src={image.src} 
-        alt={image.file.name} 
-        className="w-full h-full object-cover rounded"
+      <img
+        src={image.src}
+        alt={image.file.name}
+        className="h-full w-full rounded object-cover"
       />
     </div>
   );
