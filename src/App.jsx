@@ -7,10 +7,10 @@ import {
 } from "@dnd-kit/core";
 import { useImageManagement } from "./hooks/useImageManagement";
 import { DEFAULT_SETTINGS } from "./constants";
-import TabNavigation from "./components/TabNavigation.jsx";
-import UploadTab from "./components/UploadTab.jsx";
-import DesignTab from "./components/DesignTab.jsx";
-import SettingsTab from "./components/SettingsTab.jsx";
+import TabNavigation from "./components/TabNavigation";
+import UploadTab from "./components/UploadTab";
+import DesignTab from "./components/DesignTab";
+import SettingsTab from "./components/SettingsTab";
 
 function App() {
   const [activeTab, setActiveTab] = useState("upload");
@@ -143,8 +143,12 @@ function App() {
 
   return (
     <div className="app">
-      <h1 className="app-title">Tales</h1>
-      <h2 className="app-subtitle">Your story told in pictures</h2>
+      <div className="text-center  my-8">
+        <p className="text-4xl font-bold">Tales</p>
+        <p className="text-lg">
+          Your story told in pictures
+        </p>
+      </div>
 
       <TabNavigation
         activeTab={activeTab}

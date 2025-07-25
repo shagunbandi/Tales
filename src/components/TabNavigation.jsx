@@ -1,4 +1,5 @@
 import React from "react";
+import { Breadcrumb, BreadcrumbItem } from "flowbite-react";
 
 const TabNavigation = ({
   activeTab,
@@ -17,21 +18,23 @@ const TabNavigation = ({
   ];
 
   return (
-    <div className="tab-navigation">
+    <Breadcrumb aria-label="Navigation tabs" className="bg-gray-50 px-5 py-3">
       {tabs.map((tab) => (
-        <button
+        <BreadcrumbItem
           key={tab.id}
-          className={`tab-button ${activeTab === tab.id ? "active" : ""} ${
-            tab.disabled ? "disabled" : ""
-          }`}
-          onClick={() => !tab.disabled && setActiveTab(tab.id)}
-          disabled={tab.disabled}
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (!tab.disabled) {
+              setActiveTab(tab.id);
+            }
+          }}
         >
           {tab.label}
           {tab.id === "design" && totalImages > 0 && ` (${totalImages} images)`}
-        </button>
+        </BreadcrumbItem>
       ))}
-    </div>
+    </Breadcrumb>
   );
 };
 
