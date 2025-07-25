@@ -1,4 +1,9 @@
-import { COLOR_PALETTE } from '../constants.js'
+import {
+  COLOR_PALETTE,
+  PAGE_SIZES,
+  PREVIEW_SCALE,
+  getPreviewDimensions,
+} from '../constants.js'
 
 /**
  * Layout utility functions for image arrangement and page management
@@ -6,12 +11,43 @@ import { COLOR_PALETTE } from '../constants.js'
 
 /**
  * Converts preview dimensions to millimeters for PDF generation
- * @param {number} previewValue - The preview dimension value
+ * @param {number} previewValue - The preview dimension value in pixels
  * @param {Object} settings - The current settings object
  * @returns {number} The dimension in millimeters
  */
 export function previewToMm(previewValue, settings) {
-  // TODO: Implement conversion from preview dimensions to millimeters
+  if (!settings) {
+    throw new Error('Settings object is required for preview to mm conversion')
+  }
+
+  const pageSize = PAGE_SIZES[settings.pageSize || 'a4']
+  const orientation = settings.orientation || 'landscape'
+
+  // Calculate actual page dimensions in mm
+  let actualPageWidth, actualPageHeight
+  if (orientation === 'landscape') {
+    actualPageWidth = pageSize.width
+    actualPageHeight = pageSize.height
+  } else {
+    actualPageWidth = pageSize.height
+    actualPageHeight = pageSize.width
+  }
+
+  // Get preview dimensions using the existing function
+  const previewDimensions = getPreviewDimensions(settings)
+
+  // Calculate conversion factors
+  const widthConversionFactor = actualPageWidth / previewDimensions.width
+  const heightConversionFactor = actualPageHeight / previewDimensions.height
+
+  // Convert preview value to millimeters
+  // For width-related values (x, width), use width conversion factor
+  // For height-related values (y, height), use height conversion factor
+  // Since we can't determine which dimension this is, we'll use the average
+  // or assume it's proportional to the page dimensions
+  const conversionFactor = (widthConversionFactor + heightConversionFactor) / 2
+
+  return previewValue * conversionFactor
 }
 
 /**
