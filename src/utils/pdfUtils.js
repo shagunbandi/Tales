@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { A4_WIDTH_MM, A4_HEIGHT_MM, PAGE_SIZES } from '../constants.js'
+import { PAGE_SIZES } from '../constants.js'
 import { previewToMm } from './layoutUtils.js'
 
 export const generatePDF = async (pages, settings = null) => {

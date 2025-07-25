@@ -15,15 +15,6 @@ export const PAGE_SIZES = {
   legal: { width: 356, height: 216, name: 'Legal' },
 }
 
-export const LAYOUT_CONSTRAINTS = {
-  MAX_IMAGE_HEIGHT_RATIO: 0.8,
-  MAX_IMAGE_WIDTH_RATIO: 0.9,
-  IMAGE_GAP_RATIO: 0.5,
-  MAX_COLUMNS: 2,
-  IMAGES_PER_ROW: 3,
-  NUMBER_OF_ROWS: 2,
-}
-
 export const DEFAULT_SETTINGS = {
   pageSize: 'a4',
   orientation: 'landscape',
@@ -33,19 +24,15 @@ export const DEFAULT_SETTINGS = {
   imageQuality: 0.9,
   maxImageHeight: 80,
   maxImageWidth: 90,
-  maxImageHeightRatio: LAYOUT_CONSTRAINTS.MAX_IMAGE_HEIGHT_RATIO,
-  maxImageWidthRatio: LAYOUT_CONSTRAINTS.MAX_IMAGE_WIDTH_RATIO,
-  imageGapRatio: LAYOUT_CONSTRAINTS.IMAGE_GAP_RATIO,
+  maxImageHeightRatio: 0.8,
+  maxImageWidthRatio: 0.9,
+  imageGapRatio: 0.5,
+  maxColumns: 2,
+  imagesPerRow: 3,
+  numberOfRows: 2,
 }
 
-export const A4_WIDTH_MM = 297
-export const A4_HEIGHT_MM = 210
-export const MARGIN_PX = 20
-export const IMAGE_GAP_PX = 10
-
 export const PREVIEW_SCALE = 0.8
-export const PREVIEW_WIDTH = 600 * PREVIEW_SCALE
-export const PREVIEW_HEIGHT = (210 / 297) * PREVIEW_WIDTH
 
 export const getPreviewDimensions = (settings) => {
   const pageSize = PAGE_SIZES[settings?.pageSize || 'a4']

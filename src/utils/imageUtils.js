@@ -1,9 +1,4 @@
-import {
-  PREVIEW_HEIGHT,
-  PREVIEW_WIDTH,
-  SUPPORTED_FORMATS,
-  getPreviewDimensions,
-} from '../constants.js'
+import { SUPPORTED_FORMATS, getPreviewDimensions } from '../constants.js'
 
 export const loadImage = (file, settings = null) => {
   return new Promise((resolve, reject) => {
