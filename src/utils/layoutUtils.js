@@ -59,17 +59,6 @@ export function getRandomColor() {
 }
 
 /**
- * Automatically arranges images across pages using optimal layout algorithms
- * @param {Array} availableImages - Array of images to arrange
- * @param {Array} existingPages - Array of existing pages
- * @param {Object} settings - Layout settings including page margin, image gap, etc.
- * @returns {Object} Object containing arrangedPages and remainingImages
- */
-export function autoArrangeImages(availableImages, existingPages, settings) {
-  // TODO: Implement automatic image arrangement across pages
-}
-
-/**
  * Finds the correct position to insert an image back into the available images list
  * @param {Array} availableImages - Current array of available images
  * @param {number} originalIndex - The original index of the image

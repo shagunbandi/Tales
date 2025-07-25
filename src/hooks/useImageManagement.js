@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react'
 import { processFiles } from '../utils/imageUtils.js'
 import {
-  autoArrangeImages,
   getRandomColor,
   findCorrectInsertPosition,
   arrangeAndCenterImages,
 } from '../utils/layoutUtils.js'
+import { autoArrangeImages } from '../utils/autoArrangeUtils.js'
 import { generatePDF } from '../utils/pdfUtils.js'
 import { COLOR_PALETTE, getPreviewDimensions } from '../constants.js'
 
