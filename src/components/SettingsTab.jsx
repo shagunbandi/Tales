@@ -2,10 +2,9 @@ import React from "react";
 
 const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
   const handleSettingChange = (key, value) => {
-    // Handle empty string or invalid numbers
     let parsedValue = value;
     if (value === "" || isNaN(value)) {
-      parsedValue = key === "imageQuality" ? 0.8 : 1; // Default values
+      parsedValue = key === "imageQuality" ? 0.8 : 1;
     } else {
       parsedValue =
         key === "imageQuality" ? parseFloat(value) : parseInt(value);
@@ -13,56 +12,36 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
     onSettingsChange({ ...settings, [key]: parsedValue });
   };
 
-  // Validation function to check if all settings are valid
   const validateSettings = () => {
     const errors = {};
+    const isValidNumber = (value, min, max) =>
+      !isNaN(value) && value !== "" && value >= min && value <= max;
 
-    // Helper function to check if value is valid number
-    const isValidNumber = (value, min, max) => {
-      return !isNaN(value) && value !== "" && value >= min && value <= max;
-    };
-
-    // Page margin validation
     if (!isValidNumber(settings.pageMargin, 5, 50)) {
       errors.pageMargin = "Page margin must be between 5 and 50 pixels";
     }
-
-    // Image gap validation
     if (!isValidNumber(settings.imageGap, 0, 30)) {
       errors.imageGap = "Image gap must be between 0 and 30 pixels";
     }
-
-    // Max images per row validation
     if (!isValidNumber(settings.maxImagesPerRow, 1, Infinity)) {
       errors.maxImagesPerRow = "Max images per row must be at least 1";
     }
-
-    // Max number of rows validation
     if (!isValidNumber(settings.maxNumberOfRows, 1, Infinity)) {
       errors.maxNumberOfRows = "Max number of rows must be at least 1";
     }
-
-    // Min images per row validation
     if (!isValidNumber(settings.minImagesPerRow, 1, Infinity)) {
       errors.minImagesPerRow = "Min images per row must be at least 1";
     }
-
-    // Min number of rows validation
     if (!isValidNumber(settings.minNumberOfRows, 1, Infinity)) {
       errors.minNumberOfRows = "Min number of rows must be at least 1";
     }
-
-    // Max number of pages validation
     if (!isValidNumber(settings.maxNumberOfPages, 1, 100)) {
       errors.maxNumberOfPages = "Max number of pages must be between 1 and 100";
     }
-
-    // Image quality validation
     if (!isValidNumber(settings.imageQuality, 0.1, 1.0)) {
       errors.imageQuality = "Image quality must be between 0.1 and 1.0";
     }
 
-    // Cross-field validation (only if both values are valid)
     if (
       isValidNumber(settings.minImagesPerRow, 1, Infinity) &&
       isValidNumber(settings.maxImagesPerRow, 1, Infinity) &&
@@ -88,204 +67,127 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
-    <div className="settings-tab">
-      <div className="settings-container">
-        <h3>Layout Settings</h3>
-        <p className="settings-description">
+    <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div>
+        <h3 className="text-xl font-semibold text-gray-800">Layout Settings</h3>
+        <p className="text-sm text-gray-600">
           Configure how your images will be arranged in the PDF pages.
         </p>
-
-        <form className="settings-form" onSubmit={(e) => e.preventDefault()}>
-          <div className="settings-grid">
-            <div className="setting-group">
-              <label htmlFor="pageMargin">Page Margin (px):</label>
-              <input
-                type="number"
-                id="pageMargin"
-                value={settings.pageMargin || ""}
-                onChange={(e) =>
-                  handleSettingChange("pageMargin", e.target.value)
-                }
-                min="5"
-                max="50"
-                className={errors.pageMargin ? "error" : ""}
-                required
-              />
-              <small>Space around the edges of each page</small>
-              {errors.pageMargin && (
-                <div className="error-message">{errors.pageMargin}</div>
-              )}
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="imageGap">Image Gap (px):</label>
-              <input
-                type="number"
-                id="imageGap"
-                value={settings.imageGap || ""}
-                onChange={(e) =>
-                  handleSettingChange("imageGap", e.target.value)
-                }
-                min="0"
-                max="30"
-                className={errors.imageGap ? "error" : ""}
-                required
-              />
-              <small>Space between images on the same page</small>
-              {errors.imageGap && (
-                <div className="error-message">{errors.imageGap}</div>
-              )}
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="maxImagesPerRow">Max Images Per Row:</label>
-              <input
-                type="number"
-                id="maxImagesPerRow"
-                value={settings.maxImagesPerRow || ""}
-                onChange={(e) =>
-                  handleSettingChange("maxImagesPerRow", e.target.value)
-                }
-                min="1"
-                className={errors.maxImagesPerRow ? "error" : ""}
-                required
-              />
-              <small>
-                Maximum number of images that can be placed in a single row
-              </small>
-              {errors.maxImagesPerRow && (
-                <div className="error-message">{errors.maxImagesPerRow}</div>
-              )}
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="maxNumberOfRows">Max Number of Rows:</label>
-              <input
-                type="number"
-                id="maxNumberOfRows"
-                value={settings.maxNumberOfRows || ""}
-                onChange={(e) =>
-                  handleSettingChange("maxNumberOfRows", e.target.value)
-                }
-                min="1"
-                className={errors.maxNumberOfRows ? "error" : ""}
-                required
-              />
-              <small>Maximum number of rows per page</small>
-              {errors.maxNumberOfRows && (
-                <div className="error-message">{errors.maxNumberOfRows}</div>
-              )}
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="minImagesPerRow">Min Images Per Row:</label>
-              <input
-                type="number"
-                id="minImagesPerRow"
-                value={settings.minImagesPerRow || ""}
-                onChange={(e) =>
-                  handleSettingChange("minImagesPerRow", e.target.value)
-                }
-                min="1"
-                className={errors.minImagesPerRow ? "error" : ""}
-                required
-              />
-              <small>
-                Minimum number of images that should be placed in a row
-              </small>
-              {errors.minImagesPerRow && (
-                <div className="error-message">{errors.minImagesPerRow}</div>
-              )}
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="minNumberOfRows">Min Number of Rows:</label>
-              <input
-                type="number"
-                id="minNumberOfRows"
-                value={settings.minNumberOfRows || ""}
-                onChange={(e) =>
-                  handleSettingChange("minNumberOfRows", e.target.value)
-                }
-                min="1"
-                className={errors.minNumberOfRows ? "error" : ""}
-                required
-              />
-              <small>Minimum number of rows per page</small>
-              {errors.minNumberOfRows && (
-                <div className="error-message">{errors.minNumberOfRows}</div>
-              )}
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="maxNumberOfPages">Max Number of Pages:</label>
-              <input
-                type="number"
-                id="maxNumberOfPages"
-                value={settings.maxNumberOfPages || ""}
-                onChange={(e) =>
-                  handleSettingChange("maxNumberOfPages", e.target.value)
-                }
-                min="1"
-                max="100"
-                className={errors.maxNumberOfPages ? "error" : ""}
-                required
-              />
-              <small>Maximum number of pages in the generated PDF</small>
-              {errors.maxNumberOfPages && (
-                <div className="error-message">{errors.maxNumberOfPages}</div>
-              )}
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="imageQuality">Image Quality:</label>
-              <input
-                type="number"
-                id="imageQuality"
-                value={settings.imageQuality || ""}
-                onChange={(e) =>
-                  handleSettingChange("imageQuality", e.target.value)
-                }
-                min="0.1"
-                max="1.0"
-                step="0.1"
-                className={errors.imageQuality ? "error" : ""}
-                required
-              />
-              <small>
-                Quality of images in the PDF (0.1 = low, 1.0 = high)
-              </small>
-              {errors.imageQuality && (
-                <div className="error-message">{errors.imageQuality}</div>
-              )}
-            </div>
-          </div>
-
-          <div className="settings-actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              onClick={onNext}
-              disabled={hasErrors}
-            >
-              Next: Design Layout
-            </button>
-            {hasErrors && (
-              <div className="validation-summary">
-                Please fix the errors above before proceeding.
-              </div>
-            )}
-          </div>
-        </form>
-
-        {/* Debug section to verify settings are updated */}
-        <div className="settings-debug">
-          <details>
-            <summary>Current Settings Values (Debug)</summary>
-            <pre>{JSON.stringify(settings, null, 2)}</pre>
-          </details>
-        </div>
       </div>
+
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[
+            {
+              id: "pageMargin",
+              label: "Page Margin (px):",
+              min: 5,
+              max: 50,
+              help: "Space around the edges of each page",
+            },
+            {
+              id: "imageGap",
+              label: "Image Gap (px):",
+              min: 0,
+              max: 30,
+              help: "Space between images on the same page",
+            },
+            {
+              id: "maxImagesPerRow",
+              label: "Max Images Per Row:",
+              min: 1,
+              help: "Maximum number of images in a row",
+            },
+            {
+              id: "maxNumberOfRows",
+              label: "Max Number of Rows:",
+              min: 1,
+              help: "Maximum number of rows per page",
+            },
+            {
+              id: "minImagesPerRow",
+              label: "Min Images Per Row:",
+              min: 1,
+              help: "Minimum number of images per row",
+            },
+            {
+              id: "minNumberOfRows",
+              label: "Min Number of Rows:",
+              min: 1,
+              help: "Minimum number of rows per page",
+            },
+            {
+              id: "maxNumberOfPages",
+              label: "Max Number of Pages:",
+              min: 1,
+              max: 100,
+              help: "Maximum pages in the generated PDF",
+            },
+            {
+              id: "imageQuality",
+              label: "Image Quality:",
+              min: 0.1,
+              max: 1.0,
+              step: 0.1,
+              help: "Quality of images (0.1 = low, 1.0 = high)",
+            },
+          ].map(({ id, label, min, max, step = 1, help }) => (
+            <div key={id} className="space-y-1">
+              <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+                {label}
+              </label>
+              <input
+                type="number"
+                id={id}
+                value={settings[id] || ""}
+                onChange={(e) => handleSettingChange(id, e.target.value)}
+                min={min}
+                max={max}
+                step={step}
+                required
+                className={`w-full border rounded px-3 py-2 text-sm ${
+                  errors[id]
+                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                }`}
+              />
+              <p className="text-xs text-gray-500">{help}</p>
+              {errors[id] && (
+                <p className="text-xs text-red-600 mt-1">{errors[id]}</p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-4 flex flex-col gap-2 items-start">
+          <button
+            type="submit"
+            onClick={onNext}
+            disabled={hasErrors}
+            className={`px-4 py-2 text-sm rounded text-white ${
+              hasErrors
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            Next: Design Layout
+          </button>
+          {hasErrors && (
+            <p className="text-sm text-red-600">
+              Please fix the errors above before proceeding.
+            </p>
+          )}
+        </div>
+      </form>
+
+      <details className="text-sm text-gray-500">
+        <summary className="cursor-pointer text-blue-600 underline">
+          Current Settings Values (Debug)
+        </summary>
+        <pre className="mt-2 bg-gray-50 p-3 rounded text-xs text-gray-700">
+          {JSON.stringify(settings, null, 2)}
+        </pre>
+      </details>
     </div>
   );
 };
