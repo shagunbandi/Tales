@@ -7,6 +7,35 @@ export const COLOR_PALETTE = [
   { name: 'Pastel Green', color: '#77DD77' },
   { name: 'Light Khaki', color: '#F0E68C' },
   { name: 'Powder Blue', color: '#B0E0E6' },
+  { name: 'Pastel Blue', color: '#BFD8FF' },
+  { name: 'Pale Lavender', color: '#E7D6F7' },
+  { name: 'Cream', color: '#FFF8E1' },
+  { name: 'Blush Pink', color: '#F9E0E8' },
+  { name: 'Light Peach', color: '#FFE5B4' },
+  { name: 'Sky Gray-Blue', color: '#E3F2FD' },
+  { name: 'Powder Gray', color: '#E9ECEF' },
+  { name: 'Lavender Mist', color: '#E6E6FA' },
+  { name: 'Seafoam Green', color: '#9FE2BF' },
+  { name: 'Soft Apricot', color: '#FFDAB9' },
+  { name: 'Light Coral', color: '#F08080' },
+  { name: 'Pale Turquoise', color: '#AFEEEE' },
+  { name: 'Honeydew', color: '#F0FFF0' },
+  { name: 'Misty Rose', color: '#FFE4E1' },
+  { name: 'Thistle', color: '#D8BFD8' },
+  { name: 'Alice Blue', color: '#F0F8FF' },
+  { name: 'Papaya Whip', color: '#FFEFD5' },
+  { name: 'Lavender Blush', color: '#FFF0F5' },
+  { name: 'Light Steel Blue', color: '#B0C4DE' },
+  { name: 'Peach Puff', color: '#FFDAB9' },
+  { name: 'Sky Blue', color: '#87CEEB' },
+  { name: 'Light Cyan', color: '#E0FFFF' },
+  { name: 'Pale Goldenrod', color: '#EEE8AA' },
+  { name: 'Mint Cream', color: '#F5FFFA' },
+  { name: 'Seashell', color: '#FFF5EE' },
+  { name: 'Old Lace', color: '#FDF5E6' },
+  { name: 'Lemon Chiffon', color: '#FFFACD' },
+  { name: 'Light Pink', color: '#FFB6C1' },
+  { name: 'Powder Pink', color: '#FADADD' },
 ]
 
 export const PAGE_SIZES = {
@@ -25,6 +54,7 @@ export const DEFAULT_SETTINGS = {
   maxNumberOfRows: 2,
   minImagesPerRow: 1,
   minNumberOfRows: 1,
+  maxNumberOfPages: 15,
 }
 
 export const PREVIEW_SCALE = 0.8

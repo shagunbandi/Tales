@@ -112,6 +112,23 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
             </div>
 
             <div className="setting-group">
+              <label htmlFor="maxNumberOfPages">Max Number of Pages:</label>
+              <input
+                type="number"
+                id="maxNumberOfPages"
+                value={settings.maxNumberOfPages}
+                onChange={(e) =>
+                  handleSettingChange(
+                    'maxNumberOfPages',
+                    parseInt(e.target.value),
+                  )
+                }
+                min="1"
+                max="100"
+              />
+            </div>
+
+            <div className="setting-group">
               <label htmlFor="imageQuality">Image Quality:</label>
               <input
                 type="number"
