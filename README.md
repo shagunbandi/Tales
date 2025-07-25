@@ -21,7 +21,7 @@ A simple frontend-only web application that allows users to select multiple imag
 The application uses a carefully selected palette of sober English colors:
 
 - Oxford Blue (#002147)
-- Slate Gray (#708090) 
+- Slate Gray (#708090)
 - Steel Blue (#4682B4)
 - Cornsilk (#FFF8DC)
 - Antique White (#FAEBD7)
@@ -32,6 +32,7 @@ The application uses a carefully selected palette of sober English colors:
 ## Technical Details
 
 ### Page Layout
+
 - **Format**: A4 landscape (297mm × 210mm)
 - **Margins**: 30px uniform margin on all sides for optimal space utilization
 - **Image sizing**: Height scaled to 75% of available page height for optimal page utilization
@@ -41,6 +42,7 @@ The application uses a carefully selected palette of sober English colors:
 - **EXIF handling**: Automatically corrects image orientation from camera metadata
 
 ### Technology Stack
+
 - **Frontend**: React 18 with Vite
 - **PDF Generation**: jsPDF library
 - **File Handling**: File System Access API and FileReader
@@ -49,6 +51,7 @@ The application uses a carefully selected palette of sober English colors:
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - npm or yarn
 
@@ -56,11 +59,13 @@ The application uses a carefully selected palette of sober English colors:
 
 1. Clone or download the project
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -69,7 +74,7 @@ The application uses a carefully selected palette of sober English colors:
 
 ### Usage
 
-1. **Upload Images**: 
+1. **Upload Images**:
    - Click the upload area or drag & drop image files
    - Select multiple images (JPG, PNG, GIF, WebP)
    - Images are automatically sorted by filename
@@ -87,6 +92,7 @@ The application uses a carefully selected palette of sober English colors:
 ### Error Handling
 
 The application includes error handling for:
+
 - Unsupported file formats
 - File reading errors
 - Image loading failures
@@ -121,4 +127,4 @@ Feel free to submit issues and enhancement requests!
 
 ## License
 
-This project is open source and available under the MIT License. 
+This project is open source and available under the MIT License.

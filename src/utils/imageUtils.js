@@ -1,30 +1,30 @@
-import { SUPPORTED_FORMATS, getPreviewDimensions } from '../constants.js'
+import { SUPPORTED_FORMATS, getPreviewDimensions } from "../constants.js";
 
 export const loadImage = (file, settings = null) => {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image()
+      const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        canvas.width = img.naturalWidth
-        canvas.height = img.naturalHeight
-        ctx.drawImage(img, 0, 0)
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.drawImage(img, 0, 0);
         const correctedSrc = canvas.toDataURL(
-          'image/jpeg',
+          "image/jpeg",
           settings?.imageQuality,
-        )
+        );
 
         const { width: previewWidth, height: previewHeight } =
-          getPreviewDimensions(settings)
-        const maxHeight = previewHeight
-        const maxWidth = previewWidth
-        const scaleHeight = maxHeight / img.naturalHeight
-        const scaleWidth = maxWidth / img.naturalWidth
-        const scale = Math.min(scaleHeight, scaleWidth, 1)
-        const scaledWidth = img.naturalWidth * scale
-        const scaledHeight = img.naturalHeight * scale
+          getPreviewDimensions(settings);
+        const maxHeight = previewHeight;
+        const maxWidth = previewWidth;
+        const scaleHeight = maxHeight / img.naturalHeight;
+        const scaleWidth = maxWidth / img.naturalWidth;
+        const scale = Math.min(scaleHeight, scaleWidth, 1);
+        const scaledWidth = img.naturalWidth * scale;
+        const scaledHeight = img.naturalHeight * scale;
 
         resolve({
           file,
@@ -35,17 +35,17 @@ export const loadImage = (file, settings = null) => {
           previewHeight: scaledHeight,
           x: 0,
           y: 0,
-        })
-      }
+        });
+      };
       img.onerror = () =>
-        reject(new Error(`Failed to load image: ${file.name}`))
-      img.src = event.target.result
-    }
+        reject(new Error(`Failed to load image: ${file.name}`));
+      img.src = event.target.result;
+    };
     reader.onerror = () =>
-      reject(new Error(`Failed to read file: ${file.name}`))
-    reader.readAsDataURL(file)
-  })
-}
+      reject(new Error(`Failed to read file: ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+};
 
 export const processFiles = async (
   files,
@@ -54,27 +54,27 @@ export const processFiles = async (
 ) => {
   const imageFiles = files
     .filter((file) => SUPPORTED_FORMATS.includes(file.type))
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   if (imageFiles.length === 0) {
     throw new Error(
-      'No supported image files found. Please select JPG, PNG, GIF, or WebP files.',
-    )
+      "No supported image files found. Please select JPG, PNG, GIF, or WebP files.",
+    );
   }
 
-  const processedImages = []
+  const processedImages = [];
   for (const file of imageFiles) {
     try {
-      const imageData = await loadImage(file, settings)
+      const imageData = await loadImage(file, settings);
       processedImages.push({
         ...imageData,
         id: `img-${Date.now()}-${Math.random()}`,
         originalIndex: availableImagesLength + processedImages.length,
-      })
+      });
     } catch (err) {
-      console.warn(`Failed to load image ${file.name}:`, err)
+      console.warn(`Failed to load image ${file.name}:`, err);
     }
   }
 
-  return processedImages
-}
+  return processedImages;
+};

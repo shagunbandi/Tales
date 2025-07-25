@@ -1,8 +1,8 @@
-import React from 'react'
-import AvailableImages from './design/AvailableImages.jsx'
-import PagesHeader from './design/PagesHeader.jsx'
-import PagesList from './design/PagesList.jsx'
-import GeneratePDFButton from './design/GeneratePDFButton.jsx'
+import React from "react";
+import AvailableImages from "./design/AvailableImages.jsx";
+import PagesHeader from "./design/PagesHeader.jsx";
+import PagesList from "./design/PagesList.jsx";
+import GeneratePDFButton from "./design/GeneratePDFButton.jsx";
 
 const DesignTab = ({
   pages,
@@ -54,7 +54,7 @@ const DesignTab = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DesignTab
+export default DesignTab;

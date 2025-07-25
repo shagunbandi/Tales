@@ -1,6 +1,6 @@
-import React from 'react'
-import PagePreview from './pageList/PagePreview.jsx'
-import AddPageSection from './pageList/AddPageSection.jsx'
+import React from "react";
+import PagePreview from "./pageList/PagePreview.jsx";
+import AddPageSection from "./pageList/AddPageSection.jsx";
 
 const PagesList = ({
   pages,
@@ -13,7 +13,7 @@ const PagesList = ({
   return (
     <div className="pages-list">
       <AddPageSection
-        onAddPage={() => onAddPageBetween('start')}
+        onAddPage={() => onAddPageBetween("start")}
         title="Add page at the beginning"
       />
 
@@ -48,7 +48,7 @@ const PagesList = ({
         <AddPageSection onAddPage={onAddPage} title="Add page at the end" />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default PagesList
+export default PagesList;

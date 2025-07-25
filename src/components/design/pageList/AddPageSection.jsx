@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 const AddPageSection = ({ onAddPage, position, title }) => {
   return (
@@ -10,7 +10,7 @@ const AddPageSection = ({ onAddPage, position, title }) => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AddPageSection
+export default AddPageSection;

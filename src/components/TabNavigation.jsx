@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 const TabNavigation = ({
   activeTab,
@@ -7,32 +7,32 @@ const TabNavigation = ({
   hasSettingsErrors,
 }) => {
   const tabs = [
-    { id: 'upload', label: '1. Upload Images', disabled: totalImages > 0 },
-    { id: 'settings', label: '2. Settings', disabled: totalImages === 0 },
+    { id: "upload", label: "1. Upload Images", disabled: totalImages > 0 },
+    { id: "settings", label: "2. Settings", disabled: totalImages === 0 },
     {
-      id: 'design',
-      label: '3. Design Layout',
+      id: "design",
+      label: "3. Design Layout",
       disabled: totalImages === 0 || hasSettingsErrors,
     },
-  ]
+  ];
 
   return (
     <div className="tab-navigation">
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          className={`tab-button ${activeTab === tab.id ? 'active' : ''} ${
-            tab.disabled ? 'disabled' : ''
+          className={`tab-button ${activeTab === tab.id ? "active" : ""} ${
+            tab.disabled ? "disabled" : ""
           }`}
           onClick={() => !tab.disabled && setActiveTab(tab.id)}
           disabled={tab.disabled}
         >
           {tab.label}
-          {tab.id === 'design' && totalImages > 0 && ` (${totalImages} images)`}
+          {tab.id === "design" && totalImages > 0 && ` (${totalImages} images)`}
         </button>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default TabNavigation
+export default TabNavigation;

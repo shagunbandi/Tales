@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect } from "react";
 
 const UploadTab = ({
   handleFiles,
@@ -8,42 +8,42 @@ const UploadTab = ({
 }) => {
   const handleFileChange = useCallback(
     async (event) => {
-      const files = Array.from(event.target.files)
-      await handleFiles(files)
+      const files = Array.from(event.target.files);
+      await handleFiles(files);
     },
     [handleFiles],
-  )
+  );
 
   const handleDrop = useCallback(
     async (event) => {
-      event.preventDefault()
-      const files = Array.from(event.dataTransfer.files)
-      await handleFiles(files)
+      event.preventDefault();
+      const files = Array.from(event.dataTransfer.files);
+      await handleFiles(files);
     },
     [handleFiles],
-  )
+  );
 
   const handleDragOver = useCallback((event) => {
-    event.preventDefault()
-    event.currentTarget.classList.add('dragover')
-  }, [])
+    event.preventDefault();
+    event.currentTarget.classList.add("dragover");
+  }, []);
 
   const handleDragLeave = useCallback((event) => {
-    event.currentTarget.classList.remove('dragover')
-  }, [])
+    event.currentTarget.classList.remove("dragover");
+  }, []);
 
   useEffect(() => {
     if (totalImages > 0 && !isProcessing) {
-      setActiveTab('design')
+      setActiveTab("design");
     }
-  }, [totalImages, isProcessing, setActiveTab])
+  }, [totalImages, isProcessing, setActiveTab]);
 
   return (
     <div className="upload-tab">
       <div className="upload-section">
         <div
           className="folder-picker"
-          onClick={() => document.getElementById('folder-input').click()}
+          onClick={() => document.getElementById("folder-input").click()}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -79,7 +79,7 @@ const UploadTab = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default UploadTab
+export default UploadTab;

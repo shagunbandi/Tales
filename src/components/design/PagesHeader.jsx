@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 const PagesHeader = ({ isProcessing, availableImages, onAutoArrange }) => {
   return (
@@ -10,11 +10,11 @@ const PagesHeader = ({ isProcessing, availableImages, onAutoArrange }) => {
           onClick={onAutoArrange}
           disabled={isProcessing || availableImages.length === 0}
         >
-          {isProcessing ? 'Auto-arranging...' : 'Auto-arrange Images'}
+          {isProcessing ? "Auto-arranging..." : "Auto-arrange Images"}
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PagesHeader
+export default PagesHeader;

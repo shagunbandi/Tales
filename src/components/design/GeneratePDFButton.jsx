@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 const GeneratePDFButton = ({ onGeneratePDF, pages, isProcessing }) => {
   return (
@@ -8,10 +8,10 @@ const GeneratePDFButton = ({ onGeneratePDF, pages, isProcessing }) => {
         onClick={onGeneratePDF}
         disabled={pages.every((p) => p.images.length === 0) || isProcessing}
       >
-        {isProcessing ? 'Generating PDF...' : 'Generate PDF'}
+        {isProcessing ? "Generating PDF..." : "Generate PDF"}
       </button>
     </div>
-  )
-}
+  );
+};
 
-export default GeneratePDFButton
+export default GeneratePDFButton;

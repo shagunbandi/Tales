@@ -2,7 +2,7 @@ import {
   COLOR_PALETTE,
   PAGE_SIZES,
   getPreviewDimensions,
-} from '../constants.js'
+} from "../constants.js";
 
 /**
  * Layout utility functions for image arrangement and page management
@@ -16,37 +16,37 @@ import {
  */
 export function previewToMm(previewValue, settings) {
   if (!settings) {
-    throw new Error('Settings object is required for preview to mm conversion')
+    throw new Error("Settings object is required for preview to mm conversion");
   }
 
-  const pageSize = PAGE_SIZES[settings.pageSize || 'a4']
-  const orientation = settings.orientation || 'landscape'
+  const pageSize = PAGE_SIZES[settings.pageSize || "a4"];
+  const orientation = settings.orientation || "landscape";
 
   // Calculate actual page dimensions in mm
-  let actualPageWidth, actualPageHeight
-  if (orientation === 'landscape') {
-    actualPageWidth = pageSize.width
-    actualPageHeight = pageSize.height
+  let actualPageWidth, actualPageHeight;
+  if (orientation === "landscape") {
+    actualPageWidth = pageSize.width;
+    actualPageHeight = pageSize.height;
   } else {
-    actualPageWidth = pageSize.height
-    actualPageHeight = pageSize.width
+    actualPageWidth = pageSize.height;
+    actualPageHeight = pageSize.width;
   }
 
   // Get preview dimensions using the existing function
-  const previewDimensions = getPreviewDimensions(settings)
+  const previewDimensions = getPreviewDimensions(settings);
 
   // Calculate conversion factors
-  const widthConversionFactor = actualPageWidth / previewDimensions.width
-  const heightConversionFactor = actualPageHeight / previewDimensions.height
+  const widthConversionFactor = actualPageWidth / previewDimensions.width;
+  const heightConversionFactor = actualPageHeight / previewDimensions.height;
 
   // Convert preview value to millimeters
   // For width-related values (x, width), use width conversion factor
   // For height-related values (y, height), use height conversion factor
   // Since we can't determine which dimension this is, we'll use the average
   // or assume it's proportional to the page dimensions
-  const conversionFactor = (widthConversionFactor + heightConversionFactor) / 2
+  const conversionFactor = (widthConversionFactor + heightConversionFactor) / 2;
 
-  return previewValue * conversionFactor
+  return previewValue * conversionFactor;
 }
 
 /**
@@ -54,8 +54,8 @@ export function previewToMm(previewValue, settings) {
  * @returns {Object} Color object with color property
  */
 export function getRandomColor() {
-  const randomIndex = Math.floor(Math.random() * COLOR_PALETTE.length)
-  return COLOR_PALETTE[randomIndex]
+  const randomIndex = Math.floor(Math.random() * COLOR_PALETTE.length);
+  return COLOR_PALETTE[randomIndex];
 }
 
 /**
@@ -67,31 +67,31 @@ export function getRandomColor() {
 export function findCorrectInsertPosition(availableImages, originalIndex) {
   // If the available images array is empty, insert at the beginning
   if (availableImages.length === 0) {
-    return 0
+    return 0;
   }
 
   // Find the position where the image should be inserted to maintain original order
   // We want to insert the image so that all images with originalIndex < this image's originalIndex
   // come before it, and all images with originalIndex > this image's originalIndex come after it
 
-  let insertIndex = 0
+  let insertIndex = 0;
 
   for (let i = 0; i < availableImages.length; i++) {
-    const currentImage = availableImages[i]
+    const currentImage = availableImages[i];
 
     // If the current image has a higher originalIndex, we should insert before it
     if (currentImage.originalIndex > originalIndex) {
-      insertIndex = i
-      break
+      insertIndex = i;
+      break;
     }
 
     // If we reach the end, insert at the end
     if (i === availableImages.length - 1) {
-      insertIndex = availableImages.length
+      insertIndex = availableImages.length;
     }
   }
 
-  return insertIndex
+  return insertIndex;
 }
 
 /**
@@ -114,17 +114,17 @@ export function arrangeAndCenterImages(
   sameHeight = true,
 ) {
   if (!images || images.length === 0) {
-    return []
+    return [];
   }
 
-  const maxImagesPerRow = settings.maxImagesPerRow
-  const maxNumberOfRows = settings.maxNumberOfRows
-  const minImagesPerRow = settings.minImagesPerRow
-  const minNumberOfRows = settings.minNumberOfRows
+  const maxImagesPerRow = settings.maxImagesPerRow;
+  const maxNumberOfRows = settings.maxNumberOfRows;
+  const minImagesPerRow = settings.minImagesPerRow;
+  const minNumberOfRows = settings.minNumberOfRows;
 
   // Calculate usable area (excluding margins)
-  const usableWidth = totalWidth - 2 * pageMargin
-  const usableHeight = totalHeight - 2 * pageMargin
+  const usableWidth = totalWidth - 2 * pageMargin;
+  const usableHeight = totalHeight - 2 * pageMargin;
 
   // Generate all possible combinations of rows and images per row
   const combinations = generateLayoutCombinations(
@@ -133,10 +133,10 @@ export function arrangeAndCenterImages(
     maxNumberOfRows,
     minImagesPerRow,
     maxImagesPerRow,
-  )
+  );
 
-  let bestLayout = null
-  let maxAreaCovered = 0
+  let bestLayout = null;
+  let maxAreaCovered = 0;
 
   // Try each combination and find the one with maximum area coverage
   for (const combination of combinations) {
@@ -147,17 +147,17 @@ export function arrangeAndCenterImages(
       usableHeight,
       imageGap,
       sameHeight,
-    )
+    );
 
     const areaCovered = calculatePageAreaCoveredByImages(
       layoutResult,
       usableWidth,
       usableHeight,
-    )
+    );
 
     if (areaCovered > maxAreaCovered) {
-      maxAreaCovered = areaCovered
-      bestLayout = layoutResult
+      maxAreaCovered = areaCovered;
+      bestLayout = layoutResult;
     }
   }
 
@@ -169,7 +169,7 @@ export function arrangeAndCenterImages(
       usableHeight,
       imageGap,
       sameHeight,
-    )
+    );
   }
 
   // Apply the best layout with proper positioning
@@ -179,9 +179,9 @@ export function arrangeAndCenterImages(
     imageGap,
     totalWidth,
     totalHeight,
-  )
+  );
 
-  return finalResult
+  return finalResult;
 }
 
 /**
@@ -197,19 +197,19 @@ export function calculatePageAreaCoveredByImages(
   usableHeight,
 ) {
   if (!images || images.length === 0) {
-    return 0
+    return 0;
   }
 
-  const totalPageArea = usableWidth * usableHeight
-  let totalImageArea = 0
+  const totalPageArea = usableWidth * usableHeight;
+  let totalImageArea = 0;
 
   for (const image of images) {
     if (image.previewWidth && image.previewHeight) {
-      totalImageArea += image.previewWidth * image.previewHeight
+      totalImageArea += image.previewWidth * image.previewHeight;
     }
   }
 
-  return totalImageArea / totalPageArea
+  return totalImageArea / totalPageArea;
 }
 
 /**
@@ -228,39 +228,39 @@ function generateLayoutCombinations(
   minImagesPerRow,
   maxImagesPerRow,
 ) {
-  const results = []
+  const results = [];
 
   for (let rows = minRows; rows <= Math.min(maxRows, totalImages); rows++) {
-    const layouts = []
+    const layouts = [];
 
     function backtrack(row = 0, remaining = totalImages, layout = []) {
       if (row === rows) {
         if (remaining === 0) {
-          layouts.push([...layout])
+          layouts.push([...layout]);
         }
-        return
+        return;
       }
 
-      const min = Math.max(minImagesPerRow, 1)
-      const max = Math.min(maxImagesPerRow, remaining)
+      const min = Math.max(minImagesPerRow, 1);
+      const max = Math.min(maxImagesPerRow, remaining);
 
       for (let count = min; count <= max; count++) {
-        backtrack(row + 1, remaining - count, [...layout, count])
+        backtrack(row + 1, remaining - count, [...layout, count]);
       }
     }
 
-    backtrack()
+    backtrack();
 
     for (const layout of layouts) {
       results.push({
         numRows: rows,
         imagesPerRow: Math.max(...layout),
         layout,
-      })
+      });
     }
   }
 
-  return results
+  return results;
 }
 
 /**
@@ -271,16 +271,16 @@ function generateLayoutCombinations(
  * @returns {Array} Array of row layouts
  */
 function distributeImages(totalImages, numRows, imagesPerRow) {
-  const layout = []
-  let remainingImages = totalImages
+  const layout = [];
+  let remainingImages = totalImages;
 
   for (let row = 0; row < numRows; row++) {
-    const imagesInThisRow = Math.min(imagesPerRow, remainingImages)
-    layout.push(imagesInThisRow)
-    remainingImages -= imagesInThisRow
+    const imagesInThisRow = Math.min(imagesPerRow, remainingImages);
+    layout.push(imagesInThisRow);
+    remainingImages -= imagesInThisRow;
   }
 
-  return layout
+  return layout;
 }
 
 /**
@@ -301,84 +301,84 @@ function calculateLayoutForCombination(
   imageGap,
   sameHeight,
 ) {
-  const { layout } = combination
-  const result = []
-  let imageIndex = 0
+  const { layout } = combination;
+  const result = [];
+  let imageIndex = 0;
 
   for (let rowIndex = 0; rowIndex < layout.length; rowIndex++) {
-    const imagesInRow = layout[rowIndex]
+    const imagesInRow = layout[rowIndex];
 
-    if (imagesInRow === 0) continue
+    if (imagesInRow === 0) continue;
 
     // Get images for this row
-    const rowImages = []
+    const rowImages = [];
     for (let i = 0; i < imagesInRow; i++) {
       if (imageIndex + i < images.length) {
-        rowImages.push({ ...images[imageIndex + i] })
+        rowImages.push({ ...images[imageIndex + i] });
       }
     }
 
-    if (rowImages.length === 0) continue
+    if (rowImages.length === 0) continue;
 
     // Calculate dimensions for this row
-    let rowHeight, imageWidths
+    let rowHeight, imageWidths;
 
     if (sameHeight) {
       // All images have same height, calculate widths based on aspect ratio
       // Account for gaps between rows when calculating row height
-      const totalGapsBetweenRows = imageGap * (layout.length - 1)
-      const availableHeightForImages = usableHeight - totalGapsBetweenRows
-      rowHeight = availableHeightForImages / layout.length
+      const totalGapsBetweenRows = imageGap * (layout.length - 1);
+      const availableHeightForImages = usableHeight - totalGapsBetweenRows;
+      rowHeight = availableHeightForImages / layout.length;
 
       // Calculate total width needed for all images at this height
-      let totalWidthNeeded = 0
-      imageWidths = []
+      let totalWidthNeeded = 0;
+      imageWidths = [];
 
       for (const image of rowImages) {
-        const aspectRatio = image.originalWidth / image.originalHeight
-        const imageWidth = rowHeight * aspectRatio
-        imageWidths.push(imageWidth)
-        totalWidthNeeded += imageWidth
+        const aspectRatio = image.originalWidth / image.originalHeight;
+        const imageWidth = rowHeight * aspectRatio;
+        imageWidths.push(imageWidth);
+        totalWidthNeeded += imageWidth;
       }
 
       // Add gaps
-      totalWidthNeeded += imageGap * (rowImages.length - 1)
+      totalWidthNeeded += imageGap * (rowImages.length - 1);
 
       // If total width exceeds available width, scale down proportionally
       if (totalWidthNeeded > usableWidth) {
-        const scaleFactor = usableWidth / totalWidthNeeded
-        rowHeight *= scaleFactor
+        const scaleFactor = usableWidth / totalWidthNeeded;
+        rowHeight *= scaleFactor;
 
         // Recalculate widths with new height
-        imageWidths = []
+        imageWidths = [];
         for (const image of rowImages) {
-          const aspectRatio = image.originalWidth / image.originalHeight
-          const imageWidth = rowHeight * aspectRatio
-          imageWidths.push(imageWidth)
+          const aspectRatio = image.originalWidth / image.originalHeight;
+          const imageWidth = rowHeight * aspectRatio;
+          imageWidths.push(imageWidth);
         }
       }
     } else {
       // Each image maintains its own aspect ratio
       const imageWidth =
-        (usableWidth - imageGap * (imagesInRow - 1)) / imagesInRow
-      rowHeight = imageWidth
-      imageWidths = Array(rowImages.length).fill(imageWidth)
+        (usableWidth - imageGap * (imagesInRow - 1)) / imagesInRow;
+      rowHeight = imageWidth;
+      imageWidths = Array(rowImages.length).fill(imageWidth);
     }
 
     // Assign dimensions to images
     for (let colIndex = 0; colIndex < rowImages.length; colIndex++) {
-      const image = rowImages[colIndex]
-      image.previewWidth = imageWidths[colIndex]
-      image.previewHeight = rowHeight
-      image.rowIndex = rowIndex
-      image.colIndex = colIndex
+      const image = rowImages[colIndex];
+      image.previewWidth = imageWidths[colIndex];
+      image.previewHeight = rowHeight;
+      image.rowIndex = rowIndex;
+      image.colIndex = colIndex;
 
-      result.push(image)
-      imageIndex++
+      result.push(image);
+      imageIndex++;
     }
   }
 
-  return result
+  return result;
 }
 
 /**
@@ -398,8 +398,8 @@ function arrangeImagesInSingleRow(
   sameHeight,
 ) {
   const imageWidth =
-    (usableWidth - imageGap * (images.length - 1)) / images.length
-  const imageHeight = sameHeight ? usableHeight : imageWidth
+    (usableWidth - imageGap * (images.length - 1)) / images.length;
+  const imageHeight = sameHeight ? usableHeight : imageWidth;
 
   return images.map((image, index) => ({
     ...image,
@@ -407,7 +407,7 @@ function arrangeImagesInSingleRow(
     previewHeight: imageHeight,
     rowIndex: 0,
     colIndex: index,
-  }))
+  }));
 }
 
 /**
@@ -427,18 +427,20 @@ function applyLayoutWithPositioning(
 ) {
   // Calculate consistent row height for all rows
   // TODO: SHAGUN try with number of rows logic
-  const maxRowHeight = Math.max(...layoutImages.map((img) => img.previewHeight))
+  const maxRowHeight = Math.max(
+    ...layoutImages.map((img) => img.previewHeight),
+  );
 
   // Calculate total number of rows for vertical centering
-  const maxRowIndex = Math.max(...layoutImages.map((img) => img.rowIndex))
-  const totalRows = maxRowIndex + 1
-  const totalRowsHeight = totalRows * maxRowHeight + (totalRows - 1) * imageGap
-  const usableHeight = totalHeight - 2 * pageMargin
-  const verticalOffset = (usableHeight - totalRowsHeight) / 2
+  const maxRowIndex = Math.max(...layoutImages.map((img) => img.rowIndex));
+  const totalRows = maxRowIndex + 1;
+  const totalRowsHeight = totalRows * maxRowHeight + (totalRows - 1) * imageGap;
+  const usableHeight = totalHeight - 2 * pageMargin;
+  const verticalOffset = (usableHeight - totalRowsHeight) / 2;
 
-  const result = []
-  let currentRow = 0
-  let currentRowImages = []
+  const result = [];
+  let currentRow = 0;
+  let currentRowImages = [];
 
   // Group images by row
   for (const image of layoutImages) {
@@ -456,12 +458,12 @@ function applyLayoutWithPositioning(
             maxRowHeight,
             verticalOffset,
           ),
-        )
+        );
       }
-      currentRowImages = []
-      currentRow = image.rowIndex
+      currentRowImages = [];
+      currentRow = image.rowIndex;
     }
-    currentRowImages.push(image)
+    currentRowImages.push(image);
   }
 
   // Process last row
@@ -477,10 +479,10 @@ function applyLayoutWithPositioning(
         maxRowHeight,
         verticalOffset,
       ),
-    )
+    );
   }
 
-  return result
+  return result;
 }
 
 /**
@@ -502,44 +504,44 @@ function positionImagesInRow(
   consistentRowHeight,
   verticalOffset,
 ) {
-  const result = []
+  const result = [];
 
   // Calculate total width of all images in this row plus gaps
-  let totalRowWidth = 0
+  let totalRowWidth = 0;
   for (const image of rowImages) {
-    totalRowWidth += image.previewWidth
+    totalRowWidth += image.previewWidth;
   }
-  totalRowWidth += imageGap * (rowImages.length - 1)
+  totalRowWidth += imageGap * (rowImages.length - 1);
 
   // TODO: SHAGUN: check if this is correct I think we can simplify this
   // For single image, center it within the total page width
-  let currentX
+  let currentX;
   if (rowImages.length === 1) {
-    currentX = (totalWidth - rowImages[0].previewWidth) / 2
+    currentX = (totalWidth - rowImages[0].previewWidth) / 2;
   } else {
     // For multiple images, center the entire row
-    currentX = (totalWidth - totalRowWidth) / 2
+    currentX = (totalWidth - totalRowWidth) / 2;
   }
 
   // Calculate vertical positioning for the row
-  const rowHeight = rowImages[0].previewHeight
+  const rowHeight = rowImages[0].previewHeight;
 
-  let rowY
+  let rowY;
 
   // Center all rows vertically within the page using the pre-calculated offset
-  const previousRowsHeight = rowIndex * (consistentRowHeight + imageGap)
-  rowY = pageMargin + verticalOffset + previousRowsHeight
+  const previousRowsHeight = rowIndex * (consistentRowHeight + imageGap);
+  rowY = pageMargin + verticalOffset + previousRowsHeight;
 
   for (const image of rowImages) {
     const finalImage = {
       ...image,
       x: currentX,
       y: rowY,
-    }
+    };
 
-    result.push(finalImage)
-    currentX += image.previewWidth + imageGap
+    result.push(finalImage);
+    currentX += image.previewWidth + imageGap;
   }
 
-  return result
+  return result;
 }

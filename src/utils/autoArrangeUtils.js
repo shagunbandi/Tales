@@ -2,8 +2,8 @@
  * Auto-arrangement utility functions for distributing images across pages
  */
 
-import { arrangeAndCenterImages, getRandomColor } from './layoutUtils.js'
-import { getPreviewDimensions } from '../constants.js'
+import { arrangeAndCenterImages, getRandomColor } from "./layoutUtils.js";
+import { getPreviewDimensions } from "../constants.js";
 
 /**
  * Automatically arranges images across pages using optimal layout algorithms
@@ -14,14 +14,14 @@ import { getPreviewDimensions } from '../constants.js'
  */
 export function autoArrangeImages(availableImages, existingPages, settings) {
   // Step 1: Calculate remaining pages
-  const remainingPages = settings.maxNumberOfPages - existingPages.length
+  const remainingPages = settings.maxNumberOfPages - existingPages.length;
 
   // If no remaining pages, return all images as remaining
   if (remainingPages <= 0) {
     return {
       arrangedPages: [],
       remainingImages: availableImages,
-    }
+    };
   }
 
   // If no images to place, return empty arrays
@@ -29,39 +29,39 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
     return {
       arrangedPages: [],
       remainingImages: [],
-    }
+    };
   }
 
   // Step 2: Calculate maximum images per page based on layout constraints
-  const maxImagesPerPage = settings.maxImagesPerRow * settings.maxNumberOfRows
+  const maxImagesPerPage = settings.maxImagesPerRow * settings.maxNumberOfRows;
 
   // Step 3: Calculate average images per page with validation
-  const totalImagesToPlace = availableImages.length
-  let averageImagesPerPage = Math.ceil(totalImagesToPlace / remainingPages)
+  const totalImagesToPlace = availableImages.length;
+  let averageImagesPerPage = Math.ceil(totalImagesToPlace / remainingPages);
 
   // Validate against maximum capacity
   if (averageImagesPerPage > maxImagesPerPage) {
-    averageImagesPerPage = maxImagesPerPage
+    averageImagesPerPage = maxImagesPerPage;
   }
 
   // Step 4: Calculate how many images can actually be placed
-  const maxImagesThatCanBePlaced = remainingPages * averageImagesPerPage
-  const imagesToPlace = Math.min(totalImagesToPlace, maxImagesThatCanBePlaced)
-  const imagesThatWillRemain = totalImagesToPlace - imagesToPlace
+  const maxImagesThatCanBePlaced = remainingPages * averageImagesPerPage;
+  const imagesToPlace = Math.min(totalImagesToPlace, maxImagesThatCanBePlaced);
+  const imagesThatWillRemain = totalImagesToPlace - imagesToPlace;
 
   // Step 5: Create new pages with arranged images
-  const arrangedPages = []
-  const imagesToArrange = availableImages.slice(0, imagesToPlace)
-  const remainingImages = availableImages.slice(imagesToPlace)
+  const arrangedPages = [];
+  const imagesToArrange = availableImages.slice(0, imagesToPlace);
+  const remainingImages = availableImages.slice(imagesToPlace);
 
   // Get page dimensions for layout calculation
   const { width: previewWidth, height: previewHeight } =
-    getPreviewDimensions(settings)
-  const pageMargin = settings.pageMargin
-  const imageGap = settings.imageGap
+    getPreviewDimensions(settings);
+  const pageMargin = settings.pageMargin;
+  const imageGap = settings.imageGap;
 
   // Distribute images across pages
-  let currentImageIndex = 0
+  let currentImageIndex = 0;
   for (
     let pageIndex = 0;
     pageIndex < remainingPages && currentImageIndex < imagesToArrange.length;
@@ -71,15 +71,15 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
     const imagesForThisPage = Math.min(
       averageImagesPerPage,
       imagesToArrange.length - currentImageIndex,
-    )
+    );
 
-    if (imagesForThisPage <= 0) break
+    if (imagesForThisPage <= 0) break;
 
     // Get images for this page
     const pageImages = imagesToArrange.slice(
       currentImageIndex,
       currentImageIndex + imagesForThisPage,
-    )
+    );
 
     // Use arrangeAndCenterImages to get optimal layout for this page
     const arrangedImages = arrangeAndCenterImages(
@@ -89,21 +89,21 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
       pageMargin,
       imageGap,
       settings,
-    )
+    );
 
     // Create new page
     const newPage = {
       id: `page-${Date.now()}-${pageIndex}`,
       images: arrangedImages,
       color: getRandomColor(),
-    }
+    };
 
-    arrangedPages.push(newPage)
-    currentImageIndex += imagesForThisPage
+    arrangedPages.push(newPage);
+    currentImageIndex += imagesForThisPage;
   }
 
   return {
     arrangedPages,
     remainingImages,
-  }
+  };
 }
