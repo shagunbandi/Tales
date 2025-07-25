@@ -13,14 +13,13 @@ export const loadImage = (file, settings = null) => {
         ctx.drawImage(img, 0, 0)
         const correctedSrc = canvas.toDataURL(
           'image/jpeg',
-          settings?.imageQuality || 0.9,
+          settings?.imageQuality,
         )
 
         const { width: previewWidth, height: previewHeight } =
           getPreviewDimensions(settings)
-        const maxHeight =
-          previewHeight * ((settings?.maxImageHeight || 80) / 100)
-        const maxWidth = previewWidth * ((settings?.maxImageWidth || 90) / 100)
+        const maxHeight = previewHeight * (settings?.maxImageHeight / 100)
+        const maxWidth = previewWidth * (settings?.maxImageWidth / 100)
         const scaleHeight = maxHeight / img.naturalHeight
         const scaleWidth = maxWidth / img.naturalWidth
         const scale = Math.min(scaleHeight, scaleWidth, 1)

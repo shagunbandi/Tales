@@ -7,11 +7,7 @@ import {
   arrangeAndCenterImages,
 } from '../utils/layoutUtils.js'
 import { generatePDF } from '../utils/pdfUtils.js'
-import {
-  COLOR_PALETTE,
-  getPreviewDimensions,
-  DEFAULT_SETTINGS,
-} from '../constants.js'
+import { COLOR_PALETTE, getPreviewDimensions } from '../constants.js'
 
 export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([
@@ -67,9 +63,8 @@ export const useImageManagement = (settings = null) => {
               newImages.splice(destination.index, 0, imageToMove)
 
               // Use arrangeAndCenterImages for multi-row layout
-              const pageMargin =
-                settings?.pageMargin || DEFAULT_SETTINGS.pageMargin
-              const imageGap = settings?.imageGap || DEFAULT_SETTINGS.imageGap
+              const pageMargin = settings?.pageMargin
+              const imageGap = settings?.imageGap
               const { width: previewWidth, height: previewHeight } =
                 getPreviewDimensions(settings)
               const availableWidth = previewWidth - pageMargin * 2
@@ -81,6 +76,7 @@ export const useImageManagement = (settings = null) => {
                 availableHeight,
                 pageMargin,
                 imageGap,
+                settings,
               )
               return { ...page, images: arrangedImages }
             }
@@ -100,9 +96,8 @@ export const useImageManagement = (settings = null) => {
               newImages.splice(destination.index, 0, moved)
 
               // Use arrangeAndCenterImages for multi-row layout
-              const pageMargin =
-                settings?.pageMargin || DEFAULT_SETTINGS.pageMargin
-              const imageGap = settings?.imageGap || DEFAULT_SETTINGS.imageGap
+              const pageMargin = settings?.pageMargin
+              const imageGap = settings?.imageGap
               const { width: previewWidth, height: previewHeight } =
                 getPreviewDimensions(settings)
               const availableWidth = previewWidth - pageMargin * 2
@@ -114,6 +109,7 @@ export const useImageManagement = (settings = null) => {
                 availableHeight,
                 pageMargin,
                 imageGap,
+                settings,
               )
               return { ...page, images: arrangedImages }
             }

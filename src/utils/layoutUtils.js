@@ -112,6 +112,7 @@ export function findCorrectInsertPosition(availableImages, originalIndex) {
  * @param {number} availableHeight - Available height for images
  * @param {number} pageMargin - Page margin
  * @param {number} imageGap - Gap between images
+ * @param {Object} settings - Layout settings including imagesPerRow
  * @returns {Array} Array of images with updated positions and dimensions
  */
 export function arrangeAndCenterImages(
@@ -120,84 +121,5 @@ export function arrangeAndCenterImages(
   availableHeight,
   pageMargin,
   imageGap,
-) {
-  // TODO: Implement multi-row image arrangement with centering
-}
-
-/**
- * Calculates the optimal layout for images on a page
- * @param {Array} images - Array of images to layout
- * @param {number} availableWidth - Available width
- * @param {number} availableHeight - Available height
- * @param {Object} constraints - Layout constraints
- * @returns {Object} Layout result with positioned images
- */
-export function calculateOptimalLayout(
-  images,
-  availableWidth,
-  availableHeight,
-  constraints,
-) {
-  // TODO: Implement optimal layout calculation algorithm
-}
-
-/**
- * Tries different layout configurations to find the best fit
- * @param {Array} images - Array of images to layout
- * @param {number} availableWidth - Available width
- * @param {number} availableHeight - Available height
- * @param {Object} constraints - Layout constraints
- * @returns {Object} Best layout result
- */
-export function tryLayout(
-  images,
-  availableWidth,
-  availableHeight,
-  constraints,
-) {
-  // TODO: Implement layout trial and error algorithm
-}
-
-/**
- * Normalizes image heights to create uniform rows
- * @param {Array} images - Array of images to normalize
- * @param {number} targetHeight - Target height for normalization
- * @returns {Array} Array of images with normalized heights
- */
-export function normalizeImageHeights(images, targetHeight) {
-  // TODO: Implement image height normalization
-}
-
-/**
- * Arranges images in a simple row with uniform height
- * @param {Array} images - Array of images to arrange
- * @param {number} availableWidth - Available width
- * @param {number} rowHeight - Height of the row
- * @param {number} gap - Gap between images
- * @returns {Array} Array of images positioned in a row
- */
-export function arrangeSimpleRowWithUniformHeight(
-  images,
-  availableWidth,
-  rowHeight,
-  gap,
-) {
-  // TODO: Implement simple row arrangement with uniform height
-}
-
-/**
- * Arranges images on a page using various layout strategies
- * @param {Array} images - Array of images to arrange
- * @param {number} availableWidth - Available width
- * @param {number} availableHeight - Available height
- * @param {Object} settings - Layout settings
- * @returns {Array} Array of images positioned on the page
- */
-export function arrangeImagesOnPage(
-  images,
-  availableWidth,
-  availableHeight,
-  settings,
-) {
-  // TODO: Implement comprehensive page layout arrangement
-}
+  settings = null,
+) {}

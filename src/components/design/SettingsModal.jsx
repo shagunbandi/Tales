@@ -1,5 +1,4 @@
 import React from 'react'
-import { DEFAULT_SETTINGS } from '../../constants.js'
 
 const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
   const handleSettingChange = (key, value) => {
@@ -131,38 +130,6 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
                 min="0.1"
                 max="1.0"
                 step="0.1"
-              />
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="imageGapRatio">Image Gap Ratio:</label>
-              <input
-                type="number"
-                id="imageGapRatio"
-                value={settings.imageGapRatio}
-                onChange={(e) =>
-                  handleSettingChange(
-                    'imageGapRatio',
-                    parseFloat(e.target.value),
-                  )
-                }
-                min="0.1"
-                max="1.0"
-                step="0.1"
-              />
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="maxColumns">Max Columns:</label>
-              <input
-                type="number"
-                id="maxColumns"
-                value={settings.maxColumns}
-                onChange={(e) =>
-                  handleSettingChange('maxColumns', parseInt(e.target.value))
-                }
-                min="1"
-                max="6"
               />
             </div>
 
