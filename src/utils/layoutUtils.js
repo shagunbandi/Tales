@@ -1,7 +1,6 @@
 import {
   COLOR_PALETTE,
   PAGE_SIZES,
-  PREVIEW_SCALE,
   getPreviewDimensions,
 } from '../constants.js'
 
@@ -77,7 +76,33 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
  * @returns {number} The correct insert position
  */
 export function findCorrectInsertPosition(availableImages, originalIndex) {
-  // TODO: Implement logic to find correct insert position based on original index
+  // If the available images array is empty, insert at the beginning
+  if (availableImages.length === 0) {
+    return 0
+  }
+
+  // Find the position where the image should be inserted to maintain original order
+  // We want to insert the image so that all images with originalIndex < this image's originalIndex
+  // come before it, and all images with originalIndex > this image's originalIndex come after it
+
+  let insertIndex = 0
+
+  for (let i = 0; i < availableImages.length; i++) {
+    const currentImage = availableImages[i]
+
+    // If the current image has a higher originalIndex, we should insert before it
+    if (currentImage.originalIndex > originalIndex) {
+      insertIndex = i
+      break
+    }
+
+    // If we reach the end, insert at the end
+    if (i === availableImages.length - 1) {
+      insertIndex = availableImages.length
+    }
+  }
+
+  return insertIndex
 }
 
 /**
