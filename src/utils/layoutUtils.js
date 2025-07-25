@@ -121,5 +121,6 @@ export function arrangeAndCenterImages(
   availableHeight,
   pageMargin,
   imageGap,
-  settings = null,
+  settings,
+  sameHeight = true,
 ) {}

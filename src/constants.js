@@ -21,13 +21,9 @@ export const DEFAULT_SETTINGS = {
   pageMargin: 20,
   imageGap: 10,
   imageQuality: 0.9,
-  maxImageHeight: 80,
-  maxImageWidth: 90,
-  maxImageHeightRatio: 0.8,
-  maxImageWidthRatio: 0.9,
   maxImagesPerPage: 6,
   imagesPerRow: 3,
-  numberOfRows: 2,
+  numberOfRows: 1,
 }
 
 export const PREVIEW_SCALE = 0.8

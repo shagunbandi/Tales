@@ -18,8 +18,8 @@ export const loadImage = (file, settings = null) => {
 
         const { width: previewWidth, height: previewHeight } =
           getPreviewDimensions(settings)
-        const maxHeight = previewHeight * (settings?.maxImageHeight / 100)
-        const maxWidth = previewWidth * (settings?.maxImageWidth / 100)
+        const maxHeight = previewHeight
+        const maxWidth = previewWidth
         const scaleHeight = maxHeight / img.naturalHeight
         const scaleWidth = maxWidth / img.naturalWidth
         const scale = Math.min(scaleHeight, scaleWidth, 1)
