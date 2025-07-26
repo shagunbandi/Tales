@@ -1,7 +1,7 @@
 {
-  "name": "flowbite-react-template-react-router-declarative",
+  "name": "tales-pwa",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
     "node": "24.4.1"

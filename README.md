@@ -1,9 +1,10 @@
-# Image to PDF Generator
+# Tales - For Journeys Worth Remembering
 
-A simple frontend-only web application that allows users to select multiple images and generate a PDF with them arranged on A4 landscape pages with random sober background colors.
+A Progressive Web App (PWA) that allows users to select multiple images and generate a PDF with them arranged on A4 landscape pages with random sober background colors. Install it on your device for offline access and native app-like experience.
 
 ## Features
 
+- ✅ **Progressive Web App**: Install on your device for offline access
 - ✅ **Multi-image upload**: Select multiple images via file picker or drag & drop
 - ✅ **Format support**: JPG, PNG, GIF, WebP image formats
 - ✅ **Smart layout**: Images automatically arranged left-to-right on A4 landscape pages
@@ -15,6 +16,7 @@ A simple frontend-only web application that allows users to select multiple imag
 - ✅ **Progress tracking**: Real-time progress indicators during processing
 - ✅ **Page preview**: Visual preview showing page count and colors
 - ✅ **PDF generation**: Creates downloadable PDF files using jsPDF
+- ✅ **Offline support**: Works without internet connection after installation
 
 ## Color Palette
 
@@ -44,6 +46,7 @@ The application uses a carefully selected palette of sober English colors:
 ### Technology Stack
 
 - **Frontend**: React 18 with Vite
+- **PWA**: Service Worker for offline functionality
 - **PDF Generation**: jsPDF library
 - **File Handling**: File System Access API and FileReader
 - **Styling**: CSS with clean, minimal design
@@ -71,6 +74,15 @@ The application uses a carefully selected palette of sober English colors:
    ```
 
 4. Open your browser and navigate to the displayed local URL (typically `http://localhost:5173`)
+
+### PWA Installation
+
+The app can be installed as a Progressive Web App:
+
+1. **Chrome/Edge**: Click the install icon in the address bar or use the install prompt
+2. **Safari**: Tap the share button and select "Add to Home Screen"
+3. **Android**: Use the install prompt or add to home screen from browser menu
+4. **iOS**: Tap the share button and select "Add to Home Screen"
 
 ### Usage
 

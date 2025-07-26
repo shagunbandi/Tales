@@ -30,6 +30,7 @@ clean:
 
 # Development mode (if needed)
 dev:
+    nvm use node
     npm run dev
 
 # Install dependencies

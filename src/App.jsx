@@ -12,6 +12,7 @@ import UploadTab from "./components/UploadTab";
 import DesignTab from "./components/DesignTab";
 import SettingsTab from "./components/SettingsTab";
 import AppHeader from "./components/AppHeader";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 function App() {
   const [activeTab, setActiveTab] = useState("upload");
@@ -196,6 +197,8 @@ function App() {
           {error}
         </div>
       )}
+
+      <PWAInstallPrompt />
     </div>
   );
 }
