@@ -11,7 +11,7 @@ const PagesList = ({
   settings,
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <AddPageSection
         onAddPage={() => onAddPageBetween("start")}
         title="Add page at the beginning"

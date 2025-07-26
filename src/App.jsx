@@ -11,6 +11,7 @@ import TabNavigation from "./components/TabNavigation";
 import UploadTab from "./components/UploadTab";
 import DesignTab from "./components/DesignTab";
 import SettingsTab from "./components/SettingsTab";
+import AppHeader from "./components/AppHeader";
 
 function App() {
   const [activeTab, setActiveTab] = useState("upload");
@@ -143,10 +144,7 @@ function App() {
 
   return (
     <div className="min-h-screen mx-auto max-w-4xl">
-      <div className="my-8 text-center">
-        <p className="text-4xl font-bold">Tales</p>
-        <p className="text-lg">Your story told in pictures</p>
-      </div>
+      <AppHeader />
 
       <TabNavigation
         activeTab={activeTab}

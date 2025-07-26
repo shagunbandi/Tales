@@ -17,7 +17,7 @@ const AvailableImages = ({
   });
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="mb-4 flex flex-col gap-2">
         <div>
           <h3 className="text-lg font-semibold text-gray-800">Available Images</h3>

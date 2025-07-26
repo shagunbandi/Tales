@@ -23,8 +23,8 @@ const PagePreview = ({
   const imageCount = page.images.length;
 
   return (
-    <div className="mb-6">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="mb-6 min-w-0">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-700">
             Page {pageIndex + 1}
@@ -56,16 +56,18 @@ const PagePreview = ({
       </div>
 
       <div className="border-t border-gray-200 pt-4">
-        <div className="flex justify-center">
+        <div className="flex justify-center overflow-hidden">
           <div
             ref={setDroppableRef}
-            className={`relative rounded border-2 border-dashed ${
+            className={`relative rounded border-2 border-dashed max-w-full w-full sm:w-auto ${
               isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
             }`}
             style={{
               backgroundColor: page.color.color,
               width: previewDimensions.width,
               height: previewDimensions.height,
+              maxWidth: "100%",
+              maxHeight: "400px",
             }}
           >
             {page.images.map((image, index) => (

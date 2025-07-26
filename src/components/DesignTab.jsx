@@ -22,11 +22,11 @@ const DesignTab = ({
   onSettingsChange,
 }) => {
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <Card>
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:flex-row">
           {/* Available Images */}
-          <div className="lg:col-span-1">
+          <div className="w-full lg:w-1/3 lg:min-w-0">
             <AvailableImages
               availableImages={availableImages}
               removeAvailableImage={onRemoveAvailableImage}
@@ -36,7 +36,7 @@ const DesignTab = ({
           </div>
 
           {/* Pages Design */}
-          <div className="lg:col-span-2">
+          <div className="w-full lg:w-2/3 lg:min-w-0">
             <PagesHeader
               isProcessing={isProcessing}
               availableImages={availableImages}
