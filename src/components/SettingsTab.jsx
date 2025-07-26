@@ -71,10 +71,10 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
     <div className="space-y-6 p-6">
       <Card>
         <div>
-          <h3 className="text-xl font-semibold text-gray-800">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
             Layout Settings
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             Configure how your images will be arranged in the PDF pages.
           </p>
         </div>
@@ -139,7 +139,7 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
               <div key={id} className="space-y-1">
                 <label
                   htmlFor={id}
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-200"
                 >
                   {label}
                 </label>
@@ -152,15 +152,15 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
                   max={max}
                   step={step}
                   required
-                  className={`w-full rounded border px-3 py-2 text-sm ${
+                  className={`w-full rounded border px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
                     errors[id]
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-400"
                   }`}
                 />
-                <p className="text-xs text-gray-500">{help}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{help}</p>
                 {errors[id] && (
-                  <p className="mt-1 text-xs text-red-600">{errors[id]}</p>
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors[id]}</p>
                 )}
               </div>
             ))}
@@ -173,25 +173,25 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
               disabled={hasErrors}
               className={`rounded px-4 py-2 text-sm text-white ${
                 hasErrors
-                  ? "cursor-not-allowed bg-gray-300"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  ? "cursor-not-allowed bg-gray-300 dark:bg-gray-600"
+                  : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
               }`}
             >
               Next: Design Layout
             </button>
             {hasErrors && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-red-600 dark:text-red-400">
                 Please fix the errors above before proceeding.
               </p>
             )}
           </div>
         </form>
 
-        <details className="text-sm text-gray-500">
-          <summary className="cursor-pointer text-blue-600 underline">
+        <details className="text-sm text-gray-500 dark:text-gray-400">
+          <summary className="cursor-pointer text-blue-600 dark:text-blue-400 underline">
             Current Settings Values (Debug)
           </summary>
-          <pre className="mt-2 rounded bg-gray-50 p-3 text-xs text-gray-700">
+          <pre className="mt-2 rounded bg-gray-50 dark:bg-gray-800 p-3 text-xs text-gray-700 dark:text-gray-300">
             {JSON.stringify(settings, null, 2)}
           </pre>
         </details>

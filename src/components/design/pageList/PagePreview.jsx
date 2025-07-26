@@ -43,10 +43,10 @@ const PagePreview = ({
     <div className="mb-6 min-w-0">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             Page {pageIndex + 1}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {imageCount} {imageCount === 1 ? "image" : "images"}
           </span>
         </div>
@@ -72,7 +72,7 @@ const PagePreview = ({
         </div>
       </div>
 
-      <div className="border-t border-gray-200 pt-4">
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
         <div className="flex justify-center overflow-hidden">
           <div
             ref={containerRef}
@@ -92,7 +92,7 @@ const PagePreview = ({
               <div
                 ref={setDroppableRef}
                 className={`relative rounded border-2 border-dashed ${
-                  isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
+                  isOver ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20" : "border-gray-300 dark:border-gray-600"
                 }`}
                 style={{
                   backgroundColor: page.color.color,
@@ -111,7 +111,7 @@ const PagePreview = ({
                   />
                 ))}
                 {page.images.length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
                     Drag images here
                   </div>
                 )}

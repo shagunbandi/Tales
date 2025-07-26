@@ -10,7 +10,7 @@ const AppHeader = () => {
         <div className="absolute -top-2 -right-2 h-3 w-3 animate-bounce rounded-full bg-yellow-400"></div>
         <div className="absolute -bottom-1 -left-1 h-2 w-2 animate-ping rounded-full bg-blue-400"></div>
       </div>
-      <p className="mt-3 text-lg font-medium text-gray-600">
+      <p className="mt-3 text-lg font-medium text-gray-600 dark:text-gray-300">
         For Journeys Worth Remembering
       </p>
       <div className="mt-4 flex items-center justify-center space-x-2">

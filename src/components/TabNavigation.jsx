@@ -30,7 +30,7 @@ const TabNavigation = ({
   ];
 
   return (
-    <Breadcrumb aria-label="Navigation tabs" className="bg-gray-50 px-5 py-3">
+    <Breadcrumb aria-label="Navigation tabs" className="bg-gray-50 dark:bg-gray-800 px-5 py-3">
       {tabs.map((tab) => (
         <BreadcrumbItem
           key={tab.id}

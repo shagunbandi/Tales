@@ -4,7 +4,7 @@ import { Button } from "flowbite-react";
 const GeneratePDFButton = ({ onGeneratePDF, pages, isProcessing }) => {
   return (
     <div className="min-w-0">
-      <div className="border-t border-gray-200 pt-6">
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
         <div className="flex justify-center">
           <Button
             size="lg"

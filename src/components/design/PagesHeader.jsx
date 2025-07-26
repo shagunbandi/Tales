@@ -6,8 +6,8 @@ const PagesHeader = ({ isProcessing, availableImages, onAutoArrange }) => {
     <div className="min-w-0">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">PDF Pages</h3>
-          <p className="text-sm text-gray-500">Arrange your images on pages</p>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">PDF Pages</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Arrange your images on pages</p>
         </div>
         <Button
           color="gray"
@@ -19,7 +19,7 @@ const PagesHeader = ({ isProcessing, availableImages, onAutoArrange }) => {
           {isProcessing ? "Auto-arranging..." : "Auto-arrange"}
         </Button>
       </div>
-      <div className="border-t border-gray-200 pt-4"></div>
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4"></div>
     </div>
   );
 };

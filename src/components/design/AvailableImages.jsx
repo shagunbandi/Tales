@@ -20,10 +20,10 @@ const AvailableImages = ({
     <div className="min-w-0">
       <div className="mb-4 flex flex-col gap-2">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
             Available Images
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {availableImages.length} of {totalImages} images
           </p>
         </div>
@@ -33,7 +33,7 @@ const AvailableImages = ({
         </Button>
       </div>
 
-      <div className="border-t border-gray-200 pt-4">
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
         <div ref={setDroppableRef} className="max-h-96 overflow-y-auto">
           <div className="grid grid-cols-2 gap-3 ">
             {availableImages.map((image, index) => (
@@ -46,14 +46,14 @@ const AvailableImages = ({
             ))}
 
             {availableImages.length === 0 && totalImages === 0 && (
-              <div className="col-span-full py-8 text-center text-gray-500">
+              <div className="col-span-full py-8 text-center text-gray-500 dark:text-gray-400">
                 <p className="text-sm">No images available</p>
                 <p className="text-xs">Upload some images to get started!</p>
               </div>
             )}
 
             {availableImages.length === 0 && totalImages > 0 && (
-              <div className="col-span-full py-8 text-center text-sm text-gray-500">
+              <div className="col-span-full py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                 All images are arranged on pages
               </div>
             )}
@@ -87,7 +87,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
       {...attributes}
       {...listeners}
       style={style}
-      className={`relative cursor-move overflow-hidden rounded-lg bg-gray-50 transition-all hover:bg-gray-100 ${
+      className={`relative cursor-move overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-800 transition-all hover:bg-gray-100 dark:hover:bg-gray-700 ${
         isDragging ? "z-50 opacity-50 ring-2 ring-blue-400" : ""
       }`}
     >
@@ -109,7 +109,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
         </button>
       </div>
       <div className="p-2">
-        <p className="truncate text-xs text-gray-600">{image.file.name}</p>
+        <p className="truncate text-xs text-gray-600 dark:text-gray-300">{image.file.name}</p>
       </div>
     </div>
   );

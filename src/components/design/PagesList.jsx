@@ -19,7 +19,7 @@ const PagesList = ({
 
       {pages.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             No pages yet. Add a page to get started!
           </p>
         </div>

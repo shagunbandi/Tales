@@ -51,7 +51,7 @@ const UploadTab = ({
     <div className="space-y-6 p-6">
       <Card
         className={`cursor-pointer transition-colors duration-200 ${
-          isDragOver ? "bg-blue-50" : "hover:bg-gray-50"
+          isDragOver ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800"
         }`}
         onClick={() => document.getElementById("folder-input").click()}
         onDrop={handleDrop}
@@ -59,11 +59,11 @@ const UploadTab = ({
         onDragLeave={handleDragLeave}
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <HiOutlineCloudArrowUp className="mb-4 h-12 w-12 text-gray-400" />
-          <p className="text-lg font-semibold text-gray-700">
+          <HiOutlineCloudArrowUp className="mb-4 h-12 w-12 text-gray-400 dark:text-gray-500" />
+          <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
             Click here or drag & drop image files
           </p>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Supports JPG, PNG, GIF, WebP formats
           </p>
           <Button color="gray" size="sm" className="mt-4">
