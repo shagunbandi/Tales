@@ -35,7 +35,7 @@ const AvailableImages = ({
 
       <div className="border-t border-gray-200 pt-4">
         <div ref={setDroppableRef} className="max-h-96 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-3 ">
+          <div className="grid grid-cols-2 gap-3">
             {availableImages.map((image, index) => (
               <DraggableImage
                 key={image.id}

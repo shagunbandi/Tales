@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Button } from 'flowbite-react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from "react";
+import { Button } from "flowbite-react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -16,10 +16,10 @@ const PWAInstallPrompt = () => {
       setShowInstallPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener("beforeinstallprompt", handler);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener("beforeinstallprompt", handler);
     };
   }, []);
 
@@ -32,10 +32,10 @@ const PWAInstallPrompt = () => {
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
 
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
+    if (outcome === "accepted") {
+      console.log("User accepted the install prompt");
     } else {
-      console.log('User dismissed the install prompt');
+      console.log("User dismissed the install prompt");
     }
 
     // Clear the deferredPrompt variable
@@ -50,13 +50,11 @@ const PWAInstallPrompt = () => {
   if (!showInstallPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+    <div className="fixed right-4 bottom-4 left-4 z-50 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Install Tales
-          </h3>
-          <p className="text-xs text-gray-600 mt-1">
+          <h3 className="text-sm font-semibold text-gray-900">Install Tales</h3>
+          <p className="mt-1 text-xs text-gray-600">
             Add Tales to your home screen for quick access
           </p>
         </div>
@@ -80,4 +78,4 @@ const PWAInstallPrompt = () => {
   );
 };
 
-export default PWAInstallPrompt; 
+export default PWAInstallPrompt;
