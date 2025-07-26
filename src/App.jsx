@@ -144,7 +144,7 @@ function App() {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-4xl bg-white dark:bg-gray-900">
+    <div className="mx-auto min-h-screen max-w-4xl dark:bg-gray-900">
       <div className="absolute right-4 top-4 z-50">
         <DarkThemeToggle />
       </div>
