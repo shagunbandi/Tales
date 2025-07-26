@@ -11,7 +11,7 @@ const PagesList = ({
   settings,
 }) => {
   return (
-    <div className="space-y-6 min-w-0">
+    <div className="min-w-0 space-y-6">
       <AddPageSection
         onAddPage={() => onAddPageBetween("start")}
         title="Add page at the beginning"
@@ -19,7 +19,9 @@ const PagesList = ({
 
       {pages.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-gray-500">No pages yet. Add a page to get started!</p>
+          <p className="text-gray-500">
+            No pages yet. Add a page to get started!
+          </p>
         </div>
       ) : (
         pages.map((page, pageIndex) => (

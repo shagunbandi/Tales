@@ -4,7 +4,7 @@ import { HiPlus } from "react-icons/hi";
 
 const AddPageSection = ({ onAddPage, position, title }) => {
   return (
-    <div className="flex justify-center py-2">
+    <div className="flex justify-center py-1">
       <Button
         size="sm"
         color="light"

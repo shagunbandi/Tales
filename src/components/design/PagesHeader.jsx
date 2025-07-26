@@ -19,8 +19,7 @@ const PagesHeader = ({ isProcessing, availableImages, onAutoArrange }) => {
           {isProcessing ? "Auto-arranging..." : "Auto-arrange"}
         </Button>
       </div>
-      <div className="border-t border-gray-200 pt-4">
-      </div>
+      <div className="border-t border-gray-200 pt-4"></div>
     </div>
   );
 };

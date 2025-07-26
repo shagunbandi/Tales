@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { Button } from "flowbite-react";
 import { HiTrash, HiColorSwatch } from "react-icons/hi";
@@ -21,6 +21,23 @@ const PagePreview = ({
 
   const previewDimensions = getPreviewDimensions(settings);
   const imageCount = page.images.length;
+
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const newScale = containerWidth / previewDimensions.width;
+        setScale(newScale);
+      }
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, [previewDimensions.width]);
 
   return (
     <div className="mb-6 min-w-0">
@@ -58,31 +75,48 @@ const PagePreview = ({
       <div className="border-t border-gray-200 pt-4">
         <div className="flex justify-center overflow-hidden">
           <div
-            ref={setDroppableRef}
-            className={`relative rounded border-2 border-dashed max-w-full w-full sm:w-auto ${
-              isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
-            }`}
+            ref={containerRef}
+            className="w-full max-w-full overflow-hidden"
             style={{
-              backgroundColor: page.color.color,
-              width: previewDimensions.width,
-              height: previewDimensions.height,
-              maxWidth: "100%",
-              maxHeight: "400px",
+              height: previewDimensions.height * scale,
             }}
           >
-            {page.images.map((image, index) => (
-              <DraggablePageImage
-                key={`${page.id}-${image.id}`}
-                image={image}
-                pageId={page.id}
-                index={index}
-              />
-            ))}
-            {page.images.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
-                Drag images here
+            <div
+              style={{
+                transform: `scale(${scale})`,
+                transformOrigin: "top left",
+                width: previewDimensions.width,
+                height: previewDimensions.height,
+              }}
+            >
+              <div
+                ref={setDroppableRef}
+                className={`relative rounded border-2 border-dashed ${
+                  isOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
+                }`}
+                style={{
+                  backgroundColor: page.color.color,
+                  width: previewDimensions.width,
+                  height: previewDimensions.height,
+                  maxWidth: "100%",
+                  maxHeight: "400px",
+                }}
+              >
+                {page.images.map((image, index) => (
+                  <DraggablePageImage
+                    key={`${page.id}-${image.id}`}
+                    image={image}
+                    pageId={page.id}
+                    index={index}
+                  />
+                ))}
+                {page.images.length === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
+                    Drag images here
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -101,11 +135,13 @@ const DraggablePageImage = ({ image, pageId, index }) => {
       },
     });
 
+  if (!image?.src) return null;
+
   const style = {
-    left: image.x,
-    top: image.y,
-    width: image.previewWidth,
-    height: image.previewHeight,
+    left: image.x ?? 0,
+    top: image.y ?? 0,
+    width: image.previewWidth ?? 100,
+    height: image.previewHeight ?? 100,
     ...(transform
       ? {
           transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -123,7 +159,7 @@ const DraggablePageImage = ({ image, pageId, index }) => {
     >
       <img
         src={image.src}
-        alt={image.file.name}
+        alt={image.file?.name || "Image"}
         className="h-full w-full rounded object-cover"
       />
     </div>

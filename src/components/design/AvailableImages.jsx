@@ -20,7 +20,9 @@ const AvailableImages = ({
     <div className="min-w-0">
       <div className="mb-4 flex flex-col gap-2">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">Available Images</h3>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Available Images
+          </h3>
           <p className="text-sm text-gray-500">
             {availableImages.length} of {totalImages} images
           </p>
@@ -33,7 +35,7 @@ const AvailableImages = ({
 
       <div className="border-t border-gray-200 pt-4">
         <div ref={setDroppableRef} className="max-h-96 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 ">
             {availableImages.map((image, index) => (
               <DraggableImage
                 key={image.id}
@@ -107,9 +109,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
         </button>
       </div>
       <div className="p-2">
-        <p className="truncate text-xs text-gray-600">
-          {image.file.name}
-        </p>
+        <p className="truncate text-xs text-gray-600">{image.file.name}</p>
       </div>
     </div>
   );

@@ -71,7 +71,9 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
     <div className="space-y-6 p-6">
       <Card>
         <div>
-          <h3 className="text-xl font-semibold text-gray-800">Layout Settings</h3>
+          <h3 className="text-xl font-semibold text-gray-800">
+            Layout Settings
+          </h3>
           <p className="text-sm text-gray-600">
             Configure how your images will be arranged in the PDF pages.
           </p>

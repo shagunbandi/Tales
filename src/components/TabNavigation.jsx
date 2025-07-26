@@ -8,20 +8,24 @@ const TabNavigation = ({
   hasSettingsErrors,
 }) => {
   const tabs = [
-    { 
-      id: "upload", 
-      label: "1. Upload Images", 
-      disabled: activeTab !== "upload" && totalImages > 0 
+    {
+      id: "upload",
+      label: "1. Upload Images",
+      disabled: activeTab !== "upload" && totalImages > 0,
     },
-    { 
-      id: "settings", 
-      label: "2. Settings", 
-      disabled: activeTab === "upload" || totalImages === 0 
+    {
+      id: "settings",
+      label: "2. Settings",
+      disabled: activeTab === "upload" || totalImages === 0,
     },
     {
       id: "design",
       label: "3. Design Layout",
-      disabled: activeTab === "upload" || activeTab === "settings" || totalImages === 0 || hasSettingsErrors,
+      disabled:
+        activeTab === "upload" ||
+        activeTab === "settings" ||
+        totalImages === 0 ||
+        hasSettingsErrors,
     },
   ];
 
@@ -37,7 +41,9 @@ const TabNavigation = ({
               setActiveTab(tab.id);
             }
           }}
-          className={tab.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+          className={
+            tab.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+          }
         >
           {tab.label}
           {tab.id === "design" && totalImages > 0 && ` (${totalImages} images)`}

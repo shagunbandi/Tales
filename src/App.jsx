@@ -143,7 +143,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen mx-auto max-w-4xl">
+    <div className="mx-auto min-h-screen max-w-4xl">
       <AppHeader />
 
       <TabNavigation
