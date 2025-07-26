@@ -12,7 +12,6 @@ import UploadTab from "./components/UploadTab";
 import DesignTab from "./components/DesignTab";
 import SettingsTab from "./components/SettingsTab";
 import AppHeader from "./components/AppHeader";
-
 import { DarkThemeToggle } from "flowbite-react";
 
 function App() {
@@ -144,9 +143,11 @@ function App() {
     setActiveTab("design");
   };
 
-  return (<>
-      <DarkThemeToggle />
+  return (
     <div className="mx-auto min-h-screen max-w-4xl bg-white dark:bg-gray-900">
+      <div className="absolute right-4 top-4 z-50">
+        <DarkThemeToggle />
+      </div>
       <AppHeader />
 
       <TabNavigation
@@ -200,9 +201,7 @@ function App() {
         </div>
       )}
 
-
     </div>
-    </>
   );
 }
 
