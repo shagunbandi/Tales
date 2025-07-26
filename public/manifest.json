@@ -1,7 +1,7 @@
 {
-  "name": "Tales - For Journeys Worth Remembering",
+  "name": "Tales - Create Beautiful Photo Books & Memories",
   "short_name": "Tales",
-  "description": "Create beautiful photo books and memories",
+  "description": "Create stunning photo books and preserve your memories with Tales. Upload multiple images, arrange them beautifully on A4 pages, and generate professional PDF photo books. Free online tool with drag & drop support.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",
@@ -28,7 +28,17 @@
       "purpose": "any"
     }
   ],
-  "categories": ["lifestyle", "productivity", "photo"],
+  "categories": ["lifestyle", "productivity", "photo", "utilities"],
   "lang": "en",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [
+    {
+      "src": "/tales.ico",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
 } 
