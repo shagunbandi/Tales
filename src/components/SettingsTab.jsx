@@ -4,25 +4,28 @@ import { Card } from "flowbite-react";
 const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
   const handleSettingChange = (key, value) => {
     let parsedValue = value;
-    if (value === "" || isNaN(value)) {
-      parsedValue = key === "imageQuality" ? 0.8 : 1;
-    } else {
-      parsedValue =
-        key === "imageQuality" ? parseFloat(value) : parseInt(value);
+    if (value !== "" && !isNaN(value)) {
+      parsedValue = key === "imageQuality" ? parseFloat(value) : parseInt(value);
     }
     onSettingsChange({ ...settings, [key]: parsedValue });
   };
 
   const validateSettings = () => {
     const errors = {};
-    const isValidNumber = (value, min, max) =>
-      !isNaN(value) && value !== "" && value >= min && value <= max;
+    const isValidNumber = (value, min, max) => {
+      // Handle undefined, null, or empty values
+      if (value === undefined || value === null || value === "") {
+        return false;
+      }
+      // Ensure it's a valid number and within range
+      return !isNaN(value) && value >= min && value <= max;
+    };
 
-    if (!isValidNumber(settings.pageMargin, 5, 50)) {
-      errors.pageMargin = "Page margin must be between 5 and 50 pixels";
+    if (!isValidNumber(settings.pageMargin, 0, 50)) {
+      errors.pageMargin = "Page margin must be between 0 and 50 pixels (0 is allowed)";
     }
     if (!isValidNumber(settings.imageGap, 0, 30)) {
-      errors.imageGap = "Image gap must be between 0 and 30 pixels";
+      errors.imageGap = "Image gap must be between 0 and 30 pixels (0 is allowed)";
     }
     if (!isValidNumber(settings.maxImagesPerRow, 1, Infinity)) {
       errors.maxImagesPerRow = "Max images per row must be at least 1";
@@ -85,7 +88,7 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
               {
                 id: "pageMargin",
                 label: "Page Margin (px):",
-                min: 5,
+                min: 0,
                 max: 50,
                 help: "Space around the edges of each page",
               },
@@ -146,7 +149,7 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
                 <input
                   type="number"
                   id={id}
-                  value={settings[id] || ""}
+                  value={settings[id] !== undefined && settings[id] !== null ? settings[id] : ""}
                   onChange={(e) => handleSettingChange(id, e.target.value)}
                   min={min}
                   max={max}
@@ -186,15 +189,6 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
             )}
           </div>
         </form>
-
-        <details className="text-sm text-gray-500 dark:text-gray-400">
-          <summary className="cursor-pointer text-blue-600 dark:text-blue-400 underline">
-            Current Settings Values (Debug)
-          </summary>
-          <pre className="mt-2 rounded bg-gray-50 dark:bg-gray-800 p-3 text-xs text-gray-700 dark:text-gray-300">
-            {JSON.stringify(settings, null, 2)}
-          </pre>
-        </details>
       </Card>
     </div>
   );
