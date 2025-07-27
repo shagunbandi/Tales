@@ -14,15 +14,21 @@ const TabNavigation = ({
       disabled: activeTab !== "upload" && totalImages > 0,
     },
     {
-      id: "settings",
-      label: "2. Settings",
+      id: "designStyle",
+      label: "2. Design Style",
       disabled: activeTab === "upload" || totalImages === 0,
     },
     {
+      id: "settings",
+      label: "3. Settings",
+      disabled: activeTab === "upload" || activeTab === "designStyle" || totalImages === 0,
+    },
+    {
       id: "design",
-      label: "3. Design Layout",
+      label: "4. Design Layout",
       disabled:
         activeTab === "upload" ||
+        activeTab === "designStyle" ||
         activeTab === "settings",
         // totalImages === 0 ||
         // hasSettingsErrors,

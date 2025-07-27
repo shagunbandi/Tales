@@ -3,7 +3,7 @@ import { processFiles } from "../utils/imageUtils.js";
 import {
   getRandomColor,
   findCorrectInsertPosition,
-  arrangeAndCenterImages,
+  arrangeImages,
 } from "../utils/layoutUtils.js";
 import { autoArrangeImages } from "../utils/autoArrangeUtils.js";
 import { generatePDF } from "../utils/pdfUtils.js";
@@ -67,20 +67,9 @@ export const useImageManagement = (settings = null) => {
               // Add to the end of the page images
               newImages.push(imageToMove);
 
-              // Use arrangeAndCenterImages for multi-row layout
-              const pageMargin = settings?.pageMargin;
-              const imageGap = settings?.imageGap;
-              const { width: previewWidth, height: previewHeight } =
-                getPreviewDimensions(settings);
-
-              const arrangedImages = arrangeAndCenterImages(
-                newImages,
-                previewWidth,
-                previewHeight,
-                pageMargin,
-                imageGap,
-                settings,
-              );
+              // Use shared layout function
+              const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+              const arrangedImages = arrangeImages(newImages, previewWidth, previewHeight, settings);
               return { ...page, images: arrangedImages };
             }
             return page;
@@ -95,20 +84,9 @@ export const useImageManagement = (settings = null) => {
               const [moved] = newImages.splice(sourceIndex, 1);
               newImages.splice(sourceIndex, 0, moved); // Keep at same position for now
 
-              // Use arrangeAndCenterImages for multi-row layout
-              const pageMargin = settings?.pageMargin;
-              const imageGap = settings?.imageGap;
-              const { width: previewWidth, height: previewHeight } =
-                getPreviewDimensions(settings);
-
-              const arrangedImages = arrangeAndCenterImages(
-                newImages,
-                previewWidth,
-                previewHeight,
-                pageMargin,
-                imageGap,
-                settings,
-              );
+              // Use shared layout function
+              const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+              const arrangedImages = arrangeImages(newImages, previewWidth, previewHeight, settings);
               return { ...page, images: arrangedImages };
             }
             return page;

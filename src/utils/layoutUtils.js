@@ -2,11 +2,36 @@ import {
   COLOR_PALETTE,
   PAGE_SIZES,
   getPreviewDimensions,
+  DESIGN_STYLES,
 } from "../constants.js";
+import { arrangeImagesFullCover } from "./fullCoverLayoutUtils.js";
 
 /**
  * Layout utility functions for image arrangement and page management
  */
+
+/**
+ * Determines which layout function to use based on design style
+ * @param {Array} images - Array of images to arrange
+ * @param {number} previewWidth - Preview width
+ * @param {number} previewHeight - Preview height
+ * @param {Object} settings - Layout settings
+ * @returns {Array} Array of images with calculated positions
+ */
+export function arrangeImages(images, previewWidth, previewHeight, settings) {
+  if (settings.designStyle === DESIGN_STYLES.FULL_COVER) {
+    return arrangeImagesFullCover(images, previewWidth, previewHeight, settings);
+  } else {
+    return arrangeAndCenterImages(
+      images,
+      previewWidth,
+      previewHeight,
+      settings.pageMargin,
+      settings.imageGap,
+      settings,
+    );
+  }
+}
 
 /**
  * Converts preview dimensions to millimeters for PDF generation

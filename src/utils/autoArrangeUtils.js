@@ -2,7 +2,7 @@
  * Auto-arrangement utility functions for distributing images across pages
  */
 
-import { arrangeAndCenterImages, getRandomColor } from "./layoutUtils.js";
+import { getRandomColor, arrangeImages } from "./layoutUtils.js";
 import { getPreviewDimensions } from "../constants.js";
 
 /**
@@ -57,8 +57,6 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
   // Get page dimensions for layout calculation
   const { width: previewWidth, height: previewHeight } =
     getPreviewDimensions(settings);
-  const pageMargin = settings.pageMargin;
-  const imageGap = settings.imageGap;
 
   // Distribute images across pages
   let currentImageIndex = 0;
@@ -81,15 +79,8 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
       currentImageIndex + imagesForThisPage,
     );
 
-    // Use arrangeAndCenterImages to get optimal layout for this page
-    const arrangedImages = arrangeAndCenterImages(
-      pageImages,
-      previewWidth,
-      previewHeight,
-      pageMargin,
-      imageGap,
-      settings,
-    );
+    // Use shared layout function
+    const arrangedImages = arrangeImages(pageImages, previewWidth, previewHeight, settings);
 
     // Create new page
     const newPage = {

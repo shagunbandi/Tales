@@ -9,6 +9,7 @@ import { useImageManagement } from "./hooks/useImageManagement";
 import { DEFAULT_SETTINGS } from "./constants";
 import TabNavigation from "./components/TabNavigation";
 import UploadTab from "./components/UploadTab";
+import DesignStyleTab from "./components/DesignStyleTab";
 import DesignTab from "./components/DesignTab";
 import SettingsTab from "./components/SettingsTab";
 import AppHeader from "./components/AppHeader";
@@ -54,7 +55,7 @@ function App() {
     };
 
     // Page margin validation
-    if (!isValidNumber(settings.pageMargin, 5, 50)) {
+    if (!isValidNumber(settings.pageMargin, 0, 50)) {
       errors.pageMargin = "Page margin must be between 5 and 50 pixels";
     }
 
@@ -132,12 +133,16 @@ function App() {
     input.click();
   };
 
-  // Redirect to settings when images are uploaded
+  // Redirect to design style when images are uploaded
   React.useEffect(() => {
     if (totalImages > 0 && activeTab === "upload") {
-      setActiveTab("settings");
+      setActiveTab("designStyle");
     }
   }, [totalImages, activeTab]);
+
+  const handleNextToSettings = () => {
+    setActiveTab("settings");
+  };
 
   const handleNextToDesign = () => {
     setActiveTab("design");
@@ -164,6 +169,14 @@ function App() {
             isProcessing={isProcessing}
             totalImages={totalImages}
             setActiveTab={setActiveTab}
+          />
+        )}
+
+        {activeTab === "designStyle" && (
+          <DesignStyleTab
+            settings={settings}
+            onSettingsChange={setSettings}
+            onNext={handleNextToSettings}
           />
         )}
 
