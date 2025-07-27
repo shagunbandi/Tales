@@ -10,9 +10,7 @@ import { generatePDF } from "../utils/pdfUtils.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
 
 export const useImageManagement = (settings = null) => {
-  const [pages, setPages] = useState([
-    { id: "page-1", images: [], color: COLOR_PALETTE[0] },
-  ]);
+  const [pages, setPages] = useState([]);
   const [availableImages, setAvailableImages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");

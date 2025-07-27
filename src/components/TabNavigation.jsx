@@ -23,9 +23,9 @@ const TabNavigation = ({
       label: "3. Design Layout",
       disabled:
         activeTab === "upload" ||
-        activeTab === "settings" ||
-        totalImages === 0 ||
-        hasSettingsErrors,
+        activeTab === "settings",
+        // totalImages === 0 ||
+        // hasSettingsErrors,
     },
   ];
 
