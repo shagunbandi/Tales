@@ -2,19 +2,45 @@ import {
   COLOR_PALETTE,
   PAGE_SIZES,
   getPreviewDimensions,
+  DESIGN_STYLES,
 } from "../constants.js";
+import { arrangeImagesFullCover } from "./fullCoverLayoutUtils.js";
 
 /**
  * Layout utility functions for image arrangement and page management
  */
 
 /**
+ * Determines which layout function to use based on design style
+ * @param {Array} images - Array of images to arrange
+ * @param {number} previewWidth - Preview width
+ * @param {number} previewHeight - Preview height
+ * @param {Object} settings - Layout settings
+ * @returns {Promise<Array>} Array of images with calculated positions
+ */
+export async function arrangeImages(images, previewWidth, previewHeight, settings) {
+  if (settings.designStyle === DESIGN_STYLES.FULL_COVER) {
+    return await arrangeImagesFullCover(images, previewWidth, previewHeight, settings);
+  } else {
+    return arrangeAndCenterImages(
+      images,
+      previewWidth,
+      previewHeight,
+      settings.pageMargin,
+      settings.imageGap,
+      settings,
+    );
+  }
+}
+
+/**
  * Converts preview dimensions to millimeters for PDF generation
  * @param {number} previewValue - The preview dimension value in pixels
  * @param {Object} settings - The current settings object
+ * @param {string} dimensionType - Optional: 'width', 'height', or 'position' to use appropriate conversion factor
  * @returns {number} The dimension in millimeters
  */
-export function previewToMm(previewValue, settings) {
+export function previewToMm(previewValue, settings, dimensionType = null) {
   if (!settings) {
     throw new Error("Settings object is required for preview to mm conversion");
   }
@@ -39,12 +65,16 @@ export function previewToMm(previewValue, settings) {
   const widthConversionFactor = actualPageWidth / previewDimensions.width;
   const heightConversionFactor = actualPageHeight / previewDimensions.height;
 
-  // Convert preview value to millimeters
-  // For width-related values (x, width), use width conversion factor
-  // For height-related values (y, height), use height conversion factor
-  // Since we can't determine which dimension this is, we'll use the average
-  // or assume it's proportional to the page dimensions
-  const conversionFactor = (widthConversionFactor + heightConversionFactor) / 2;
+  // Use appropriate conversion factor based on dimension type
+  let conversionFactor;
+  if (dimensionType === 'width' || dimensionType === 'x') {
+    conversionFactor = widthConversionFactor;
+  } else if (dimensionType === 'height' || dimensionType === 'y') {
+    conversionFactor = heightConversionFactor;
+  } else {
+    // For unknown types, use the average (fallback behavior)
+    conversionFactor = (widthConversionFactor + heightConversionFactor) / 2;
+  }
 
   return previewValue * conversionFactor;
 }

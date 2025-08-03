@@ -3,7 +3,7 @@ import { processFiles } from "../utils/imageUtils.js";
 import {
   getRandomColor,
   findCorrectInsertPosition,
-  arrangeAndCenterImages,
+  arrangeImages,
 } from "../utils/layoutUtils.js";
 import { autoArrangeImages } from "../utils/autoArrangeUtils.js";
 import { generatePDF } from "../utils/pdfUtils.js";
@@ -14,6 +14,7 @@ export const useImageManagement = (settings = null) => {
   const [availableImages, setAvailableImages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState(null);
 
   const handleFiles = useCallback(
     async (files) => {
@@ -37,7 +38,7 @@ export const useImageManagement = (settings = null) => {
   );
 
   const handleDragEnd = useCallback(
-    (event) => {
+    async (event) => {
       const { active, over } = event;
 
       if (!over) return;
@@ -67,21 +68,18 @@ export const useImageManagement = (settings = null) => {
               // Add to the end of the page images
               newImages.push(imageToMove);
 
-              // Use arrangeAndCenterImages for multi-row layout
-              const pageMargin = settings?.pageMargin;
-              const imageGap = settings?.imageGap;
-              const { width: previewWidth, height: previewHeight } =
-                getPreviewDimensions(settings);
-
-              const arrangedImages = arrangeAndCenterImages(
-                newImages,
-                previewWidth,
-                previewHeight,
-                pageMargin,
-                imageGap,
-                settings,
-              );
-              return { ...page, images: arrangedImages };
+              // Use shared layout function (now async)
+              const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+              arrangeImages(newImages, previewWidth, previewHeight, settings).then(arrangedImages => {
+                setPages((currentPages) =>
+                  currentPages.map((currentPage) =>
+                    currentPage.id === pageId ? { ...currentPage, images: arrangedImages } : currentPage
+                  )
+                );
+              });
+              
+              // Return current state while async operation completes
+              return page;
             }
             return page;
           }),
@@ -95,21 +93,18 @@ export const useImageManagement = (settings = null) => {
               const [moved] = newImages.splice(sourceIndex, 1);
               newImages.splice(sourceIndex, 0, moved); // Keep at same position for now
 
-              // Use arrangeAndCenterImages for multi-row layout
-              const pageMargin = settings?.pageMargin;
-              const imageGap = settings?.imageGap;
-              const { width: previewWidth, height: previewHeight } =
-                getPreviewDimensions(settings);
-
-              const arrangedImages = arrangeAndCenterImages(
-                newImages,
-                previewWidth,
-                previewHeight,
-                pageMargin,
-                imageGap,
-                settings,
-              );
-              return { ...page, images: arrangedImages };
+              // Use shared layout function (now async)
+              const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+              arrangeImages(newImages, previewWidth, previewHeight, settings).then(arrangedImages => {
+                setPages((currentPages) =>
+                  currentPages.map((currentPage) =>
+                    currentPage.id === pageId ? { ...currentPage, images: arrangedImages } : currentPage
+                  )
+                );
+              });
+              
+              // Return current state while async operation completes
+              return page;
             }
             return page;
           }),
@@ -125,14 +120,28 @@ export const useImageManagement = (settings = null) => {
 
         if (currentPage && currentPage.images[imageIndex]) {
           const imageToRemove = currentPage.images[imageIndex];
+          
+          // Restore original image if it was cropped
+          const originalImage = imageToRemove.originalSrc ? {
+            ...imageToRemove,
+            src: imageToRemove.originalSrc,
+            originalSrc: undefined, // Remove the originalSrc property
+            // Remove cropping-related properties
+            previewWidth: undefined,
+            previewHeight: undefined,
+            x: undefined,
+            y: undefined,
+            rowIndex: undefined,
+            colIndex: undefined,
+          } : imageToRemove;
 
           setAvailableImages((current) => {
             const newAvailable = [...current];
             const insertIndex = findCorrectInsertPosition(
               newAvailable,
-              imageToRemove.originalIndex,
+              originalImage.originalIndex,
             );
-            newAvailable.splice(insertIndex, 0, imageToRemove);
+            newAvailable.splice(insertIndex, 0, originalImage);
             return newAvailable;
           });
         }
@@ -227,11 +236,15 @@ export const useImageManagement = (settings = null) => {
     if (availableImages.length === 0) return;
 
     setIsProcessing(true);
+    setProgress(null);
     try {
-      const { arrangedPages, remainingImages } = autoArrangeImages(
+      const { arrangedPages, remainingImages } = await autoArrangeImages(
         availableImages,
         pages,
         settings,
+        (progressData) => {
+          setProgress(progressData);
+        }
       );
 
       setPages((prevPages) => [...prevPages, ...arrangedPages]);
@@ -240,6 +253,7 @@ export const useImageManagement = (settings = null) => {
       setError(`Failed to auto-arrange images: ${err.message}`);
     } finally {
       setIsProcessing(false);
+      setProgress(null);
     }
   }, [availableImages, pages, settings]);
 
@@ -247,12 +261,16 @@ export const useImageManagement = (settings = null) => {
     if (pages.length === 0) return;
 
     setIsProcessing(true);
+    setProgress(null);
     try {
-      await generatePDF(pages, settings);
+      await generatePDF(pages, settings, (progressData) => {
+        setProgress(progressData);
+      });
     } catch (err) {
       setError(`Failed to generate PDF: ${err.message}`);
     } finally {
       setIsProcessing(false);
+      setProgress(null);
     }
   }, [pages, settings]);
 
@@ -265,6 +283,7 @@ export const useImageManagement = (settings = null) => {
     availableImages,
     isProcessing,
     error,
+    progress,
     totalImages,
     handleFiles,
     handleDragEnd,

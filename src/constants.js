@@ -44,9 +44,25 @@ export const PAGE_SIZES = {
   legal: { width: 356, height: 216, name: "Legal" },
 };
 
+export const DESIGN_STYLES = {
+  CLASSIC: "classic",
+  FULL_COVER: "full_cover",
+};
+
+export const DESIGN_STYLE_LABELS = {
+  [DESIGN_STYLES.CLASSIC]: "Classic",
+  [DESIGN_STYLES.FULL_COVER]: "Full Cover",
+};
+
+export const DESIGN_STYLE_DESCRIPTIONS = {
+  [DESIGN_STYLES.CLASSIC]: "Traditional layout with gaps and margins",
+  [DESIGN_STYLES.FULL_COVER]: "Images cover the entire page without gaps",
+};
+
 export const DEFAULT_SETTINGS = {
   pageSize: "a4",
   orientation: "landscape",
+  designStyle: DESIGN_STYLES.CLASSIC,
   pageMargin: 20,
   imageGap: 10,
   imageQuality: 0.9,

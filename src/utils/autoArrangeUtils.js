@@ -2,7 +2,7 @@
  * Auto-arrangement utility functions for distributing images across pages
  */
 
-import { arrangeAndCenterImages, getRandomColor } from "./layoutUtils.js";
+import { getRandomColor, arrangeImages } from "./layoutUtils.js";
 import { getPreviewDimensions } from "../constants.js";
 
 /**
@@ -10,9 +10,9 @@ import { getPreviewDimensions } from "../constants.js";
  * @param {Array} availableImages - Array of images to arrange
  * @param {Array} existingPages - Array of existing pages
  * @param {Object} settings - Layout settings including page margin, image gap, etc.
- * @returns {Object} Object containing arrangedPages and remainingImages
+ * @returns {Promise<Object>} Object containing arrangedPages and remainingImages
  */
-export function autoArrangeImages(availableImages, existingPages, settings) {
+export async function autoArrangeImages(availableImages, existingPages, settings, onProgress = null) {
   // Step 1: Calculate remaining pages
   const remainingPages = settings.maxNumberOfPages - existingPages.length;
 
@@ -47,7 +47,6 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
   // Step 4: Calculate how many images can actually be placed
   const maxImagesThatCanBePlaced = remainingPages * averageImagesPerPage;
   const imagesToPlace = Math.min(totalImagesToPlace, maxImagesThatCanBePlaced);
-  const imagesThatWillRemain = totalImagesToPlace - imagesToPlace;
 
   // Step 5: Create new pages with arranged images
   const arrangedPages = [];
@@ -57,16 +56,28 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
   // Get page dimensions for layout calculation
   const { width: previewWidth, height: previewHeight } =
     getPreviewDimensions(settings);
-  const pageMargin = settings.pageMargin;
-  const imageGap = settings.imageGap;
 
   // Distribute images across pages
   let currentImageIndex = 0;
+  const totalPagesToCreate = Math.min(remainingPages, Math.ceil(imagesToArrange.length / averageImagesPerPage));
+  
   for (
     let pageIndex = 0;
     pageIndex < remainingPages && currentImageIndex < imagesToArrange.length;
     pageIndex++
   ) {
+    if (onProgress) {
+      onProgress({
+        step: pageIndex,
+        total: totalPagesToCreate,
+        message: `Arranging page ${pageIndex + 1} of ${totalPagesToCreate}...`,
+        percentage: Math.round((pageIndex / totalPagesToCreate) * 100)
+      });
+    }
+
+    // Allow UI to update
+    await new Promise(resolve => setTimeout(resolve, 10));
+
     // Calculate how many images should go on this page
     const imagesForThisPage = Math.min(
       averageImagesPerPage,
@@ -81,15 +92,8 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
       currentImageIndex + imagesForThisPage,
     );
 
-    // Use arrangeAndCenterImages to get optimal layout for this page
-    const arrangedImages = arrangeAndCenterImages(
-      pageImages,
-      previewWidth,
-      previewHeight,
-      pageMargin,
-      imageGap,
-      settings,
-    );
+    // Use shared layout function (now async)
+    const arrangedImages = await arrangeImages(pageImages, previewWidth, previewHeight, settings);
 
     // Create new page
     const newPage = {
@@ -100,6 +104,15 @@ export function autoArrangeImages(availableImages, existingPages, settings) {
 
     arrangedPages.push(newPage);
     currentImageIndex += imagesForThisPage;
+  }
+
+  if (onProgress) {
+    onProgress({
+      step: totalPagesToCreate,
+      total: totalPagesToCreate,
+      message: 'Auto-arrange complete!',
+      percentage: 100
+    });
   }
 
   return {
