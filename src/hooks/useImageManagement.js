@@ -14,6 +14,7 @@ export const useImageManagement = (settings = null) => {
   const [availableImages, setAvailableImages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState(null);
 
   const handleFiles = useCallback(
     async (files) => {
@@ -37,7 +38,7 @@ export const useImageManagement = (settings = null) => {
   );
 
   const handleDragEnd = useCallback(
-    (event) => {
+    async (event) => {
       const { active, over } = event;
 
       if (!over) return;
@@ -67,10 +68,18 @@ export const useImageManagement = (settings = null) => {
               // Add to the end of the page images
               newImages.push(imageToMove);
 
-              // Use shared layout function
+              // Use shared layout function (now async)
               const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-              const arrangedImages = arrangeImages(newImages, previewWidth, previewHeight, settings);
-              return { ...page, images: arrangedImages };
+              arrangeImages(newImages, previewWidth, previewHeight, settings).then(arrangedImages => {
+                setPages((currentPages) =>
+                  currentPages.map((currentPage) =>
+                    currentPage.id === pageId ? { ...currentPage, images: arrangedImages } : currentPage
+                  )
+                );
+              });
+              
+              // Return current state while async operation completes
+              return page;
             }
             return page;
           }),
@@ -84,10 +93,18 @@ export const useImageManagement = (settings = null) => {
               const [moved] = newImages.splice(sourceIndex, 1);
               newImages.splice(sourceIndex, 0, moved); // Keep at same position for now
 
-              // Use shared layout function
+              // Use shared layout function (now async)
               const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-              const arrangedImages = arrangeImages(newImages, previewWidth, previewHeight, settings);
-              return { ...page, images: arrangedImages };
+              arrangeImages(newImages, previewWidth, previewHeight, settings).then(arrangedImages => {
+                setPages((currentPages) =>
+                  currentPages.map((currentPage) =>
+                    currentPage.id === pageId ? { ...currentPage, images: arrangedImages } : currentPage
+                  )
+                );
+              });
+              
+              // Return current state while async operation completes
+              return page;
             }
             return page;
           }),
@@ -205,11 +222,15 @@ export const useImageManagement = (settings = null) => {
     if (availableImages.length === 0) return;
 
     setIsProcessing(true);
+    setProgress(null);
     try {
-      const { arrangedPages, remainingImages } = autoArrangeImages(
+      const { arrangedPages, remainingImages } = await autoArrangeImages(
         availableImages,
         pages,
         settings,
+        (progressData) => {
+          setProgress(progressData);
+        }
       );
 
       setPages((prevPages) => [...prevPages, ...arrangedPages]);
@@ -218,6 +239,7 @@ export const useImageManagement = (settings = null) => {
       setError(`Failed to auto-arrange images: ${err.message}`);
     } finally {
       setIsProcessing(false);
+      setProgress(null);
     }
   }, [availableImages, pages, settings]);
 
@@ -225,12 +247,16 @@ export const useImageManagement = (settings = null) => {
     if (pages.length === 0) return;
 
     setIsProcessing(true);
+    setProgress(null);
     try {
-      await generatePDF(pages, settings);
+      await generatePDF(pages, settings, (progressData) => {
+        setProgress(progressData);
+      });
     } catch (err) {
       setError(`Failed to generate PDF: ${err.message}`);
     } finally {
       setIsProcessing(false);
+      setProgress(null);
     }
   }, [pages, settings]);
 
@@ -243,6 +269,7 @@ export const useImageManagement = (settings = null) => {
     availableImages,
     isProcessing,
     error,
+    progress,
     totalImages,
     handleFiles,
     handleDragEnd,

@@ -19,6 +19,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@heroicons/react": "^2.2.0",
+    "cropperjs": "^2.0.1",
     "flowbite-react": "^0.12.3",
     "jspdf": "^2.5.1",
     "react": "^19.1.0",

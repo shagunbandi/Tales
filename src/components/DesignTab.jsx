@@ -4,12 +4,14 @@ import AvailableImages from "./design/AvailableImages.jsx";
 import PagesHeader from "./design/PagesHeader.jsx";
 import PagesList from "./design/PagesList.jsx";
 import GeneratePDFButton from "./design/GeneratePDFButton.jsx";
+import ProgressBar from "./ProgressBar.jsx";
 
 const DesignTab = ({
   pages,
   availableImages,
   totalImages,
   isProcessing,
+  progress,
   onAddPage,
   onAddPageBetween,
   onRemovePage,
@@ -23,6 +25,13 @@ const DesignTab = ({
 }) => {
   return (
     <div className="space-y-6 p-4 sm:p-6">
+      {/* Progress Bar */}
+      {progress && (
+        <Card>
+          <ProgressBar progress={progress} />
+        </Card>
+      )}
+      
       <Card>
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Available Images */}

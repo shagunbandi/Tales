@@ -32,6 +32,7 @@ function App() {
     availableImages,
     isProcessing,
     error,
+    progress,
     totalImages,
     handleFiles,
     handleDragEnd,
@@ -194,6 +195,7 @@ function App() {
             availableImages={availableImages}
             totalImages={totalImages}
             isProcessing={isProcessing}
+            progress={progress}
             onAddPage={addPage}
             onAddPageBetween={addPageBetween}
             onRemovePage={removePage}

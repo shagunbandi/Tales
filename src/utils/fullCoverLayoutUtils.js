@@ -1,4 +1,5 @@
 import { getPreviewDimensions, PAGE_SIZES } from "../constants.js";
+import { cropForFullCover, cropImagesForGrid } from "./imageCropUtils.js";
 
 /**
  * Full Cover Layout utility functions
@@ -11,9 +12,9 @@ import { getPreviewDimensions, PAGE_SIZES } from "../constants.js";
  * @param {number} totalWidth - Total width of the page
  * @param {number} totalHeight - Total height of the page
  * @param {Object} settings - Layout settings
- * @returns {Array} Array of images with updated positions and dimensions
+ * @returns {Promise<Array>} Array of images with updated positions and dimensions
  */
-export function arrangeImagesFullCover(images, totalWidth, totalHeight, settings) {
+export async function arrangeImagesFullCover(images, totalWidth, totalHeight, settings) {
   if (!images || images.length === 0) {
     return [];
   }
@@ -24,19 +25,44 @@ export function arrangeImagesFullCover(images, totalWidth, totalHeight, settings
 
   if (images.length === 1) {
     // Single image covers the entire page
-    return [{
-      ...images[0],
-      x: 0,
-      y: 0,
-      previewWidth: usableWidth,
-      previewHeight: usableHeight,
-      rowIndex: 0,
-      colIndex: 0,
-    }];
+    try {
+      const croppedSrc = await cropForFullCover(
+        images[0].src,
+        usableWidth,
+        usableHeight,
+        { 
+          quality: settings.imageQuality || 0.98,
+          format: 'image/png'
+        }
+      );
+
+      return [{
+        ...images[0],
+        src: croppedSrc,
+        x: 0,
+        y: 0,
+        previewWidth: usableWidth,
+        previewHeight: usableHeight,
+        rowIndex: 0,
+        colIndex: 0,
+      }];
+    } catch (error) {
+      console.warn('Failed to crop single image for full cover:', error);
+      // Fallback to original image
+      return [{
+        ...images[0],
+        x: 0,
+        y: 0,
+        previewWidth: usableWidth,
+        previewHeight: usableHeight,
+        rowIndex: 0,
+        colIndex: 0,
+      }];
+    }
   }
 
   // For multiple images, we need to arrange them to cover the entire page
-  return arrangeMultipleImagesFullCover(images, usableWidth, usableHeight, settings);
+  return await arrangeMultipleImagesFullCover(images, usableWidth, usableHeight, settings);
 }
 
 /**
@@ -45,9 +71,9 @@ export function arrangeImagesFullCover(images, totalWidth, totalHeight, settings
  * @param {number} usableWidth - Usable width
  * @param {number} usableHeight - Usable height
  * @param {Object} settings - Layout settings
- * @returns {Array} Array of images with calculated positions
+ * @returns {Promise<Array>} Array of images with calculated positions
  */
-function arrangeMultipleImagesFullCover(images, usableWidth, usableHeight, settings) {
+async function arrangeMultipleImagesFullCover(images, usableWidth, usableHeight, settings) {
   // Calculate optimal grid layout that covers the entire page
   const gridLayout = calculateOptimalGridLayout(
     images.length,
@@ -63,20 +89,49 @@ function arrangeMultipleImagesFullCover(images, usableWidth, usableHeight, setti
   const cellWidth = usableWidth / cols;
   const cellHeight = usableHeight / rows;
 
-  return images.map((image, index) => {
-    const row = Math.floor(index / cols);
-    const col = index % cols;
+  try {
+    // Crop all images to fit their cells
+    const croppedImages = await cropImagesForGrid(
+      images,
+      cellWidth,
+      cellHeight,
+      { 
+        quality: settings.imageQuality || 0.98,
+        format: 'image/png'
+      }
+    );
 
-    return {
-      ...image,
-      x: col * cellWidth,
-      y: row * cellHeight,
-      previewWidth: cellWidth,
-      previewHeight: cellHeight,
-      rowIndex: row,
-      colIndex: col,
-    };
-  });
+    // Position the cropped images in their grid cells
+    return croppedImages.map((image, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+
+      return {
+        ...image,
+        x: col * cellWidth,
+        y: row * cellHeight,
+        rowIndex: row,
+        colIndex: col,
+      };
+    });
+  } catch (error) {
+    console.warn('Failed to crop images for grid layout:', error);
+    // Fallback to original positioning without cropping
+    return images.map((image, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+
+      return {
+        ...image,
+        x: col * cellWidth,
+        y: row * cellHeight,
+        previewWidth: cellWidth,
+        previewHeight: cellHeight,
+        rowIndex: row,
+        colIndex: col,
+      };
+    });
+  }
 }
 
 /**

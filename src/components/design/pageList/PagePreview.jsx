@@ -108,6 +108,7 @@ const PagePreview = ({
                     image={image}
                     pageId={page.id}
                     index={index}
+                    settings={settings}
                   />
                 ))}
                 {page.images.length === 0 && (
@@ -124,7 +125,7 @@ const PagePreview = ({
   );
 };
 
-const DraggablePageImage = ({ image, pageId, index }) => {
+const DraggablePageImage = ({ image, pageId, index, settings }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `${pageId}-${image.id}`,
@@ -149,6 +150,10 @@ const DraggablePageImage = ({ image, pageId, index }) => {
       : {}),
   };
 
+  // Use object-cover for full cover layout since images are pre-cropped
+  // Use object-contain for classic layout to maintain aspect ratios
+  const objectFitClass = settings?.designStyle === 'full_cover' ? 'object-cover' : 'object-contain';
+
   return (
     <div
       ref={setNodeRef}
@@ -160,7 +165,7 @@ const DraggablePageImage = ({ image, pageId, index }) => {
       <img
         src={image.src}
         alt={image.file?.name || "Image"}
-        className="h-full w-full rounded object-cover"
+        className={`h-full w-full rounded ${objectFitClass}`}
       />
     </div>
   );
