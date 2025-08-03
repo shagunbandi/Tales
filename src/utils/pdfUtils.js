@@ -132,21 +132,54 @@ export const generatePDF = async (pages, settings = null, onProgress = null) => 
         // Determine image format from the base64 data
         const imageFormat = getImageFormat(image.src);
         
-        // For full cover layout, images are already cropped to fit their allocated space
-        // So we can use the dimensions directly without additional aspect ratio calculations
-        if (settings.designStyle === 'full_cover') {
-          // Use the cropped image directly with maximum quality
-          pdf.addImage(
-            image.src, 
-            imageFormat, 
-            imgX, 
-            imgY, 
-            allocatedWidth, 
-            allocatedHeight,
-            undefined, // alias
-            'SLOW', // compression (NONE, FAST, MEDIUM, SLOW for quality vs size trade-off)
-            0 // rotation
-          );
+        // For full cover layout, crop the image to fit the allocated space for PDF
+        if (settings.designStyle === 'full_cover' || image.fullCoverMode) {
+          // Crop image to fit allocated space for PDF generation
+          try {
+            const { cropForFullCover } = await import('./imageCropUtils.js');
+            const croppedImageSrc = await cropForFullCover(
+              image.src,
+              allocatedWidth * 3, // Higher resolution for print
+              allocatedHeight * 3,
+              { 
+                quality: 0.95, 
+                format: 'image/jpeg',
+                preview: false // High quality for PDF
+              }
+            );
+            
+            pdf.addImage(
+              croppedImageSrc, 
+              'JPEG',
+              imgX, 
+              imgY, 
+              allocatedWidth, 
+              allocatedHeight,
+              undefined, // alias
+              'SLOW', // compression
+              0 // rotation
+            );
+          } catch (error) {
+            console.warn('Failed to crop image for PDF, using original:', error);
+            // Fallback to original image with aspect ratio preservation
+            const originalAspectRatio = image.originalWidth / image.originalHeight;
+            const allocatedAspectRatio = allocatedWidth / allocatedHeight;
+            
+            let finalWidth, finalHeight, finalX, finalY;
+            if (originalAspectRatio > allocatedAspectRatio) {
+              finalWidth = allocatedWidth;
+              finalHeight = allocatedWidth / originalAspectRatio;
+              finalX = imgX;
+              finalY = imgY + (allocatedHeight - finalHeight) / 2;
+            } else {
+              finalHeight = allocatedHeight;
+              finalWidth = allocatedHeight * originalAspectRatio;
+              finalX = imgX + (allocatedWidth - finalWidth) / 2;
+              finalY = imgY;
+            }
+            
+            pdf.addImage(image.src, imageFormat, finalX, finalY, finalWidth, finalHeight);
+          }
         } else {
           // For classic layout, calculate aspect ratio preserving dimensions
           const originalAspectRatio = image.originalWidth / image.originalHeight;

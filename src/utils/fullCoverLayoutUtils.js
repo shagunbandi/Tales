@@ -24,41 +24,17 @@ export async function arrangeImagesFullCover(images, totalWidth, totalHeight, se
   const usableHeight = totalHeight;
 
   if (images.length === 1) {
-    // Single image covers the entire page
-    try {
-      const croppedSrc = await cropForFullCover(
-        images[0].src,
-        usableWidth,
-        usableHeight,
-        { 
-          quality: settings.imageQuality || 0.98,
-          format: 'image/png'
-        }
-      );
-
-      return [{
-        ...images[0],
-        src: croppedSrc,
-        x: 0,
-        y: 0,
-        previewWidth: usableWidth,
-        previewHeight: usableHeight,
-        rowIndex: 0,
-        colIndex: 0,
-      }];
-    } catch (error) {
-      console.warn('Failed to crop single image for full cover:', error);
-      // Fallback to original image
-      return [{
-        ...images[0],
-        x: 0,
-        y: 0,
-        previewWidth: usableWidth,
-        previewHeight: usableHeight,
-        rowIndex: 0,
-        colIndex: 0,
-      }];
-    }
+    // Single image covers the entire page - no cropping, just positioning
+    return [{
+      ...images[0],
+      x: 0,
+      y: 0,
+      previewWidth: usableWidth,
+      previewHeight: usableHeight,
+      rowIndex: 0,
+      colIndex: 0,
+      fullCoverMode: true, // Flag to indicate this needs cropping in display/PDF
+    }];
   }
 
   // For multiple images, we need to arrange them to cover the entire page
@@ -89,49 +65,22 @@ async function arrangeMultipleImagesFullCover(images, usableWidth, usableHeight,
   const cellWidth = usableWidth / cols;
   const cellHeight = usableHeight / rows;
 
-  try {
-    // Crop all images to fit their cells
-    const croppedImages = await cropImagesForGrid(
-      images,
-      cellWidth,
-      cellHeight,
-      { 
-        quality: settings.imageQuality || 0.98,
-        format: 'image/png'
-      }
-    );
+  // Position images in their grid cells without cropping
+  return images.map((image, index) => {
+    const row = Math.floor(index / cols);
+    const col = index % cols;
 
-    // Position the cropped images in their grid cells
-    return croppedImages.map((image, index) => {
-      const row = Math.floor(index / cols);
-      const col = index % cols;
-
-      return {
-        ...image,
-        x: col * cellWidth,
-        y: row * cellHeight,
-        rowIndex: row,
-        colIndex: col,
-      };
-    });
-  } catch (error) {
-    console.warn('Failed to crop images for grid layout:', error);
-    // Fallback to original positioning without cropping
-    return images.map((image, index) => {
-      const row = Math.floor(index / cols);
-      const col = index % cols;
-
-      return {
-        ...image,
-        x: col * cellWidth,
-        y: row * cellHeight,
-        previewWidth: cellWidth,
-        previewHeight: cellHeight,
-        rowIndex: row,
-        colIndex: col,
-      };
-    });
-  }
+    return {
+      ...image,
+      x: col * cellWidth,
+      y: row * cellHeight,
+      previewWidth: cellWidth,
+      previewHeight: cellHeight,
+      rowIndex: row,
+      colIndex: col,
+      fullCoverMode: true, // Flag to indicate this needs cropping in display/PDF
+    };
+  });
 }
 
 /**

@@ -120,14 +120,28 @@ export const useImageManagement = (settings = null) => {
 
         if (currentPage && currentPage.images[imageIndex]) {
           const imageToRemove = currentPage.images[imageIndex];
+          
+          // Restore original image if it was cropped
+          const originalImage = imageToRemove.originalSrc ? {
+            ...imageToRemove,
+            src: imageToRemove.originalSrc,
+            originalSrc: undefined, // Remove the originalSrc property
+            // Remove cropping-related properties
+            previewWidth: undefined,
+            previewHeight: undefined,
+            x: undefined,
+            y: undefined,
+            rowIndex: undefined,
+            colIndex: undefined,
+          } : imageToRemove;
 
           setAvailableImages((current) => {
             const newAvailable = [...current];
             const insertIndex = findCorrectInsertPosition(
               newAvailable,
-              imageToRemove.originalIndex,
+              originalImage.originalIndex,
             );
-            newAvailable.splice(insertIndex, 0, imageToRemove);
+            newAvailable.splice(insertIndex, 0, originalImage);
             return newAvailable;
           });
         }

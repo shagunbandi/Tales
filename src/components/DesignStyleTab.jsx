@@ -1,10 +1,16 @@
 import React from "react";
 import { Card, Button } from "flowbite-react";
-import { DESIGN_STYLES, DESIGN_STYLE_LABELS, DESIGN_STYLE_DESCRIPTIONS } from "../constants.js";
+import { DESIGN_STYLES, DESIGN_STYLE_LABELS, DESIGN_STYLE_DESCRIPTIONS, DEFAULT_SETTINGS } from "../constants.js";
 
 const DesignStyleTab = ({ settings, onSettingsChange, onNext }) => {
   const handleDesignStyleChange = (designStyle) => {
-    const newSettings = { ...settings, designStyle };
+    // Reset to default settings when switching design styles
+    const newSettings = {
+      ...DEFAULT_SETTINGS,
+      designStyle,
+      pageSize: settings.pageSize, // Keep current page size
+      orientation: settings.orientation, // Keep current orientation
+    };
     
     // For full cover design, set gap and margin to 0
     if (designStyle === DESIGN_STYLES.FULL_COVER) {

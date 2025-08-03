@@ -274,6 +274,7 @@ export const cropImagesForGrid = async (images, cellWidth, cellHeight, options =
       croppedImages.push({
         ...image,
         src: croppedSrc,
+        originalSrc: image.originalSrc || image.src, // Preserve original image
         previewWidth: cellWidth,
         previewHeight: cellHeight,
       });
@@ -282,6 +283,7 @@ export const cropImagesForGrid = async (images, cellWidth, cellHeight, options =
       // Fallback to original image
       croppedImages.push({
         ...image,
+        originalSrc: image.originalSrc || image.src, // Preserve original in fallback
         previewWidth: cellWidth,
         previewHeight: cellHeight,
       });
