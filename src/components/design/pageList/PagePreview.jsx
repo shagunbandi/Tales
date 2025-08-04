@@ -56,29 +56,29 @@ const PagePreview = ({
         </div>
 
         {/* Action buttons line */}
-        <div className="flex gap-2 justify-between">
+        <div className="flex justify-between gap-2">
           <div className="flex gap-2">
-          <Button
-            size="xs"
-            color="gray"
-            onClick={() => onChangeColor(page.id)}
-            className="flex items-center gap-1"
-          >
-            <HiColorSwatch className="h-3 w-3" />
-            Color
-          </Button>
-          {page.images.length > 0 && (
             <Button
               size="xs"
-              color="yellow"
-              onClick={() => onMoveAllImagesBack(page.id)}
+              color="gray"
+              onClick={() => onChangeColor(page.id)}
               className="flex items-center gap-1"
             >
-              <HiArrowLeft className="h-3 w-3" />
-              Move All Back
+              <HiColorSwatch className="h-3 w-3" />
+              Color
             </Button>
+            {page.images.length > 0 && (
+              <Button
+                size="xs"
+                color="yellow"
+                onClick={() => onMoveAllImagesBack(page.id)}
+                className="flex items-center gap-1"
+              >
+                <HiArrowLeft className="h-3 w-3" />
+                Move All Back
+              </Button>
             )}
-            </div>
+          </div>
           <Button
             size="xs"
             color="red"
