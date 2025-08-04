@@ -61,29 +61,62 @@ export const useImageManagement = (settings = null) => {
           prev.filter((_, index) => index !== imageIndex),
         );
 
-        setPages((prev) =>
-          prev.map((page) => {
-            if (page.id === pageId) {
-              const newImages = [...page.images];
-              // Add to the end of the page images
-              newImages.push(imageToMove);
-
-              // Use shared layout function (now async)
-              const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-              arrangeImages(newImages, previewWidth, previewHeight, settings).then(arrangedImages => {
-                setPages((currentPages) =>
-                  currentPages.map((currentPage) =>
-                    currentPage.id === pageId ? { ...currentPage, images: arrangedImages } : currentPage
-                  )
-                );
+        setPages((prev) => {
+          const targetPage = prev.find(p => p.id === pageId);
+          
+          // In full cover mode, check if the page has reached max capacity
+          const maxImagesPerRow = settings.maxImagesPerRow || 4;
+          const maxNumberOfRows = settings.maxNumberOfRows || 2;
+          const maxImagesPerPage = maxImagesPerRow * maxNumberOfRows;
+          if (settings.designStyle === 'full_cover' && targetPage && targetPage.images.length >= maxImagesPerPage) {
+            // Create a new page for the image
+            const newPage = {
+              id: `page-${Date.now()}`,
+              images: [],
+              color: getRandomColor(),
+            };
+            
+            // Add the image to the new page
+            const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+            arrangeImages([imageToMove], previewWidth, previewHeight, settings).then(arrangedImages => {
+              setPages((currentPages) => {
+                const pageIndex = currentPages.findIndex(p => p.id === newPage.id);
+                if (pageIndex !== -1) {
+                  const updatedPages = [...currentPages];
+                  updatedPages[pageIndex] = { ...newPage, images: arrangedImages };
+                  return updatedPages;
+                }
+                return currentPages;
               });
-              
-              // Return current state while async operation completes
+            });
+            
+            // Add the new page to the list
+            return [...prev, newPage];
+          } else {
+            // Normal behavior - add to existing page
+            return prev.map((page) => {
+              if (page.id === pageId) {
+                const newImages = [...page.images];
+                // Add to the end of the page images
+                newImages.push(imageToMove);
+
+                // Use shared layout function (now async)
+                const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+                arrangeImages(newImages, previewWidth, previewHeight, settings).then(arrangedImages => {
+                  setPages((currentPages) =>
+                    currentPages.map((currentPage) =>
+                      currentPage.id === pageId ? { ...currentPage, images: arrangedImages } : currentPage
+                    )
+                  );
+                });
+                
+                // Return current state while async operation completes
+                return page;
+              }
               return page;
-            }
-            return page;
-          }),
-        );
+            });
+          }
+        });
       } else if (sourceId === destinationId && sourceId.startsWith("page-")) {
         const pageId = sourceId;
         setPages((prev) =>
@@ -151,6 +184,19 @@ export const useImageManagement = (settings = null) => {
             if (page.id === pageId) {
               const newImages = [...page.images];
               newImages.splice(imageIndex, 1);
+              
+              // Auto-arrange the remaining images on the page
+              if (newImages.length > 0) {
+                const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+                arrangeImages(newImages, previewWidth, previewHeight, settings).then(arrangedImages => {
+                  setPages((currentPages) =>
+                    currentPages.map((currentPage) =>
+                      currentPage.id === pageId ? { ...currentPage, images: arrangedImages } : currentPage
+                    )
+                  );
+                });
+              }
+              
               return { ...page, images: newImages };
             }
             return page;

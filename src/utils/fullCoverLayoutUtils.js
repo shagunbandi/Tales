@@ -19,100 +19,83 @@ export async function arrangeImagesFullCover(images, totalWidth, totalHeight, se
     return [];
   }
 
-  // For full cover, we use the entire page (no margins)
+  // For full cover, we use the entire page (no margins or gaps)
   const usableWidth = totalWidth;
   const usableHeight = totalHeight;
 
-  if (images.length === 1) {
-    // Single image covers the entire page - no cropping, just positioning
-    return [{
-      ...images[0],
-      x: 0,
-      y: 0,
-      previewWidth: usableWidth,
-      previewHeight: usableHeight,
-      rowIndex: 0,
-      colIndex: 0,
-      fullCoverMode: true, // Flag to indicate this needs cropping in display/PDF
-    }];
-  }
-
-  // For multiple images, we need to arrange them to cover the entire page
-  return await arrangeMultipleImagesFullCover(images, usableWidth, usableHeight, settings);
-}
-
-/**
- * Arranges multiple images to cover the entire page
- * @param {Array} images - Array of images
- * @param {number} usableWidth - Usable width
- * @param {number} usableHeight - Usable height
- * @param {Object} settings - Layout settings
- * @returns {Promise<Array>} Array of images with calculated positions
- */
-async function arrangeMultipleImagesFullCover(images, usableWidth, usableHeight, settings) {
-  // Calculate optimal grid layout that covers the entire page
-  const gridLayout = calculateOptimalGridLayout(
-    images.length,
-    usableWidth,
-    usableHeight,
-    settings.maxImagesPerRow,
-    settings.maxNumberOfRows
-  );
-
-  const { rows, cols } = gridLayout;
+  // Calculate flexible grid layout for full cover
+  const rowDistribution = calculateFlexibleRowDistribution(images.length, settings);
   
-  // Calculate cell dimensions to cover the entire page
-  const cellWidth = usableWidth / cols;
-  const cellHeight = usableHeight / rows;
+  const arrangedImages = [];
+  let imageIndex = 0;
 
-  // Position images in their grid cells without cropping
-  return images.map((image, index) => {
-    const row = Math.floor(index / cols);
-    const col = index % cols;
+  // Arrange images row by row with flexible column counts
+  for (let rowIdx = 0; rowIdx < rowDistribution.length; rowIdx++) {
+    const imagesInThisRow = rowDistribution[rowIdx];
+    const rowHeight = usableHeight / rowDistribution.length;
+    const cellWidth = usableWidth / imagesInThisRow;
+    const cellHeight = rowHeight;
 
-    return {
-      ...image,
-      x: col * cellWidth,
-      y: row * cellHeight,
-      previewWidth: cellWidth,
-      previewHeight: cellHeight,
-      rowIndex: row,
-      colIndex: col,
-      fullCoverMode: true, // Flag to indicate this needs cropping in display/PDF
-    };
-  });
-}
+    // Position images in this row
+    for (let colIdx = 0; colIdx < imagesInThisRow; colIdx++) {
+      if (imageIndex < images.length) {
+        const image = images[imageIndex];
+        
+        arrangedImages.push({
+          ...image,
+          x: colIdx * cellWidth,
+          y: rowIdx * cellHeight,
+          previewWidth: cellWidth,
+          previewHeight: cellHeight,
+          rowIndex: rowIdx,
+          colIndex: colIdx,
+          fullCoverMode: true, // Flag for CSS object-cover cropping
+        });
 
-/**
- * Calculates optimal grid layout for full cover
- * @param {number} totalImages - Total number of images
- * @param {number} width - Page width
- * @param {number} height - Page height
- * @param {number} maxImagesPerRow - Maximum images per row
- * @param {number} maxNumberOfRows - Maximum number of rows
- * @returns {Object} Grid layout with rows and cols
- */
-function calculateOptimalGridLayout(totalImages, width, height, maxImagesPerRow, maxNumberOfRows) {
-  const pageAspectRatio = width / height;
-  
-  // Try different grid configurations to find the best fit
-  let bestLayout = { rows: 1, cols: totalImages };
-  let bestScore = 0;
-
-  for (let rows = 1; rows <= Math.min(maxNumberOfRows, totalImages); rows++) {
-    const cols = Math.ceil(totalImages / rows);
-    
-    if (cols <= maxImagesPerRow) {
-      // Calculate how well this layout fits the page aspect ratio
-      const layoutAspectRatio = (cols * width) / (rows * height);
-      const score = 1 / Math.abs(layoutAspectRatio - pageAspectRatio);
-      
-      if (score > bestScore) {
-        bestScore = score;
-        bestLayout = { rows, cols };
+        imageIndex++;
       }
     }
   }
 
-  return bestLayout;
+  return arrangedImages;
+}
+
+/**
+ * Calculates flexible row distribution for full cover mode
+ * Respects maxImagesPerRow and maxNumberOfRows constraints from settings
+ * @param {number} totalImages - Total number of images
+ * @param {Object} settings - Layout settings with maxImagesPerRow and maxNumberOfRows
+ * @returns {Array} Array of numbers indicating images per row [3, 2] for 5 images
+ */
+function calculateFlexibleRowDistribution(totalImages, settings) {
+  if (totalImages === 0) return [];
+  if (totalImages === 1) return [1];
+  
+  // Get constraints from settings, with fallbacks
+  const maxImagesPerRow = settings?.maxImagesPerRow || 4;
+  const maxNumberOfRows = settings?.maxNumberOfRows || 2;
+  
+  // Calculate maximum images that can fit on this page
+  const maxImagesThisPage = maxImagesPerRow * maxNumberOfRows;
+  const imagesToArrange = Math.min(totalImages, maxImagesThisPage);
+  
+  // Calculate optimal number of rows
+  const idealRows = Math.ceil(imagesToArrange / maxImagesPerRow);
+  const actualRows = Math.min(idealRows, maxNumberOfRows);
+  
+  // Distribute images across rows as evenly as possible
+  const distribution = [];
+  let remainingImages = imagesToArrange;
+  
+  for (let row = 0; row < actualRows; row++) {
+    const remainingRows = actualRows - row;
+    const imagesInThisRow = Math.min(
+      Math.ceil(remainingImages / remainingRows),
+      maxImagesPerRow
+    );
+    distribution.push(imagesInThisRow);
+    remainingImages -= imagesInThisRow;
+  }
+  
+  return distribution;
 }

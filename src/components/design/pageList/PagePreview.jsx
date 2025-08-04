@@ -138,6 +138,8 @@ const DraggablePageImage = ({ image, pageId, index, settings }) => {
 
   if (!image?.src) return null;
 
+  const isFullCover = settings?.designStyle === 'full_cover' || image.fullCoverMode;
+
   const style = {
     left: image.x ?? 0,
     top: image.y ?? 0,
@@ -150,9 +152,9 @@ const DraggablePageImage = ({ image, pageId, index, settings }) => {
       : {}),
   };
 
-  // Use object-cover for full cover layout since images are pre-cropped
+  // Use object-cover for full cover layout to crop images for display
   // Use object-contain for classic layout to maintain aspect ratios
-  const objectFitClass = settings?.designStyle === 'full_cover' ? 'object-cover' : 'object-contain';
+  const objectFitClass = isFullCover ? 'object-cover' : 'object-contain';
 
   return (
     <div

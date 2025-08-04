@@ -32,6 +32,89 @@ export async function autoArrangeImages(availableImages, existingPages, settings
     };
   }
 
+  // For full cover mode, optimize distribution across available pages
+  if (settings.designStyle === 'full_cover') {
+    // Calculate maximum images per page based on settings constraints
+    const maxImagesPerRow = settings.maxImagesPerRow || 4;
+    const maxNumberOfRows = settings.maxNumberOfRows || 2;
+    const maxImagesPerPage = maxImagesPerRow * maxNumberOfRows;
+    
+    // Optimize distribution: try to fit all images within available pages
+    const totalImages = availableImages.length;
+    let imagesPerPage;
+    
+    if (totalImages <= remainingPages * maxImagesPerPage) {
+      // We can fit all images, so distribute optimally
+      imagesPerPage = Math.ceil(totalImages / remainingPages);
+      // But don't exceed the maximum per page
+      imagesPerPage = Math.min(imagesPerPage, maxImagesPerPage);
+    } else {
+      // We can't fit all images, so use maximum capacity
+      imagesPerPage = maxImagesPerPage;
+    }
+    
+    const totalPagesNeeded = Math.ceil(totalImages / imagesPerPage);
+    const pagesToCreate = Math.min(totalPagesNeeded, remainingPages);
+    const arrangedPages = [];
+    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+    
+    let imageIndex = 0;
+    
+    for (let pageIdx = 0; pageIdx < pagesToCreate; pageIdx++) {
+      if (onProgress) {
+        onProgress({
+          step: pageIdx,
+          total: pagesToCreate,
+          message: `Creating full cover page ${pageIdx + 1} of ${pagesToCreate}...`,
+          percentage: Math.round((pageIdx / pagesToCreate) * 100)
+        });
+      }
+
+      // Allow UI to update
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Calculate images for this specific page
+      const remainingImages = totalImages - imageIndex;
+      const remainingPagesToCreate = pagesToCreate - pageIdx;
+      const imagesForThisPage = Math.min(
+        Math.ceil(remainingImages / remainingPagesToCreate),
+        maxImagesPerPage,
+        remainingImages
+      );
+      
+      // Get images for this page
+      const pageImages = availableImages.slice(imageIndex, imageIndex + imagesForThisPage);
+      imageIndex += imagesForThisPage;
+
+      if (pageImages.length > 0) {
+        const arrangedImages = await arrangeImages(pageImages, previewWidth, previewHeight, settings);
+
+        const newPage = {
+          id: `page-${Date.now()}-${pageIdx}`,
+          images: arrangedImages,
+          color: getRandomColor(),
+        };
+
+        arrangedPages.push(newPage);
+      }
+    }
+
+    if (onProgress) {
+      onProgress({
+        step: pagesToCreate,
+        total: pagesToCreate,
+        message: 'Full cover auto-arrange complete!',
+        percentage: 100
+      });
+    }
+
+    return {
+      arrangedPages,
+      remainingImages: availableImages.slice(imageIndex),
+    };
+  }
+
+  // For classic mode, use the original logic
   // Step 2: Calculate maximum images per page based on layout constraints
   const maxImagesPerPage = settings.maxImagesPerRow * settings.maxNumberOfRows;
 

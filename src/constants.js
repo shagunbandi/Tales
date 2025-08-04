@@ -71,6 +71,7 @@ export const DEFAULT_SETTINGS = {
   minImagesPerRow: 1,
   minNumberOfRows: 1,
   maxNumberOfPages: 15,
+  fullCoverImagesPerPage: 6, // Default number of images per page in full cover mode
 };
 
 export const PREVIEW_SCALE = 0.8;
