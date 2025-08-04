@@ -80,8 +80,8 @@ function calculateFlexibleRowDistribution(totalImages, settings) {
   if (totalImages === 1) return [1];
 
   // Get constraints from settings, with fallbacks
-  const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings?.maxNumberOfRows || 2;
+  const maxImagesPerRow = settings?.maxImagesPerRow;
+  const maxNumberOfRows = settings?.maxNumberOfRows;
 
   // Calculate maximum images that can fit on this page
   const maxImagesThisPage = maxImagesPerRow * maxNumberOfRows;
