@@ -12,7 +12,12 @@ import { getPreviewDimensions } from "../constants.js";
  * @param {Object} settings - Layout settings including page margin, image gap, etc.
  * @returns {Promise<Object>} Object containing arrangedPages and remainingImages
  */
-export async function autoArrangeImages(availableImages, existingPages, settings, onProgress = null) {
+export async function autoArrangeImages(
+  availableImages,
+  existingPages,
+  settings,
+  onProgress = null,
+) {
   // Step 1: Calculate remaining pages
   const remainingPages = settings.maxNumberOfPages - existingPages.length;
 
@@ -33,16 +38,20 @@ export async function autoArrangeImages(availableImages, existingPages, settings
   }
 
   // For full cover mode, optimize distribution across available pages
-  if (settings.designStyle === 'full_cover') {
-    // Calculate maximum images per page based on settings constraints
+  if (settings.designStyle === "full_cover") {
+    // Calculate maximum images per page based on both grid and per-page settings
     const maxImagesPerRow = settings.maxImagesPerRow || 4;
     const maxNumberOfRows = settings.maxNumberOfRows || 2;
-    const maxImagesPerPage = maxImagesPerRow * maxNumberOfRows;
-    
+    const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
+    const maxImagesPerPage = Math.min(
+      maxImagesFromGrid,
+      settings.imagesPerPage || maxImagesFromGrid,
+    );
+
     // Optimize distribution: try to fit all images within available pages
     const totalImages = availableImages.length;
     let imagesPerPage;
-    
+
     if (totalImages <= remainingPages * maxImagesPerPage) {
       // We can fit all images, so distribute optimally
       imagesPerPage = Math.ceil(totalImages / remainingPages);
@@ -52,26 +61,27 @@ export async function autoArrangeImages(availableImages, existingPages, settings
       // We can't fit all images, so use maximum capacity
       imagesPerPage = maxImagesPerPage;
     }
-    
+
     const totalPagesNeeded = Math.ceil(totalImages / imagesPerPage);
     const pagesToCreate = Math.min(totalPagesNeeded, remainingPages);
     const arrangedPages = [];
-    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-    
+    const { width: previewWidth, height: previewHeight } =
+      getPreviewDimensions(settings);
+
     let imageIndex = 0;
-    
+
     for (let pageIdx = 0; pageIdx < pagesToCreate; pageIdx++) {
       if (onProgress) {
         onProgress({
           step: pageIdx,
           total: pagesToCreate,
           message: `Creating full cover page ${pageIdx + 1} of ${pagesToCreate}...`,
-          percentage: Math.round((pageIdx / pagesToCreate) * 100)
+          percentage: Math.round((pageIdx / pagesToCreate) * 100),
         });
       }
 
       // Allow UI to update
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Calculate images for this specific page
       const remainingImages = totalImages - imageIndex;
@@ -79,15 +89,23 @@ export async function autoArrangeImages(availableImages, existingPages, settings
       const imagesForThisPage = Math.min(
         Math.ceil(remainingImages / remainingPagesToCreate),
         maxImagesPerPage,
-        remainingImages
+        remainingImages,
       );
-      
+
       // Get images for this page
-      const pageImages = availableImages.slice(imageIndex, imageIndex + imagesForThisPage);
+      const pageImages = availableImages.slice(
+        imageIndex,
+        imageIndex + imagesForThisPage,
+      );
       imageIndex += imagesForThisPage;
 
       if (pageImages.length > 0) {
-        const arrangedImages = await arrangeImages(pageImages, previewWidth, previewHeight, settings);
+        const arrangedImages = await arrangeImages(
+          pageImages,
+          previewWidth,
+          previewHeight,
+          settings,
+        );
 
         const newPage = {
           id: `page-${Date.now()}-${pageIdx}`,
@@ -103,8 +121,8 @@ export async function autoArrangeImages(availableImages, existingPages, settings
       onProgress({
         step: pagesToCreate,
         total: pagesToCreate,
-        message: 'Full cover auto-arrange complete!',
-        percentage: 100
+        message: "Full cover auto-arrange complete!",
+        percentage: 100,
       });
     }
 
@@ -115,8 +133,12 @@ export async function autoArrangeImages(availableImages, existingPages, settings
   }
 
   // For classic mode, use the original logic
-  // Step 2: Calculate maximum images per page based on layout constraints
-  const maxImagesPerPage = settings.maxImagesPerRow * settings.maxNumberOfRows;
+  // Step 2: Calculate maximum images per page based on both grid and per-page settings
+  const maxImagesFromGrid = settings.maxImagesPerRow * settings.maxNumberOfRows;
+  const maxImagesPerPage = Math.min(
+    maxImagesFromGrid,
+    settings.imagesPerPage || maxImagesFromGrid,
+  );
 
   // Step 3: Calculate average images per page with validation
   const totalImagesToPlace = availableImages.length;
@@ -142,8 +164,11 @@ export async function autoArrangeImages(availableImages, existingPages, settings
 
   // Distribute images across pages
   let currentImageIndex = 0;
-  const totalPagesToCreate = Math.min(remainingPages, Math.ceil(imagesToArrange.length / averageImagesPerPage));
-  
+  const totalPagesToCreate = Math.min(
+    remainingPages,
+    Math.ceil(imagesToArrange.length / averageImagesPerPage),
+  );
+
   for (
     let pageIndex = 0;
     pageIndex < remainingPages && currentImageIndex < imagesToArrange.length;
@@ -154,12 +179,12 @@ export async function autoArrangeImages(availableImages, existingPages, settings
         step: pageIndex,
         total: totalPagesToCreate,
         message: `Arranging page ${pageIndex + 1} of ${totalPagesToCreate}...`,
-        percentage: Math.round((pageIndex / totalPagesToCreate) * 100)
+        percentage: Math.round((pageIndex / totalPagesToCreate) * 100),
       });
     }
 
     // Allow UI to update
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Calculate how many images should go on this page
     const imagesForThisPage = Math.min(
@@ -176,7 +201,12 @@ export async function autoArrangeImages(availableImages, existingPages, settings
     );
 
     // Use shared layout function (now async)
-    const arrangedImages = await arrangeImages(pageImages, previewWidth, previewHeight, settings);
+    const arrangedImages = await arrangeImages(
+      pageImages,
+      previewWidth,
+      previewHeight,
+      settings,
+    );
 
     // Create new page
     const newPage = {
@@ -193,8 +223,8 @@ export async function autoArrangeImages(availableImages, existingPages, settings
     onProgress({
       step: totalPagesToCreate,
       total: totalPagesToCreate,
-      message: 'Auto-arrange complete!',
-      percentage: 100
+      message: "Auto-arrange complete!",
+      percentage: 100,
     });
   }
 

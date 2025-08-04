@@ -8,6 +8,9 @@ const PagesList = ({
   onRemovePage,
   onChangePageColor,
   onAddPage,
+  onMoveImageBack,
+  onMoveAllImagesBack,
+  onAutoArrangePage,
   settings,
 }) => {
   return (
@@ -31,7 +34,9 @@ const PagesList = ({
               pageIndex={pageIndex}
               onChangeColor={onChangePageColor}
               onRemovePage={onRemovePage}
-              onAddPageBetween={onAddPageBetween}
+              onMoveImageBack={onMoveImageBack}
+              onMoveAllImagesBack={onMoveAllImagesBack}
+              onAutoArrangePage={onAutoArrangePage}
               isLastPage={pageIndex === pages.length - 1}
               settings={settings}
             />

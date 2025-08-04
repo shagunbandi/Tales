@@ -51,7 +51,9 @@ const UploadTab = ({
     <div className="space-y-6 p-6">
       <Card
         className={`cursor-pointer transition-colors duration-200 ${
-          isDragOver ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800"
+          isDragOver
+            ? "bg-blue-50 dark:bg-blue-900/20"
+            : "hover:bg-gray-50 dark:hover:bg-gray-800"
         }`}
         onClick={() => document.getElementById("folder-input").click()}
         onDrop={handleDrop}

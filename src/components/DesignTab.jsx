@@ -20,6 +20,9 @@ const DesignTab = ({
   onAddMoreImages,
   onGeneratePDF,
   onAutoArrange,
+  onMoveImageBack,
+  onMoveAllImagesBack,
+  onAutoArrangePage,
   settings,
   onSettingsChange,
 }) => {
@@ -31,7 +34,7 @@ const DesignTab = ({
           <ProgressBar progress={progress} />
         </Card>
       )}
-      
+
       <Card>
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Available Images */}
@@ -58,6 +61,9 @@ const DesignTab = ({
               onRemovePage={onRemovePage}
               onChangePageColor={onChangePageColor}
               onAddPage={onAddPage}
+              onMoveImageBack={onMoveImageBack}
+              onMoveAllImagesBack={onMoveAllImagesBack}
+              onAutoArrangePage={onAutoArrangePage}
               settings={settings}
             />
 

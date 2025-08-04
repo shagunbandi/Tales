@@ -18,9 +18,19 @@ import { arrangeImagesFullCover } from "./fullCoverLayoutUtils.js";
  * @param {Object} settings - Layout settings
  * @returns {Promise<Array>} Array of images with calculated positions
  */
-export async function arrangeImages(images, previewWidth, previewHeight, settings) {
+export async function arrangeImages(
+  images,
+  previewWidth,
+  previewHeight,
+  settings,
+) {
   if (settings.designStyle === DESIGN_STYLES.FULL_COVER) {
-    return await arrangeImagesFullCover(images, previewWidth, previewHeight, settings);
+    return await arrangeImagesFullCover(
+      images,
+      previewWidth,
+      previewHeight,
+      settings,
+    );
   } else {
     return arrangeAndCenterImages(
       images,
@@ -67,9 +77,9 @@ export function previewToMm(previewValue, settings, dimensionType = null) {
 
   // Use appropriate conversion factor based on dimension type
   let conversionFactor;
-  if (dimensionType === 'width' || dimensionType === 'x') {
+  if (dimensionType === "width" || dimensionType === "x") {
     conversionFactor = widthConversionFactor;
-  } else if (dimensionType === 'height' || dimensionType === 'y') {
+  } else if (dimensionType === "height" || dimensionType === "y") {
     conversionFactor = heightConversionFactor;
   } else {
     // For unknown types, use the average (fallback behavior)
@@ -147,18 +157,35 @@ export function arrangeAndCenterImages(
     return [];
   }
 
-  const maxImagesPerRow = settings.maxImagesPerRow;
-  const maxNumberOfRows = settings.maxNumberOfRows;
-  const minImagesPerRow = settings.minImagesPerRow;
-  const minNumberOfRows = settings.minNumberOfRows;
+  const maxImagesPerRow = settings.maxImagesPerRow || 4;
+  const maxNumberOfRows = settings.maxNumberOfRows || 2;
+  const imagesPerPage =
+    settings.imagesPerPage || maxImagesPerRow * maxNumberOfRows;
+
+  // Calculate effective limits considering both grid and per-page settings
+  const effectiveMaxImagesPerPage = Math.min(
+    maxImagesPerRow * maxNumberOfRows,
+    imagesPerPage,
+  );
+  const actualImagesToArrange = Math.min(
+    images.length,
+    effectiveMaxImagesPerPage,
+  );
+
+  // Set reasonable minimums (1 image per row minimum, 1 row minimum)
+  const minImagesPerRow = 1;
+  const minNumberOfRows = 1;
 
   // Calculate usable area (excluding margins)
   const usableWidth = totalWidth - 2 * pageMargin;
   const usableHeight = totalHeight - 2 * pageMargin;
 
+  // Only arrange the images that fit within our limits
+  const imagesToArrange = images.slice(0, actualImagesToArrange);
+
   // Generate all possible combinations of rows and images per row
   const combinations = generateLayoutCombinations(
-    images.length,
+    imagesToArrange.length,
     minNumberOfRows,
     maxNumberOfRows,
     minImagesPerRow,
@@ -171,7 +198,7 @@ export function arrangeAndCenterImages(
   // Try each combination and find the one with maximum area coverage
   for (const combination of combinations) {
     const layoutResult = calculateLayoutForCombination(
-      images,
+      imagesToArrange,
       combination,
       usableWidth,
       usableHeight,
@@ -194,7 +221,7 @@ export function arrangeAndCenterImages(
   // If no valid layout found, use a simple single-row layout
   if (!bestLayout) {
     return arrangeImagesInSingleRow(
-      images,
+      imagesToArrange,
       usableWidth,
       usableHeight,
       imageGap,

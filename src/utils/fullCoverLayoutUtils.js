@@ -14,7 +14,12 @@ import { cropForFullCover, cropImagesForGrid } from "./imageCropUtils.js";
  * @param {Object} settings - Layout settings
  * @returns {Promise<Array>} Array of images with updated positions and dimensions
  */
-export async function arrangeImagesFullCover(images, totalWidth, totalHeight, settings) {
+export async function arrangeImagesFullCover(
+  images,
+  totalWidth,
+  totalHeight,
+  settings,
+) {
   if (!images || images.length === 0) {
     return [];
   }
@@ -24,8 +29,11 @@ export async function arrangeImagesFullCover(images, totalWidth, totalHeight, se
   const usableHeight = totalHeight;
 
   // Calculate flexible grid layout for full cover
-  const rowDistribution = calculateFlexibleRowDistribution(images.length, settings);
-  
+  const rowDistribution = calculateFlexibleRowDistribution(
+    images.length,
+    settings,
+  );
+
   const arrangedImages = [];
   let imageIndex = 0;
 
@@ -40,7 +48,7 @@ export async function arrangeImagesFullCover(images, totalWidth, totalHeight, se
     for (let colIdx = 0; colIdx < imagesInThisRow; colIdx++) {
       if (imageIndex < images.length) {
         const image = images[imageIndex];
-        
+
         arrangedImages.push({
           ...image,
           x: colIdx * cellWidth,
@@ -70,32 +78,32 @@ export async function arrangeImagesFullCover(images, totalWidth, totalHeight, se
 function calculateFlexibleRowDistribution(totalImages, settings) {
   if (totalImages === 0) return [];
   if (totalImages === 1) return [1];
-  
+
   // Get constraints from settings, with fallbacks
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
   const maxNumberOfRows = settings?.maxNumberOfRows || 2;
-  
+
   // Calculate maximum images that can fit on this page
   const maxImagesThisPage = maxImagesPerRow * maxNumberOfRows;
   const imagesToArrange = Math.min(totalImages, maxImagesThisPage);
-  
+
   // Calculate optimal number of rows
   const idealRows = Math.ceil(imagesToArrange / maxImagesPerRow);
   const actualRows = Math.min(idealRows, maxNumberOfRows);
-  
+
   // Distribute images across rows as evenly as possible
   const distribution = [];
   let remainingImages = imagesToArrange;
-  
+
   for (let row = 0; row < actualRows; row++) {
     const remainingRows = actualRows - row;
     const imagesInThisRow = Math.min(
       Math.ceil(remainingImages / remainingRows),
-      maxImagesPerRow
+      maxImagesPerRow,
     );
     distribution.push(imagesInThisRow);
     remainingImages -= imagesInThisRow;
   }
-  
+
   return distribution;
 }

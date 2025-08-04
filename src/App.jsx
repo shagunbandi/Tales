@@ -42,6 +42,9 @@ function App() {
     changePageColor,
     removeAvailableImage,
     autoArrangeImagesToPages,
+    moveImageBack,
+    moveAllImagesBack,
+    autoArrangePage,
     handleGeneratePDF,
     setError,
   } = useImageManagement(settings);
@@ -75,14 +78,9 @@ function App() {
       errors.maxNumberOfRows = "Max number of rows must be at least 1";
     }
 
-    // Min images per row validation
-    if (!isValidNumber(settings.minImagesPerRow, 1, Infinity)) {
-      errors.minImagesPerRow = "Min images per row must be at least 1";
-    }
-
-    // Min number of rows validation
-    if (!isValidNumber(settings.minNumberOfRows, 1, Infinity)) {
-      errors.minNumberOfRows = "Min number of rows must be at least 1";
+    // Images per page validation
+    if (!isValidNumber(settings.imagesPerPage, 1, Infinity)) {
+      errors.imagesPerPage = "Images per page must be at least 1";
     }
 
     // Max number of pages validation
@@ -93,25 +91,6 @@ function App() {
     // Image quality validation
     if (!isValidNumber(settings.imageQuality, 0.1, 1.0)) {
       errors.imageQuality = "Image quality must be between 0.1 and 1.0";
-    }
-
-    // Cross-field validation (only if both values are valid)
-    if (
-      isValidNumber(settings.minImagesPerRow, 1, Infinity) &&
-      isValidNumber(settings.maxImagesPerRow, 1, Infinity) &&
-      settings.minImagesPerRow > settings.maxImagesPerRow
-    ) {
-      errors.minImagesPerRow =
-        "Min images per row cannot be greater than max images per row";
-    }
-
-    if (
-      isValidNumber(settings.minNumberOfRows, 1, Infinity) &&
-      isValidNumber(settings.maxNumberOfRows, 1, Infinity) &&
-      settings.minNumberOfRows > settings.maxNumberOfRows
-    ) {
-      errors.minNumberOfRows =
-        "Min number of rows cannot be greater than max number of rows";
     }
 
     return errors;
@@ -151,7 +130,7 @@ function App() {
 
   return (
     <div className="mx-auto min-h-screen max-w-4xl dark:bg-gray-900">
-      <div className="absolute right-4 top-4 z-50">
+      <div className="absolute top-4 right-4 z-50">
         <DarkThemeToggle />
       </div>
       <AppHeader />
@@ -204,6 +183,9 @@ function App() {
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}
             onAutoArrange={autoArrangeImagesToPages}
+            onMoveImageBack={moveImageBack}
+            onMoveAllImagesBack={moveAllImagesBack}
+            onAutoArrangePage={autoArrangePage}
             settings={settings}
             onSettingsChange={setSettings}
           />
@@ -211,11 +193,10 @@ function App() {
       </DndContext>
 
       {error && (
-        <div className="fixed top-4 right-4 z-50 rounded-lg bg-red-500 dark:bg-red-600 px-4 py-2 text-white shadow-lg">
+        <div className="fixed top-4 right-4 z-50 rounded-lg bg-red-500 px-4 py-2 text-white shadow-lg dark:bg-red-600">
           {error}
         </div>
       )}
-
     </div>
   );
 }

@@ -6,7 +6,8 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
   const handleSettingChange = (key, value) => {
     let parsedValue = value;
     if (value !== "" && !isNaN(value)) {
-      parsedValue = key === "imageQuality" ? parseFloat(value) : parseInt(value);
+      parsedValue =
+        key === "imageQuality" ? parseFloat(value) : parseInt(value);
     }
     onSettingsChange({ ...settings, [key]: parsedValue });
   };
@@ -25,48 +26,29 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
     // Only validate gap and margin for classic design
     if (settings.designStyle !== DESIGN_STYLES.FULL_COVER) {
       if (!isValidNumber(settings.pageMargin, 0, 50)) {
-        errors.pageMargin = "Page margin must be between 0 and 50 pixels (0 is allowed)";
+        errors.pageMargin =
+          "Page margin must be between 0 and 50 pixels (0 is allowed)";
       }
       if (!isValidNumber(settings.imageGap, 0, 30)) {
-        errors.imageGap = "Image gap must be between 0 and 30 pixels (0 is allowed)";
+        errors.imageGap =
+          "Image gap must be between 0 and 30 pixels (0 is allowed)";
       }
     }
-    
+
     if (!isValidNumber(settings.maxImagesPerRow, 1, Infinity)) {
       errors.maxImagesPerRow = "Max images per row must be at least 1";
     }
     if (!isValidNumber(settings.maxNumberOfRows, 1, Infinity)) {
       errors.maxNumberOfRows = "Max number of rows must be at least 1";
     }
-    if (!isValidNumber(settings.minImagesPerRow, 1, Infinity)) {
-      errors.minImagesPerRow = "Min images per row must be at least 1";
-    }
-    if (!isValidNumber(settings.minNumberOfRows, 1, Infinity)) {
-      errors.minNumberOfRows = "Min number of rows must be at least 1";
+    if (!isValidNumber(settings.imagesPerPage, 1, Infinity)) {
+      errors.imagesPerPage = "Images per page must be at least 1";
     }
     if (!isValidNumber(settings.maxNumberOfPages, 1, 100)) {
       errors.maxNumberOfPages = "Max number of pages must be between 1 and 100";
     }
     if (!isValidNumber(settings.imageQuality, 0.1, 1.0)) {
       errors.imageQuality = "Image quality must be between 0.1 and 1.0";
-    }
-
-    if (
-      isValidNumber(settings.minImagesPerRow, 1, Infinity) &&
-      isValidNumber(settings.maxImagesPerRow, 1, Infinity) &&
-      settings.minImagesPerRow > settings.maxImagesPerRow
-    ) {
-      errors.minImagesPerRow =
-        "Min images per row cannot be greater than max images per row";
-    }
-
-    if (
-      isValidNumber(settings.minNumberOfRows, 1, Infinity) &&
-      isValidNumber(settings.maxNumberOfRows, 1, Infinity) &&
-      settings.minNumberOfRows > settings.maxNumberOfRows
-    ) {
-      errors.minNumberOfRows =
-        "Min number of rows cannot be greater than max number of rows";
     }
 
     return errors;
@@ -106,16 +88,10 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
       help: "Maximum number of rows per page",
     },
     {
-      id: "minImagesPerRow",
-      label: "Min Images Per Row:",
+      id: "imagesPerPage",
+      label: "Images Per Page:",
       min: 1,
-      help: "Minimum number of images per row",
-    },
-    {
-      id: "minNumberOfRows",
-      label: "Min Number of Rows:",
-      min: 1,
-      help: "Minimum number of rows per page",
+      help: "Preferred number of images per page (works with row/column limits)",
     },
     {
       id: "maxNumberOfPages",
@@ -144,8 +120,9 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
           <p className="text-sm text-gray-600 dark:text-gray-300">
             Configure how your images will be arranged in the PDF pages.
             {isFullCover && (
-              <span className="block mt-1 text-blue-600 dark:text-blue-400">
-                Full Cover Mode: Gap and margin settings are disabled as images will cover the entire page.
+              <span className="mt-1 block text-blue-600 dark:text-blue-400">
+                Full Cover Mode: Gap and margin settings are disabled as images
+                will cover the entire page.
               </span>
             )}
           </p>
@@ -154,36 +131,44 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {settingFields
-              .filter(field => !field.hidden)
+              .filter((field) => !field.hidden)
               .map(({ id, label, min, max, step = 1, help }) => (
-              <div key={id} className="space-y-1">
-                <label
-                  htmlFor={id}
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                >
-                  {label}
-                </label>
-                <input
-                  type="number"
-                  id={id}
-                  value={settings[id] !== undefined && settings[id] !== null ? settings[id] : ""}
-                  onChange={(e) => handleSettingChange(id, e.target.value)}
-                  min={min}
-                  max={max}
-                  step={step}
-                  required
-                  className={`w-full rounded border px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                    errors[id]
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-                  }`}
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400">{help}</p>
-                {errors[id] && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors[id]}</p>
-                )}
-              </div>
-            ))}
+                <div key={id} className="space-y-1">
+                  <label
+                    htmlFor={id}
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                  >
+                    {label}
+                  </label>
+                  <input
+                    type="number"
+                    id={id}
+                    value={
+                      settings[id] !== undefined && settings[id] !== null
+                        ? settings[id]
+                        : ""
+                    }
+                    onChange={(e) => handleSettingChange(id, e.target.value)}
+                    min={min}
+                    max={max}
+                    step={step}
+                    required
+                    className={`w-full rounded border bg-white px-3 py-2 text-sm text-gray-900 dark:bg-gray-700 dark:text-gray-100 ${
+                      errors[id]
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                    }`}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {help}
+                  </p>
+                  {errors[id] && (
+                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                      {errors[id]}
+                    </p>
+                  )}
+                </div>
+              ))}
           </div>
 
           <div className="flex flex-col items-start gap-2 pt-4">

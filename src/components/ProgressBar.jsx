@@ -6,7 +6,7 @@ const ProgressBar = ({ progress, className = "" }) => {
 
   return (
     <div className={`w-full ${className}`}>
-      <div className="mb-2 flex justify-between items-center">
+      <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {progress.message}
         </span>

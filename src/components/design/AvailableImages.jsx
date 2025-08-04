@@ -33,9 +33,9 @@ const AvailableImages = ({
         </Button>
       </div>
 
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
         <div ref={setDroppableRef} className="max-h-96 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-3 ">
+          <div className="grid grid-cols-2 gap-3">
             {availableImages.map((image, index) => (
               <DraggableImage
                 key={image.id}
@@ -87,7 +87,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
       {...attributes}
       {...listeners}
       style={style}
-      className={`relative cursor-move overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-800 transition-all hover:bg-gray-100 dark:hover:bg-gray-700 ${
+      className={`relative cursor-move overflow-hidden rounded-lg bg-gray-50 transition-all hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 ${
         isDragging ? "z-50 opacity-50 ring-2 ring-blue-400" : ""
       }`}
     >
@@ -109,7 +109,9 @@ const DraggableImage = ({ image, index, onRemove }) => {
         </button>
       </div>
       <div className="p-2">
-        <p className="truncate text-xs text-gray-600 dark:text-gray-300">{image.file.name}</p>
+        <p className="truncate text-xs text-gray-600 dark:text-gray-300">
+          {image.file.name}
+        </p>
       </div>
     </div>
   );

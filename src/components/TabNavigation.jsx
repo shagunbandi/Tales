@@ -21,7 +21,10 @@ const TabNavigation = ({
     {
       id: "settings",
       label: "3. Settings",
-      disabled: activeTab === "upload" || activeTab === "designStyle" || totalImages === 0,
+      disabled:
+        activeTab === "upload" ||
+        activeTab === "designStyle" ||
+        totalImages === 0,
     },
     {
       id: "design",
@@ -30,13 +33,16 @@ const TabNavigation = ({
         activeTab === "upload" ||
         activeTab === "designStyle" ||
         activeTab === "settings",
-        // totalImages === 0 ||
-        // hasSettingsErrors,
+      // totalImages === 0 ||
+      // hasSettingsErrors,
     },
   ];
 
   return (
-    <Breadcrumb aria-label="Navigation tabs" className="bg-gray-50 dark:bg-gray-800 px-5 py-3">
+    <Breadcrumb
+      aria-label="Navigation tabs"
+      className="bg-gray-50 px-5 py-3 dark:bg-gray-800"
+    >
       {tabs.map((tab) => (
         <BreadcrumbItem
           key={tab.id}

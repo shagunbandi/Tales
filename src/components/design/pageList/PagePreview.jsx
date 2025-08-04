@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { Button } from "flowbite-react";
-import { HiTrash, HiColorSwatch } from "react-icons/hi";
+import { HiTrash, HiColorSwatch, HiArrowLeft, HiRefresh } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
 
 const PagePreview = ({
@@ -9,6 +9,9 @@ const PagePreview = ({
   pageIndex,
   onChangeColor,
   onRemovePage,
+  onMoveImageBack,
+  onMoveAllImagesBack,
+  onAutoArrangePage,
   settings,
 }) => {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -41,8 +44,9 @@ const PagePreview = ({
 
   return (
     <div className="mb-6 min-w-0">
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-4 space-y-2">
+        {/* Page info line */}
+        <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             Page {pageIndex + 1}
           </span>
@@ -50,7 +54,10 @@ const PagePreview = ({
             {imageCount} {imageCount === 1 ? "image" : "images"}
           </span>
         </div>
-        <div className="flex gap-2">
+
+        {/* Action buttons line */}
+        <div className="flex gap-2 justify-between">
+          <div className="flex gap-2">
           <Button
             size="xs"
             color="gray"
@@ -60,6 +67,18 @@ const PagePreview = ({
             <HiColorSwatch className="h-3 w-3" />
             Color
           </Button>
+          {page.images.length > 0 && (
+            <Button
+              size="xs"
+              color="yellow"
+              onClick={() => onMoveAllImagesBack(page.id)}
+              className="flex items-center gap-1"
+            >
+              <HiArrowLeft className="h-3 w-3" />
+              Move All Back
+            </Button>
+            )}
+            </div>
           <Button
             size="xs"
             color="red"
@@ -67,12 +86,11 @@ const PagePreview = ({
             className="flex items-center gap-1"
           >
             <HiTrash className="h-3 w-3" />
-            Remove
           </Button>
         </div>
       </div>
 
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
         <div className="flex justify-center overflow-hidden">
           <div
             ref={containerRef}
@@ -92,7 +110,9 @@ const PagePreview = ({
               <div
                 ref={setDroppableRef}
                 className={`relative rounded border-2 border-dashed ${
-                  isOver ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20" : "border-gray-300 dark:border-gray-600"
+                  isOver
+                    ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-300 dark:border-gray-600"
                 }`}
                 style={{
                   backgroundColor: page.color.color,
@@ -109,6 +129,7 @@ const PagePreview = ({
                     pageId={page.id}
                     index={index}
                     settings={settings}
+                    onMoveImageBack={onMoveImageBack}
                   />
                 ))}
                 {page.images.length === 0 && (
@@ -125,7 +146,15 @@ const PagePreview = ({
   );
 };
 
-const DraggablePageImage = ({ image, pageId, index, settings }) => {
+const DraggablePageImage = ({
+  image,
+  pageId,
+  index,
+  settings,
+  onMoveImageBack,
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `${pageId}-${image.id}`,
@@ -136,9 +165,15 @@ const DraggablePageImage = ({ image, pageId, index, settings }) => {
       },
     });
 
+  const handleMoveBack = (e) => {
+    e.stopPropagation();
+    onMoveImageBack(pageId, index);
+  };
+
   if (!image?.src) return null;
 
-  const isFullCover = settings?.designStyle === 'full_cover' || image.fullCoverMode;
+  const isFullCover =
+    settings?.designStyle === "full_cover" || image.fullCoverMode;
 
   const style = {
     left: image.x ?? 0,
@@ -154,7 +189,7 @@ const DraggablePageImage = ({ image, pageId, index, settings }) => {
 
   // Use object-cover for full cover layout to crop images for display
   // Use object-contain for classic layout to maintain aspect ratios
-  const objectFitClass = isFullCover ? 'object-cover' : 'object-contain';
+  const objectFitClass = isFullCover ? "object-cover" : "object-contain";
 
   return (
     <div
@@ -163,12 +198,23 @@ const DraggablePageImage = ({ image, pageId, index, settings }) => {
       {...listeners}
       className={`absolute cursor-move ${isDragging ? "z-50 opacity-50" : ""}`}
       style={style}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <img
         src={image.src}
         alt={image.file?.name || "Image"}
         className={`h-full w-full rounded ${objectFitClass}`}
       />
+      {isHovered && !isDragging && (
+        <button
+          onClick={handleMoveBack}
+          className="absolute top-1 right-1 z-10 rounded-full bg-red-500 p-1 text-xs text-white shadow-lg hover:bg-red-600"
+          title="Move back to available images"
+        >
+          <HiArrowLeft className="h-3 w-3" />
+        </button>
+      )}
     </div>
   );
 };
