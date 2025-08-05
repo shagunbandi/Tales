@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { HiX, HiPencil } from "react-icons/hi";
 import ImageEditModal from "../../modals/ImageEditModal.jsx";
+import { cropImageWithScaleAndPosition } from "../../../utils/imageCropUtils.js";
 
 const FullCoverImage = ({
   image,
@@ -28,8 +29,43 @@ const FullCoverImage = ({
     console.log('Modal state after set:', true);
   };
 
-  const handleModalSave = (editData) => {
-    onUpdateImagePosition(pageId, index, editData);
+  const handleModalSave = async (editData) => {
+    console.log('Cropping image with edit data:', editData);
+    
+    try {
+      // Create a cropped version of the image based on the edit data
+      const originalSrc = image.originalSrc || image.src;
+      
+      // Calculate optimal dimensions for preview quality
+      // Maintain higher resolution for better quality
+      const previewWidth = image.previewWidth ?? 100;
+      const previewHeight = image.previewHeight ?? 100;
+      
+      const croppedImageSrc = await cropImageWithScaleAndPosition(
+        originalSrc,
+        previewWidth,
+        previewHeight,
+        {
+          scale: editData.scale,
+          cropOffsetX: editData.cropOffsetX,
+          cropOffsetY: editData.cropOffsetY,
+          format: 'image/png', // PNG for lossless quality
+        }
+      );
+      
+      console.log('Successfully cropped image');
+      
+      // Update the image with the cropped version and the edit data
+      onUpdateImagePosition(pageId, index, {
+        ...editData,
+        src: croppedImageSrc, // Use the cropped image as the new src
+        originalSrc: originalSrc, // Preserve the original for future edits
+      });
+    } catch (error) {
+      console.error('Failed to crop image:', error);
+      // Fallback to just updating the position data
+      onUpdateImagePosition(pageId, index, editData);
+    }
   };
 
   if (!image?.src) return null;
@@ -41,12 +77,11 @@ const FullCoverImage = ({
     height: image.previewHeight ?? 100,
   };
 
+  // If we have a cropped image, use it directly without transforms
   const imageStyle = {
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
-    transform: `translate(${image.cropOffsetX || 0}px, ${image.cropOffsetY || 0}px) scale(${image.scale || 1})`,
-    transformOrigin: 'center',
+    objectFit: 'cover', // The cropped image should fill the container exactly
     cursor: 'pointer',
   };
 

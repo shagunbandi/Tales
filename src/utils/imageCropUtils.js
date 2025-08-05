@@ -297,6 +297,130 @@ export const cropForFullCover = async (
 };
 
 /**
+ * Crops an image with custom scale and position for Full Cover layout
+ * Maintains high quality for 300 DPI printing
+ * @param {string} imageSrc - Base64 or URL of the image
+ * @param {number} targetWidth - Target width of the container
+ * @param {number} targetHeight - Target height of the container
+ * @param {Object} options - Cropping options with scale, cropOffsetX, cropOffsetY
+ * @returns {Promise<string>} - Cropped image as base64
+ */
+export const cropImageWithScaleAndPosition = async (
+  imageSrc,
+  targetWidth,
+  targetHeight,
+  options = {},
+) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Get scale and position from options
+      const scale = options.scale || 1;
+      const offsetX = options.cropOffsetX || 0;
+      const offsetY = options.cropOffsetY || 0;
+
+      // Calculate how the image would be displayed with object-cover behavior
+      const imageAspectRatio = img.width / img.height;
+      const targetAspectRatio = targetWidth / targetHeight;
+
+      let baseWidth, baseHeight;
+      if (imageAspectRatio > targetAspectRatio) {
+        // Image is wider - scale to container height
+        baseHeight = targetHeight;
+        baseWidth = baseHeight * imageAspectRatio;
+      } else {
+        // Image is taller - scale to container width
+        baseWidth = targetWidth;
+        baseHeight = baseWidth / imageAspectRatio;
+      }
+
+      // Apply user's scale
+      const scaledWidth = baseWidth * scale;
+      const scaledHeight = baseHeight * scale;
+
+      // Calculate the source rectangle in the original image
+      // The offset represents where the user positioned the scaled image
+      const centerX = img.width / 2;
+      const centerY = img.height / 2;
+
+      // Convert the offset and scale back to source image coordinates
+      const sourceScale = Math.min(img.width / scaledWidth, img.height / scaledHeight);
+      const sourceWidth = targetWidth * sourceScale;
+      const sourceHeight = targetHeight * sourceScale;
+
+      // Apply the offset to determine the source crop area
+      const sourceOffsetX = (offsetX / scaledWidth) * img.width;
+      const sourceOffsetY = (offsetY / scaledHeight) * img.height;
+
+      const sourceX = Math.max(0, Math.min(img.width - sourceWidth, centerX - sourceWidth / 2 - sourceOffsetX));
+      const sourceY = Math.max(0, Math.min(img.height - sourceHeight, centerY - sourceHeight / 2 - sourceOffsetY));
+
+      // Calculate optimal canvas dimensions to maintain original quality
+      // Always use the highest reasonable resolution to prevent quality loss
+      const sourceToTargetRatio = Math.min(img.width / targetWidth, img.height / targetHeight);
+      
+      // Use at least 2x the target size, but don't exceed original image dimensions
+      const qualityMultiplier = Math.min(
+        sourceToTargetRatio,
+        Math.max(2, sourceToTargetRatio * 0.8) // At least 2x, up to 80% of source resolution
+      );
+      
+      const canvasWidth = Math.round(targetWidth * qualityMultiplier);
+      const canvasHeight = Math.round(targetHeight * qualityMultiplier);
+      
+      // Set canvas to optimal dimensions for quality
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      // Enable maximum quality rendering
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      
+      // Additional quality settings for better rendering (cross-browser)
+      if (ctx.webkitImageSmoothingEnabled !== undefined) {
+        ctx.webkitImageSmoothingEnabled = true;
+      }
+      if (ctx.mozImageSmoothingEnabled !== undefined) {
+        ctx.mozImageSmoothingEnabled = true;
+      }
+      if (ctx.msImageSmoothingEnabled !== undefined) {
+        ctx.msImageSmoothingEnabled = true;
+      }
+
+      // Draw the cropped and scaled image at optimal resolution
+      ctx.drawImage(
+        img,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        canvasWidth,
+        canvasHeight
+      );
+
+      // Format selection: PNG for preview (lossless), JPEG for PDF (smaller/faster)
+      const format = options.format || "image/png";
+      const quality = format === "image/png" ? undefined : (options.quality || 0.95);
+      const croppedImageSrc = canvas.toDataURL(format, quality);
+      resolve(croppedImageSrc);
+    };
+
+    img.onerror = () => {
+      reject(new Error("Failed to load image for cropping"));
+    };
+
+    img.src = imageSrc;
+  });
+};
+
+/**
  * Crops multiple images for grid layout
  * @param {Array} images - Array of image objects with src property
  * @param {number} cellWidth - Width of each cell

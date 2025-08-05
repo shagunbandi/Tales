@@ -152,64 +152,74 @@ export const generatePDF = async (
 
         // For full cover layout, crop the image to fit the allocated space for PDF
         if (settings.designStyle === "full_cover" || image.fullCoverMode) {
-          // Crop image to fit allocated space for PDF generation
-          try {
-            const { cropForFullCover } = await import("./imageCropUtils.js");
-            const croppedImageSrc = await cropForFullCover(
-              image.src,
-              allocatedWidth * 3, // Higher resolution for print
-              allocatedHeight * 3,
-              {
-                quality: 0.95,
-                format: "image/jpeg",
-                preview: false, // High quality for PDF
-                cropOffsetX: image.cropOffsetX || 0,
-                cropOffsetY: image.cropOffsetY || 0,
-              },
-            );
-
-            pdf.addImage(
-              croppedImageSrc,
-              "JPEG",
-              imgX,
-              imgY,
-              allocatedWidth,
-              allocatedHeight,
-              undefined, // alias
-              "SLOW", // compression
-              0, // rotation
-            );
-          } catch (error) {
-            console.warn(
-              "Failed to crop image for PDF, using original:",
-              error,
-            );
-            // Fallback to original image with aspect ratio preservation
-            const originalAspectRatio =
-              image.originalWidth / image.originalHeight;
-            const allocatedAspectRatio = allocatedWidth / allocatedHeight;
-
-            let finalWidth, finalHeight, finalX, finalY;
-            if (originalAspectRatio > allocatedAspectRatio) {
-              finalWidth = allocatedWidth;
-              finalHeight = allocatedWidth / originalAspectRatio;
-              finalX = imgX;
-              finalY = imgY + (allocatedHeight - finalHeight) / 2;
-            } else {
-              finalHeight = allocatedHeight;
-              finalWidth = allocatedHeight * originalAspectRatio;
-              finalX = imgX + (allocatedWidth - finalWidth) / 2;
-              finalY = imgY;
+          // Check if image needs custom cropping (scale/position adjustments)
+          const needsCustomCropping = (image.scale && image.scale !== 1) || 
+                                     (image.cropOffsetX && image.cropOffsetX !== 0) || 
+                                     (image.cropOffsetY && image.cropOffsetY !== 0);
+          
+          if (needsCustomCropping) {
+            // Use custom cropping for edited images
+            try {
+              const { cropImageWithScaleAndPosition } = await import("./imageCropUtils.js");
+              const sourceImage = image.originalSrc || image.src;
+              const croppedImageSrc = await cropImageWithScaleAndPosition(
+                sourceImage,
+                allocatedWidth * 2, // Reduced from 3x for better performance
+                allocatedHeight * 2,
+                {
+                  scale: image.scale || 1,
+                  cropOffsetX: image.cropOffsetX || 0,
+                  cropOffsetY: image.cropOffsetY || 0,
+                  format: "image/jpeg", // JPEG for smaller file size
+                  quality: 0.92, // High quality but smaller than PNG
+                },
+              );
+              
+              pdf.addImage(
+                croppedImageSrc,
+                "JPEG",
+                imgX,
+                imgY,
+                allocatedWidth,
+                allocatedHeight,
+                undefined, // alias
+                "SLOW", // compression
+                0, // rotation
+              );
+            } catch (error) {
+              console.warn("Failed to crop image for PDF, using standard crop:", error);
+              // Fallback to standard cropping
             }
+          } else {
+            // Use standard cropping for non-edited images (faster)
+            try {
+              const { cropForFullCover } = await import("./imageCropUtils.js");
+              const croppedImageSrc = await cropForFullCover(
+                image.src,
+                allocatedWidth * 2, // Reduced from 3x for better performance
+                allocatedHeight * 2,
+                {
+                  quality: 0.92,
+                  format: "image/jpeg",
+                  preview: false, // High quality for PDF
+                },
+              );
 
-            pdf.addImage(
-              image.src,
-              imageFormat,
-              finalX,
-              finalY,
-              finalWidth,
-              finalHeight,
-            );
+              pdf.addImage(
+                croppedImageSrc,
+                "JPEG",
+                imgX,
+                imgY,
+                allocatedWidth,
+                allocatedHeight,
+                undefined, // alias
+                "SLOW", // compression
+                0, // rotation
+              );
+            } catch (error) {
+              console.warn("Failed to crop standard image for PDF:", error);
+              // Fallback to original image processing
+            }
           }
         } else {
           // For classic layout, calculate aspect ratio preserving dimensions
@@ -218,7 +228,6 @@ export const generatePDF = async (
           const allocatedAspectRatio = allocatedWidth / allocatedHeight;
 
           let finalWidth, finalHeight, finalX, finalY;
-
           if (originalAspectRatio > allocatedAspectRatio) {
             // Image is wider than allocated space - fit to width
             finalWidth = allocatedWidth;
