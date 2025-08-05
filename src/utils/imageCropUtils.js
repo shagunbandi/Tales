@@ -324,13 +324,6 @@ export const cropImageWithScaleAndPosition = async (
       const offsetX = options.cropOffsetX || 0;
       const offsetY = options.cropOffsetY || 0;
 
-      console.log('cropImageWithScaleAndPosition:', {
-        imageSize: { width: img.width, height: img.height },
-        targetSize: { width: targetWidth, height: targetHeight },
-        scale,
-        offsetX,
-        offsetY
-      });
 
       // Calculate how the image would be displayed with object-cover behavior
       const imageAspectRatio = img.width / img.height;
@@ -367,14 +360,6 @@ export const cropImageWithScaleAndPosition = async (
 
       const sourceX = Math.max(0, Math.min(img.width - sourceWidth, centerX - sourceWidth / 2 - sourceOffsetX));
       const sourceY = Math.max(0, Math.min(img.height - sourceHeight, centerY - sourceHeight / 2 - sourceOffsetY));
-      
-      console.log('Source crop calculations:', {
-        centerX, centerY,
-        sourceWidth, sourceHeight,
-        sourceOffsetX, sourceOffsetY,
-        finalSourceX: sourceX,
-        finalSourceY: sourceY
-      });
 
       // Calculate optimal canvas dimensions to maintain original quality
       // For PDF mode, we want higher resolution but same coordinate system
@@ -392,13 +377,6 @@ export const cropImageWithScaleAndPosition = async (
       
       const canvasWidth = Math.round(targetWidth * qualityMultiplier);
       const canvasHeight = Math.round(targetHeight * qualityMultiplier);
-      
-      console.log('Canvas dimensions:', {
-        isPDFMode,
-        targetSize: { width: targetWidth, height: targetHeight },
-        qualityMultiplier,
-        canvasSize: { width: canvasWidth, height: canvasHeight }
-      });
       
       // Set canvas to optimal dimensions for quality
       canvas.width = canvasWidth;

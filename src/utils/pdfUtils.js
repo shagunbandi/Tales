@@ -162,15 +162,6 @@ export const generatePDF = async (
             try {
               const { cropImageWithScaleAndPosition } = await import("./imageCropUtils.js");
               const sourceImage = image.originalSrc || image.src;
-              console.log('PDF: Cropping image with dimensions:', {
-                allocatedWidth,
-                allocatedHeight,
-                previewWidth: image.previewWidth,
-                previewHeight: image.previewHeight,
-                scale: image.scale || 1,
-                cropOffsetX: image.cropOffsetX || 0,
-                cropOffsetY: image.cropOffsetY || 0
-              });
               
               // Use SAME base dimensions as preview for consistency
               const croppedImageSrc = await cropImageWithScaleAndPosition(

@@ -29,7 +29,6 @@ const ImageEditModal = ({
   // Initialize values when modal opens
   useEffect(() => {
     if (isOpen && image) {
-      console.log('Modal opening with image:', image);
       setScale(image.scale || 1);
       setPosition({
         x: image.cropOffsetX || 0,
@@ -96,16 +95,6 @@ const ImageEditModal = ({
       modalImageHeight = modalImageWidth / imageAspectRatio;
     }
     
-    console.log('Modal image dimensions calculation:', {
-      imageAspectRatio,
-      containerAspectRatio,
-      actualSize: { width: actualWidth, height: actualHeight },
-      baseSize: { width: baseWidth, height: baseHeight },
-      modalDisplaySize: { width: modalDisplayWidth, height: modalDisplayHeight },
-      modalImageSize: { width: modalImageWidth, height: modalImageHeight },
-      modalScale,
-      isWiderThanContainer: imageAspectRatio > containerAspectRatio
-    });
 
     return {
       width: baseWidth * scale,
@@ -162,12 +151,6 @@ const ImageEditModal = ({
     const maxOffsetX = Math.max(0, (scaledWidth - imageDimensions.actualWidth) / 2);
     const maxOffsetY = Math.max(0, (scaledHeight - imageDimensions.actualHeight) / 2);
     
-    console.log('Mouse move constraints:', {
-      scaledImageSize: { width: scaledWidth, height: scaledHeight },
-      actualContainerSize: { width: imageDimensions.actualWidth, height: imageDimensions.actualHeight },
-      maxOffset: { x: maxOffsetX, y: maxOffsetY },
-      modalScale: imageDimensions.modalScale
-    });
     
     // Convert modal mouse movement to actual coordinate system
     const modalToActualRatio = 1 / imageDimensions.modalScale;
@@ -202,7 +185,6 @@ const ImageEditModal = ({
 
   // Handle save
   const handleSave = () => {
-    console.log('Saving image edit data:', { scale, cropOffsetX: position.x, cropOffsetY: position.y });
     onSave({
       scale,
       cropOffsetX: position.x,
@@ -301,16 +283,7 @@ const ImageEditModal = ({
                 onMouseDown={handleMouseDown}
                 draggable={false}
                 onLoad={() => {
-                  console.log('Image loaded in modal:', {
-                    naturalWidth: imageRef.current?.naturalWidth,
-                    naturalHeight: imageRef.current?.naturalHeight,
-                    displayWidth: imageDimensions.modalImageWidth,
-                    displayHeight: imageDimensions.modalImageHeight,
-                    containerWidth: imageDimensions.modalDisplayWidth,
-                    containerHeight: imageDimensions.modalDisplayHeight,
-                    position,
-                    scale
-                  });
+                  // Image loaded successfully
                 }}
               />
               

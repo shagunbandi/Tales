@@ -13,8 +13,6 @@ const FullCoverImage = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  console.log('FullCoverImage render, modal state:', isModalOpen);
 
   const handleMoveBack = (e) => {
     e.stopPropagation();
@@ -23,21 +21,10 @@ const FullCoverImage = ({
 
   const handleEditClick = (e) => {
     e.stopPropagation();
-    console.log('Edit button clicked, opening modal with image:', image);
-    console.log('Current modal state:', isModalOpen);
     setIsModalOpen(true);
-    console.log('Modal state after set:', true);
   };
 
   const handleModalSave = async (editData) => {
-    console.log('Cropping image with edit data:', editData);
-    console.log('Container dimensions:', {
-      previewWidth: image.previewWidth,
-      previewHeight: image.previewHeight,
-      imageX: image.x,
-      imageY: image.y
-    });
-    
     try {
       // Create a cropped version of the image based on the edit data
       const originalSrc = image.originalSrc || image.src;
@@ -45,14 +32,6 @@ const FullCoverImage = ({
       // Use EXACT same dimensions as preview and PDF
       const previewWidth = image.previewWidth ?? 100;
       const previewHeight = image.previewHeight ?? 100;
-      
-      console.log('Calling cropImageWithScaleAndPosition with:', {
-        targetWidth: previewWidth,
-        targetHeight: previewHeight,
-        scale: editData.scale,
-        cropOffsetX: editData.cropOffsetX,
-        cropOffsetY: editData.cropOffsetY
-      });
       
       const croppedImageSrc = await cropImageWithScaleAndPosition(
         originalSrc,
@@ -65,8 +44,6 @@ const FullCoverImage = ({
           format: 'image/png', // PNG for lossless quality
         }
       );
-      
-      console.log('Successfully cropped image');
       
       // Update the image with the cropped version and the edit data
       onUpdateImagePosition(pageId, index, {
@@ -113,10 +90,7 @@ const FullCoverImage = ({
           alt={image.file?.name || "Image"}
           className="select-none"
           style={imageStyle}
-          onClick={(e) => {
-            console.log('Image clicked!');
-            handleEditClick(e);
-          }}
+          onClick={handleEditClick}
           draggable={false}
         />
         
