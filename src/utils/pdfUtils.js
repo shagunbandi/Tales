@@ -162,16 +162,28 @@ export const generatePDF = async (
             try {
               const { cropImageWithScaleAndPosition } = await import("./imageCropUtils.js");
               const sourceImage = image.originalSrc || image.src;
+              console.log('PDF: Cropping image with dimensions:', {
+                allocatedWidth,
+                allocatedHeight,
+                previewWidth: image.previewWidth,
+                previewHeight: image.previewHeight,
+                scale: image.scale || 1,
+                cropOffsetX: image.cropOffsetX || 0,
+                cropOffsetY: image.cropOffsetY || 0
+              });
+              
+              // Use SAME base dimensions as preview for consistency
               const croppedImageSrc = await cropImageWithScaleAndPosition(
                 sourceImage,
-                allocatedWidth * 2, // Reduced from 3x for better performance
-                allocatedHeight * 2,
+                image.previewWidth ?? allocatedWidth, // Use preview dimensions first
+                image.previewHeight ?? allocatedHeight,
                 {
                   scale: image.scale || 1,
                   cropOffsetX: image.cropOffsetX || 0,
                   cropOffsetY: image.cropOffsetY || 0,
                   format: "image/jpeg", // JPEG for smaller file size
                   quality: 0.92, // High quality but smaller than PNG
+                  pdfMode: true, // Flag to indicate this is for PDF
                 },
               );
               

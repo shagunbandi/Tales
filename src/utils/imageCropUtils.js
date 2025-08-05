@@ -367,19 +367,38 @@ export const cropImageWithScaleAndPosition = async (
 
       const sourceX = Math.max(0, Math.min(img.width - sourceWidth, centerX - sourceWidth / 2 - sourceOffsetX));
       const sourceY = Math.max(0, Math.min(img.height - sourceHeight, centerY - sourceHeight / 2 - sourceOffsetY));
+      
+      console.log('Source crop calculations:', {
+        centerX, centerY,
+        sourceWidth, sourceHeight,
+        sourceOffsetX, sourceOffsetY,
+        finalSourceX: sourceX,
+        finalSourceY: sourceY
+      });
 
       // Calculate optimal canvas dimensions to maintain original quality
-      // Always use the highest reasonable resolution to prevent quality loss
+      // For PDF mode, we want higher resolution but same coordinate system
+      const isPDFMode = options.pdfMode === true;
       const sourceToTargetRatio = Math.min(img.width / targetWidth, img.height / targetHeight);
       
-      // Use at least 2x the target size, but don't exceed original image dimensions
-      const qualityMultiplier = Math.min(
-        sourceToTargetRatio,
-        Math.max(2, sourceToTargetRatio * 0.8) // At least 2x, up to 80% of source resolution
-      );
+      let qualityMultiplier;
+      if (isPDFMode) {
+        // For PDF: Use higher resolution (2-3x) for print quality
+        qualityMultiplier = Math.min(sourceToTargetRatio, Math.max(3, sourceToTargetRatio * 0.9));
+      } else {
+        // For preview: Use moderate resolution (2x) for display
+        qualityMultiplier = Math.min(sourceToTargetRatio, Math.max(2, sourceToTargetRatio * 0.8));
+      }
       
       const canvasWidth = Math.round(targetWidth * qualityMultiplier);
       const canvasHeight = Math.round(targetHeight * qualityMultiplier);
+      
+      console.log('Canvas dimensions:', {
+        isPDFMode,
+        targetSize: { width: targetWidth, height: targetHeight },
+        qualityMultiplier,
+        canvasSize: { width: canvasWidth, height: canvasHeight }
+      });
       
       // Set canvas to optimal dimensions for quality
       canvas.width = canvasWidth;
