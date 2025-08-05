@@ -324,6 +324,14 @@ export const cropImageWithScaleAndPosition = async (
       const offsetX = options.cropOffsetX || 0;
       const offsetY = options.cropOffsetY || 0;
 
+      console.log('cropImageWithScaleAndPosition:', {
+        imageSize: { width: img.width, height: img.height },
+        targetSize: { width: targetWidth, height: targetHeight },
+        scale,
+        offsetX,
+        offsetY
+      });
+
       // Calculate how the image would be displayed with object-cover behavior
       const imageAspectRatio = img.width / img.height;
       const targetAspectRatio = targetWidth / targetHeight;

@@ -31,15 +31,28 @@ const FullCoverImage = ({
 
   const handleModalSave = async (editData) => {
     console.log('Cropping image with edit data:', editData);
+    console.log('Container dimensions:', {
+      previewWidth: image.previewWidth,
+      previewHeight: image.previewHeight,
+      imageX: image.x,
+      imageY: image.y
+    });
     
     try {
       // Create a cropped version of the image based on the edit data
       const originalSrc = image.originalSrc || image.src;
       
-      // Calculate optimal dimensions for preview quality
-      // Maintain higher resolution for better quality
+      // Use EXACT same dimensions as preview and PDF
       const previewWidth = image.previewWidth ?? 100;
       const previewHeight = image.previewHeight ?? 100;
+      
+      console.log('Calling cropImageWithScaleAndPosition with:', {
+        targetWidth: previewWidth,
+        targetHeight: previewHeight,
+        scale: editData.scale,
+        cropOffsetX: editData.cropOffsetX,
+        cropOffsetY: editData.cropOffsetY
+      });
       
       const croppedImageSrc = await cropImageWithScaleAndPosition(
         originalSrc,

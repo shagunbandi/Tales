@@ -39,37 +39,45 @@ const ImageEditModal = ({
   }, [isOpen, image]);
 
   // Calculate image display properties for drag functionality
+  // IMPORTANT: Use the ACTUAL container dimensions, not scaled modal dimensions
   const calculateImageDimensions = useCallback(() => {
     if (!imageRef.current) return { width: 0, height: 0, baseWidth: 0, baseHeight: 0 };
     
     const imageWidth = imageRef.current.naturalWidth || 100;
     const imageHeight = imageRef.current.naturalHeight || 100;
     const imageAspectRatio = imageWidth / imageHeight;
-    const previewContainerAspectRatio = containerWidth / containerHeight;
+    const containerAspectRatio = containerWidth / containerHeight;
     
-    // Calculate base dimensions for the preview (scaled down for modal)
-    const maxPreviewWidth = 400;
-    const maxPreviewHeight = 300;
+    // Use the ACTUAL container dimensions (same as preview/PDF)
+    // Don't scale down - this ensures consistency across modal, preview, and PDF
+    const actualWidth = containerWidth;
+    const actualHeight = containerHeight;
     
-    let previewWidth, previewHeight;
-    if (containerWidth > maxPreviewWidth || containerHeight > maxPreviewHeight) {
-      const scale = Math.min(maxPreviewWidth / containerWidth, maxPreviewHeight / containerHeight);
-      previewWidth = containerWidth * scale;
-      previewHeight = containerHeight * scale;
+    // Calculate modal display size (for UI only)
+    const maxModalWidth = 400;
+    const maxModalHeight = 300;
+    let modalDisplayWidth, modalDisplayHeight, modalScale;
+    
+    if (actualWidth > maxModalWidth || actualHeight > maxModalHeight) {
+      modalScale = Math.min(maxModalWidth / actualWidth, maxModalHeight / actualHeight);
+      modalDisplayWidth = actualWidth * modalScale;
+      modalDisplayHeight = actualHeight * modalScale;
     } else {
-      previewWidth = containerWidth;
-      previewHeight = containerHeight;
+      modalScale = 1;
+      modalDisplayWidth = actualWidth;
+      modalDisplayHeight = actualHeight;
     }
     
     // Calculate how the image would be displayed with object-cover behavior
+    // Use ACTUAL dimensions for calculations, not modal display dimensions
     let baseWidth, baseHeight;
-    if (imageAspectRatio > previewContainerAspectRatio) {
+    if (imageAspectRatio > containerAspectRatio) {
       // Image is wider - scale to container height
-      baseHeight = previewHeight;
+      baseHeight = actualHeight;
       baseWidth = baseHeight * imageAspectRatio;
     } else {
       // Image is taller - scale to container width
-      baseWidth = previewWidth;
+      baseWidth = actualWidth;
       baseHeight = baseWidth / imageAspectRatio;
     }
     
@@ -78,8 +86,11 @@ const ImageEditModal = ({
       height: baseHeight * scale,
       baseWidth,
       baseHeight,
-      previewWidth,
-      previewHeight,
+      actualWidth,
+      actualHeight,
+      modalDisplayWidth,
+      modalDisplayHeight,
+      modalScale,
     };
   }, [containerWidth, containerHeight, scale]);
 
@@ -114,16 +125,26 @@ const ImageEditModal = ({
     const newX = dragStart.startX + deltaX;
     const newY = dragStart.startY + deltaY;
     
-    // Calculate constraints based on scaled dimensions
+    // Calculate constraints based on ACTUAL dimensions (not modal display dimensions)
     const imageDimensions = calculateImageDimensions(); 
     const scaledWidth = imageDimensions.baseWidth * scale;
     const scaledHeight = imageDimensions.baseHeight * scale;
-    const maxOffsetX = Math.max(0, (scaledWidth - imageDimensions.previewWidth) / 2);
-    const maxOffsetY = Math.max(0, (scaledHeight - imageDimensions.previewHeight) / 2);
+    
+    // Use ACTUAL container dimensions for constraint calculations
+    const maxOffsetX = Math.max(0, (scaledWidth - imageDimensions.actualWidth) / 2);
+    const maxOffsetY = Math.max(0, (scaledHeight - imageDimensions.actualHeight) / 2);
+    
+    // Convert modal mouse movement to actual coordinate system
+    const modalToActualRatio = 1 / imageDimensions.modalScale;
+    const actualDeltaX = deltaX * modalToActualRatio;
+    const actualDeltaY = deltaY * modalToActualRatio;
+    
+    const actualNewX = dragStart.startX + actualDeltaX;
+    const actualNewY = dragStart.startY + actualDeltaY;
     
     setPosition({
-      x: Math.max(-maxOffsetX, Math.min(maxOffsetX, newX)),
-      y: Math.max(-maxOffsetY, Math.min(maxOffsetY, newY)),
+      x: Math.max(-maxOffsetX, Math.min(maxOffsetX, actualNewX)),
+      y: Math.max(-maxOffsetY, Math.min(maxOffsetY, actualNewY)),
     });
   }, [isDragging, dragStart, calculateImageDimensions, scale]);
 
@@ -223,8 +244,8 @@ const ImageEditModal = ({
               ref={containerRef}
               className="relative border-2 border-gray-300 dark:border-gray-600 overflow-hidden cursor-move bg-gray-100 dark:bg-gray-700 rounded"
               style={{
-                width: imageDimensions.previewWidth,
-                height: imageDimensions.previewHeight,
+                width: imageDimensions.modalDisplayWidth,
+                height: imageDimensions.modalDisplayHeight,
               }}
             >
               <img
@@ -233,11 +254,11 @@ const ImageEditModal = ({
                 alt={image.file?.name || "Image"}
                 className="absolute select-none"
                 style={{
-                  width: imageDimensions.baseWidth,
-                  height: imageDimensions.baseHeight,
+                  width: imageDimensions.baseWidth * imageDimensions.modalScale,
+                  height: imageDimensions.baseHeight * imageDimensions.modalScale,
                   left: '50%',
                   top: '50%',
-                  transform: `translate(${-imageDimensions.baseWidth / 2 + position.x}px, ${-imageDimensions.baseHeight / 2 + position.y}px) scale(${scale})`,
+                  transform: `translate(${(-imageDimensions.baseWidth * imageDimensions.modalScale / 2) + (position.x * imageDimensions.modalScale)}px, ${(-imageDimensions.baseHeight * imageDimensions.modalScale / 2) + (position.y * imageDimensions.modalScale)}px) scale(${scale})`,
                   transformOrigin: 'center',
                   cursor: isDragging ? 'grabbing' : 'grab',
                 }}
