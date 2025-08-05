@@ -81,6 +81,32 @@ const ImageEditModal = ({
       baseHeight = baseWidth / imageAspectRatio;
     }
     
+    // For modal display, calculate object-cover size directly using modal container dimensions
+    // This ensures the image properly fills the modal container while maintaining coordinate consistency
+    let modalImageWidth, modalImageHeight;
+    const modalContainerAspectRatio = modalDisplayWidth / modalDisplayHeight;
+    
+    if (imageAspectRatio > modalContainerAspectRatio) {
+      // Image is wider relative to modal container - scale to modal height
+      modalImageHeight = modalDisplayHeight;
+      modalImageWidth = modalImageHeight * imageAspectRatio;
+    } else {
+      // Image is taller relative to modal container - scale to modal width  
+      modalImageWidth = modalDisplayWidth;
+      modalImageHeight = modalImageWidth / imageAspectRatio;
+    }
+    
+    console.log('Modal image dimensions calculation:', {
+      imageAspectRatio,
+      containerAspectRatio,
+      actualSize: { width: actualWidth, height: actualHeight },
+      baseSize: { width: baseWidth, height: baseHeight },
+      modalDisplaySize: { width: modalDisplayWidth, height: modalDisplayHeight },
+      modalImageSize: { width: modalImageWidth, height: modalImageHeight },
+      modalScale,
+      isWiderThanContainer: imageAspectRatio > containerAspectRatio
+    });
+
     return {
       width: baseWidth * scale,
       height: baseHeight * scale,
@@ -90,6 +116,8 @@ const ImageEditModal = ({
       actualHeight,
       modalDisplayWidth,
       modalDisplayHeight,
+      modalImageWidth,
+      modalImageHeight,
       modalScale,
     };
   }, [containerWidth, containerHeight, scale]);
@@ -133,6 +161,13 @@ const ImageEditModal = ({
     // Use ACTUAL container dimensions for constraint calculations
     const maxOffsetX = Math.max(0, (scaledWidth - imageDimensions.actualWidth) / 2);
     const maxOffsetY = Math.max(0, (scaledHeight - imageDimensions.actualHeight) / 2);
+    
+    console.log('Mouse move constraints:', {
+      scaledImageSize: { width: scaledWidth, height: scaledHeight },
+      actualContainerSize: { width: imageDimensions.actualWidth, height: imageDimensions.actualHeight },
+      maxOffset: { x: maxOffsetX, y: maxOffsetY },
+      modalScale: imageDimensions.modalScale
+    });
     
     // Convert modal mouse movement to actual coordinate system
     const modalToActualRatio = 1 / imageDimensions.modalScale;
@@ -254,16 +289,29 @@ const ImageEditModal = ({
                 alt={image.file?.name || "Image"}
                 className="absolute select-none"
                 style={{
-                  width: imageDimensions.baseWidth * imageDimensions.modalScale,
-                  height: imageDimensions.baseHeight * imageDimensions.modalScale,
+                  width: imageDimensions.modalImageWidth,
+                  height: imageDimensions.modalImageHeight,
                   left: '50%',
                   top: '50%',
-                  transform: `translate(${(-imageDimensions.baseWidth * imageDimensions.modalScale / 2) + (position.x * imageDimensions.modalScale)}px, ${(-imageDimensions.baseHeight * imageDimensions.modalScale / 2) + (position.y * imageDimensions.modalScale)}px) scale(${scale})`,
+                  transform: `translate(-50%, -50%) translate(${position.x * imageDimensions.modalScale}px, ${position.y * imageDimensions.modalScale}px) scale(${scale})`,
                   transformOrigin: 'center',
                   cursor: isDragging ? 'grabbing' : 'grab',
+                  
                 }}
                 onMouseDown={handleMouseDown}
                 draggable={false}
+                onLoad={() => {
+                  console.log('Image loaded in modal:', {
+                    naturalWidth: imageRef.current?.naturalWidth,
+                    naturalHeight: imageRef.current?.naturalHeight,
+                    displayWidth: imageDimensions.modalImageWidth,
+                    displayHeight: imageDimensions.modalImageHeight,
+                    containerWidth: imageDimensions.modalDisplayWidth,
+                    containerHeight: imageDimensions.modalDisplayHeight,
+                    position,
+                    scale
+                  });
+                }}
               />
               
               {/* Guidelines - Rule of thirds */}
