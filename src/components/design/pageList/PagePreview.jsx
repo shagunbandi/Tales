@@ -9,6 +9,7 @@ import {
   HiViewGrid,
 } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
+import FullCoverImage from "./FullCoverImage.jsx";
 
 const PagePreview = ({
   page,
@@ -20,6 +21,7 @@ const PagePreview = ({
   onAutoArrangePage,
   onRandomizePage,
   onRandomizeLayout,
+  onUpdateImagePosition,
   settings,
 }) => {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -146,7 +148,11 @@ const PagePreview = ({
             >
               <div
                 ref={setDroppableRef}
-                className={`relative rounded border-2 border-dashed ${
+                className={`relative ${
+                  settings?.designStyle === "full_cover" 
+                    ? "border-2 border-solid" 
+                    : "rounded border-2 border-dashed"
+                } ${
                   isOver
                     ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
                     : "border-gray-300 dark:border-gray-600"
@@ -159,16 +165,34 @@ const PagePreview = ({
                   maxHeight: "400px",
                 }}
               >
-                {page.images.map((image, index) => (
-                  <DraggablePageImage
-                    key={`${page.id}-${image.id}`}
-                    image={image}
-                    pageId={page.id}
-                    index={index}
-                    settings={settings}
-                    onMoveImageBack={onMoveImageBack}
-                  />
-                ))}
+                {page.images.map((image, index) => {
+                  const isFullCover = settings?.designStyle === "full_cover" || image.fullCoverMode;
+                  
+                  if (isFullCover) {
+                    return (
+                      <FullCoverImage
+                        key={`${page.id}-${image.id}`}
+                        image={image}
+                        pageId={page.id}
+                        index={index}
+                        settings={settings}
+                        onMoveImageBack={onMoveImageBack}
+                        onUpdateImagePosition={onUpdateImagePosition}
+                      />
+                    );
+                  } else {
+                    return (
+                      <DraggablePageImage
+                        key={`${page.id}-${image.id}`}
+                        image={image}
+                        pageId={page.id}
+                        index={index}
+                        settings={settings}
+                        onMoveImageBack={onMoveImageBack}
+                      />
+                    );
+                  }
+                })}
                 {page.images.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
                     Drag images here

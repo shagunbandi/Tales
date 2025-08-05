@@ -13,6 +13,7 @@ const PagesList = ({
   onAutoArrangePage,
   onRandomizePage,
   onRandomizeLayout,
+  onUpdateImagePosition,
   settings,
 }) => {
   return (
@@ -41,6 +42,7 @@ const PagesList = ({
               onAutoArrangePage={onAutoArrangePage}
               onRandomizePage={onRandomizePage}
               onRandomizeLayout={onRandomizeLayout}
+              onUpdateImagePosition={onUpdateImagePosition}
               isLastPage={pageIndex === pages.length - 1}
               settings={settings}
             />

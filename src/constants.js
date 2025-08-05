@@ -68,8 +68,8 @@ export const DEFAULT_SETTINGS = {
   imageQuality: 0.9,
   maxImagesPerRow: 4,
   maxNumberOfRows: 2,
-  maxNumberOfPages: 15,
-  imagesPerPage: 6, // Default number of images per page
+  maxNumberOfPages: 4,
+  imagesPerPage: 10,
 };
 
 export const PREVIEW_SCALE = 0.8;

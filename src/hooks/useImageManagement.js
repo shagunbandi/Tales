@@ -557,6 +557,24 @@ export const useImageManagement = (settings = null) => {
     [settings],
   );
 
+  const updateImagePosition = useCallback((pageId, imageIndex, positionData) => {
+    setPages((prev) =>
+      prev.map((page) => {
+        if (page.id === pageId) {
+          const newImages = [...page.images];
+          if (newImages[imageIndex]) {
+            newImages[imageIndex] = {
+              ...newImages[imageIndex],
+              ...positionData,
+            };
+          }
+          return { ...page, images: newImages };
+        }
+        return page;
+      }),
+    );
+  }, []);
+
   const handleGeneratePDF = useCallback(async () => {
     if (pages.length === 0) return;
 
@@ -598,6 +616,7 @@ export const useImageManagement = (settings = null) => {
     autoArrangePage,
     randomizePage,
     randomizeLayout,
+    updateImagePosition,
     handleGeneratePDF,
     setError,
   };
