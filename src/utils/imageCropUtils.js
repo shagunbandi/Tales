@@ -56,6 +56,22 @@ export const cropImageToCover = async (
         finalCanvasHeight = cropHeight;
       }
 
+      // Apply custom crop offsets if provided
+      if (options.cropOffsetX || options.cropOffsetY) {
+        const offsetX = options.cropOffsetX || 0;
+        const offsetY = options.cropOffsetY || 0;
+        
+        // Calculate the scale between preview and actual image
+        // We need to convert preview offsets to image coordinate offsets
+        const previewScale = Math.max(targetWidth / cropWidth, targetHeight / cropHeight);
+        const scaledOffsetX = offsetX / previewScale;
+        const scaledOffsetY = offsetY / previewScale;
+        
+        // Adjust crop position by the offset (negative because we want to move the visible area)
+        cropX = Math.max(0, Math.min(img.width - cropWidth, cropX - scaledOffsetX));
+        cropY = Math.max(0, Math.min(img.height - cropHeight, cropY - scaledOffsetY));
+      }
+
       // Set canvas to the full resolution of the cropped area
       canvas.width = finalCanvasWidth;
       canvas.height = finalCanvasHeight;

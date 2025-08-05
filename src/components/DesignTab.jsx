@@ -25,6 +25,7 @@ const DesignTab = ({
   onAutoArrangePage,
   onRandomizePage,
   onRandomizeLayout,
+  onUpdateImagePosition,
   settings,
   onSettingsChange,
 }) => {
@@ -68,6 +69,7 @@ const DesignTab = ({
               onAutoArrangePage={onAutoArrangePage}
               onRandomizePage={onRandomizePage}
               onRandomizeLayout={onRandomizeLayout}
+              onUpdateImagePosition={onUpdateImagePosition}
               settings={settings}
             />
 

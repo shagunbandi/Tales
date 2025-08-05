@@ -163,6 +163,8 @@ export const generatePDF = async (
                 quality: 0.95,
                 format: "image/jpeg",
                 preview: false, // High quality for PDF
+                cropOffsetX: image.cropOffsetX || 0,
+                cropOffsetY: image.cropOffsetY || 0,
               },
             );
 
