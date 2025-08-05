@@ -7,6 +7,7 @@ import {
 } from "../utils/layoutUtils.js";
 import { autoArrangeImages } from "../utils/autoArrangeUtils.js";
 import { generatePDF } from "../utils/pdfUtils.js";
+import { randomizePageLayout, shuffleImagesInLayout, randomizeLayoutStructure } from "../utils/randomizeUtils.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
 
 export const useImageManagement = (settings = null) => {
@@ -498,6 +499,56 @@ export const useImageManagement = (settings = null) => {
     [settings],
   );
 
+  const randomizePage = useCallback(
+    async (pageId) => {
+      setPages((prev) =>
+        prev.map((page) => {
+          if (page.id === pageId && page.images.length > 0) {
+            shuffleImagesInLayout(page.images, settings).then((shuffledImages) => {
+              setPages((currentPages) =>
+                currentPages.map((currentPage) =>
+                  currentPage.id === pageId
+                    ? { ...currentPage, images: shuffledImages }
+                    : currentPage,
+                ),
+              );
+            });
+
+            // Return current state while async operation completes
+            return page;
+          }
+          return page;
+        }),
+      );
+    },
+    [settings],
+  );
+
+  const randomizeLayout = useCallback(
+    async (pageId) => {
+      setPages((prev) =>
+        prev.map((page) => {
+          if (page.id === pageId && page.images.length > 0) {
+            randomizeLayoutStructure(page.images, settings).then((randomizedLayoutImages) => {
+              setPages((currentPages) =>
+                currentPages.map((currentPage) =>
+                  currentPage.id === pageId
+                    ? { ...currentPage, images: randomizedLayoutImages }
+                    : currentPage,
+                ),
+              );
+            });
+
+            // Return current state while async operation completes
+            return page;
+          }
+          return page;
+        }),
+      );
+    },
+    [settings],
+  );
+
   const handleGeneratePDF = useCallback(async () => {
     if (pages.length === 0) return;
 
@@ -537,6 +588,8 @@ export const useImageManagement = (settings = null) => {
     moveImageBack,
     moveAllImagesBack,
     autoArrangePage,
+    randomizePage,
+    randomizeLayout,
     handleGeneratePDF,
     setError,
   };

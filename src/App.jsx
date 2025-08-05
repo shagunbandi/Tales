@@ -45,6 +45,8 @@ function App() {
     moveImageBack,
     moveAllImagesBack,
     autoArrangePage,
+    randomizePage,
+    randomizeLayout,
     handleGeneratePDF,
     setError,
   } = useImageManagement(settings);
@@ -186,6 +188,8 @@ function App() {
             onMoveImageBack={moveImageBack}
             onMoveAllImagesBack={moveAllImagesBack}
             onAutoArrangePage={autoArrangePage}
+            onRandomizePage={randomizePage}
+            onRandomizeLayout={randomizeLayout}
             settings={settings}
             onSettingsChange={setSettings}
           />

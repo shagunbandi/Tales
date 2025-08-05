@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { Button } from "flowbite-react";
-import { HiTrash, HiColorSwatch, HiArrowLeft, HiRefresh } from "react-icons/hi";
+import { HiTrash, HiColorSwatch, HiArrowLeft, HiRefresh, HiViewGrid } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
 
 const PagePreview = ({
@@ -12,6 +12,8 @@ const PagePreview = ({
   onMoveImageBack,
   onMoveAllImagesBack,
   onAutoArrangePage,
+  onRandomizePage,
+  onRandomizeLayout,
   settings,
 }) => {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -45,14 +47,28 @@ const PagePreview = ({
   return (
     <div className="mb-6 min-w-0">
       <div className="mb-4 space-y-2">
-        {/* Page info line */}
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-            Page {pageIndex + 1}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {imageCount} {imageCount === 1 ? "image" : "images"}
-          </span>
+        {/* Page info line with Randomize Layout button */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              Page {pageIndex + 1}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {imageCount} {imageCount === 1 ? "image" : "images"}
+            </span>
+          </div>
+          {page.images.length > 0 && (
+            <Button
+              size="xs"
+              color="purple"
+              onClick={() => onRandomizeLayout(page.id)}
+              className="flex items-center gap-1"
+              title="Change layout structure (how images are distributed across rows)"
+            >
+              <HiViewGrid className="h-3 w-3" />
+              Randomize Layout
+            </Button>
+          )}
         </div>
 
         {/* Action buttons line */}
@@ -68,15 +84,27 @@ const PagePreview = ({
               Color
             </Button>
             {page.images.length > 0 && (
-              <Button
-                size="xs"
-                color="yellow"
-                onClick={() => onMoveAllImagesBack(page.id)}
-                className="flex items-center gap-1"
-              >
-                <HiArrowLeft className="h-3 w-3" />
-                Move All Back
-              </Button>
+              <>
+                <Button
+                  size="xs"
+                  color="yellow"
+                  onClick={() => onMoveAllImagesBack(page.id)}
+                  className="flex items-center gap-1"
+                >
+                  <HiArrowLeft className="h-3 w-3" />
+                  Move All Back
+                </Button>
+                <Button
+                  size="xs"
+                  color="blue"
+                  onClick={() => onRandomizePage(page.id)}
+                  className="flex items-center gap-1"
+                  title="Shuffle image positions within same layout"
+                >
+                  <HiRefresh className="h-3 w-3" />
+                  Shuffle Images
+                </Button>
+              </>
             )}
           </div>
           <Button

@@ -183,38 +183,61 @@ export function arrangeAndCenterImages(
   // Only arrange the images that fit within our limits
   const imagesToArrange = images.slice(0, actualImagesToArrange);
 
-  // Generate all possible combinations of rows and images per row
-  const combinations = generateLayoutCombinations(
-    imagesToArrange.length,
-    minNumberOfRows,
-    maxNumberOfRows,
-    minImagesPerRow,
-    maxImagesPerRow,
-  );
-
   let bestLayout = null;
-  let maxAreaCovered = 0;
 
-  // Try each combination and find the one with maximum area coverage
-  for (const combination of combinations) {
-    const layoutResult = calculateLayoutForCombination(
+  // Check if we have a forced layout structure
+  if (settings._forcedLayout) {
+    console.log('Using forced layout structure:', settings._forcedLayout);
+    
+    // Create a forced combination object
+    const forcedCombination = {
+      numRows: settings._forcedLayout.length,
+      layout: settings._forcedLayout,
+    };
+    
+    bestLayout = calculateLayoutForCombination(
       imagesToArrange,
-      combination,
+      forcedCombination,
       usableWidth,
       usableHeight,
       imageGap,
       sameHeight,
     );
-
-    const areaCovered = calculatePageAreaCoveredByImages(
-      layoutResult,
-      usableWidth,
-      usableHeight,
+    
+    console.log('Forced layout result:', bestLayout.length, 'images');
+  } else {
+    // Normal behavior - generate all possible combinations and find the best one
+    const combinations = generateLayoutCombinations(
+      imagesToArrange.length,
+      minNumberOfRows,
+      maxNumberOfRows,
+      minImagesPerRow,
+      maxImagesPerRow,
     );
 
-    if (areaCovered > maxAreaCovered) {
-      maxAreaCovered = areaCovered;
-      bestLayout = layoutResult;
+    let maxAreaCovered = 0;
+
+    // Try each combination and find the one with maximum area coverage
+    for (const combination of combinations) {
+      const layoutResult = calculateLayoutForCombination(
+        imagesToArrange,
+        combination,
+        usableWidth,
+        usableHeight,
+        imageGap,
+        sameHeight,
+      );
+
+      const areaCovered = calculatePageAreaCoveredByImages(
+        layoutResult,
+        usableWidth,
+        usableHeight,
+      );
+
+      if (areaCovered > maxAreaCovered) {
+        maxAreaCovered = areaCovered;
+        bestLayout = layoutResult;
+      }
     }
   }
 

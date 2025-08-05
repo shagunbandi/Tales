@@ -23,6 +23,8 @@ const DesignTab = ({
   onMoveImageBack,
   onMoveAllImagesBack,
   onAutoArrangePage,
+  onRandomizePage,
+  onRandomizeLayout,
   settings,
   onSettingsChange,
 }) => {
@@ -64,6 +66,8 @@ const DesignTab = ({
               onMoveImageBack={onMoveImageBack}
               onMoveAllImagesBack={onMoveAllImagesBack}
               onAutoArrangePage={onAutoArrangePage}
+              onRandomizePage={onRandomizePage}
+              onRandomizeLayout={onRandomizeLayout}
               settings={settings}
             />
 

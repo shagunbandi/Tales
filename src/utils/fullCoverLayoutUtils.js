@@ -79,6 +79,12 @@ function calculateFlexibleRowDistribution(totalImages, settings) {
   if (totalImages === 0) return [];
   if (totalImages === 1) return [1];
 
+  // Check if we have a forced layout structure
+  if (settings._forcedLayout) {
+    console.log('Full Cover: Using forced layout structure:', settings._forcedLayout);
+    return [...settings._forcedLayout]; // Return a copy of the forced layout
+  }
+
   // Get constraints from settings, with fallbacks
   const maxImagesPerRow = settings?.maxImagesPerRow;
   const maxNumberOfRows = settings?.maxNumberOfRows;
