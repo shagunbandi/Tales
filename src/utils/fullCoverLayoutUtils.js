@@ -81,7 +81,10 @@ function calculateFlexibleRowDistribution(totalImages, settings) {
 
   // Check if we have a forced layout structure
   if (settings._forcedLayout) {
-    console.log('Full Cover: Using forced layout structure:', settings._forcedLayout);
+    console.log(
+      "Full Cover: Using forced layout structure:",
+      settings._forcedLayout,
+    );
     return [...settings._forcedLayout]; // Return a copy of the forced layout
   }
 

@@ -187,14 +187,14 @@ export function arrangeAndCenterImages(
 
   // Check if we have a forced layout structure
   if (settings._forcedLayout) {
-    console.log('Using forced layout structure:', settings._forcedLayout);
-    
+    console.log("Using forced layout structure:", settings._forcedLayout);
+
     // Create a forced combination object
     const forcedCombination = {
       numRows: settings._forcedLayout.length,
       layout: settings._forcedLayout,
     };
-    
+
     bestLayout = calculateLayoutForCombination(
       imagesToArrange,
       forcedCombination,
@@ -203,8 +203,8 @@ export function arrangeAndCenterImages(
       imageGap,
       sameHeight,
     );
-    
-    console.log('Forced layout result:', bestLayout.length, 'images');
+
+    console.log("Forced layout result:", bestLayout.length, "images");
   } else {
     // Normal behavior - generate all possible combinations and find the best one
     const combinations = generateLayoutCombinations(

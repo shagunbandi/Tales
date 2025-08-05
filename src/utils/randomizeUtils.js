@@ -12,11 +12,14 @@ export async function shuffleImagesInLayout(images, settings) {
     return [];
   }
 
-  console.log('Shuffling images in same layout structure');
-  console.log('Original images:', images.map(img => ({ id: img.id, x: img.x, y: img.y })));
+  console.log("Shuffling images in same layout structure");
+  console.log(
+    "Original images:",
+    images.map((img) => ({ id: img.id, x: img.x, y: img.y })),
+  );
 
   // Extract the current layout positions (x, y, width, height, rowIndex, colIndex)
-  const layoutPositions = images.map(img => ({
+  const layoutPositions = images.map((img) => ({
     x: img.x,
     y: img.y,
     previewWidth: img.previewWidth,
@@ -26,11 +29,19 @@ export async function shuffleImagesInLayout(images, settings) {
   }));
 
   // Create a shuffled version of just the image data (without position info)
-  const imageDataOnly = images.map(img => {
-    const { x, y, previewWidth, previewHeight, rowIndex, colIndex, ...imageData } = img;
+  const imageDataOnly = images.map((img) => {
+    const {
+      x,
+      y,
+      previewWidth,
+      previewHeight,
+      rowIndex,
+      colIndex,
+      ...imageData
+    } = img;
     return imageData;
   });
-  
+
   const shuffledImageData = shuffleArray([...imageDataOnly]);
 
   // Combine shuffled image data with original positions
@@ -39,8 +50,11 @@ export async function shuffleImagesInLayout(images, settings) {
     ...position, // This overwrites any position data with the preserved layout
   }));
 
-  console.log('Shuffled result:', result.map(img => ({ id: img.id, x: img.x, y: img.y })));
-  
+  console.log(
+    "Shuffled result:",
+    result.map((img) => ({ id: img.id, x: img.x, y: img.y })),
+  );
+
   return result;
 }
 
@@ -58,41 +72,54 @@ export async function randomizeLayoutStructure(images, settings) {
   const maxImagesPerRow = settings.maxImagesPerRow || 4;
   const maxNumberOfRows = settings.maxNumberOfRows || 2;
   const maxImagesPerPage = maxImagesPerRow * maxNumberOfRows;
-  
+
   // Only randomize images that can fit within the page constraints
   const imagesToRandomize = images.slice(0, maxImagesPerPage);
-  
+
   // Generate all possible valid layout combinations
   const validCombinations = generateValidLayoutCombinations(
     imagesToRandomize.length,
     maxNumberOfRows,
-    maxImagesPerRow
+    maxImagesPerRow,
   );
-  
+
   // Debug logging to help verify combinations are generated correctly
-  console.log(`Randomize Layout: ${imagesToRandomize.length} images, max ${maxNumberOfRows} rows, max ${maxImagesPerRow} per row`);
-  console.log('Valid combinations:', validCombinations.map(c => c.layout));
-  
+  console.log(
+    `Randomize Layout: ${imagesToRandomize.length} images, max ${maxNumberOfRows} rows, max ${maxImagesPerRow} per row`,
+  );
+  console.log(
+    "Valid combinations:",
+    validCombinations.map((c) => c.layout),
+  );
+
   if (validCombinations.length === 0) {
     // Fallback to original arrangement if no valid combinations found
-    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-    return await arrangeImages(imagesToRandomize, previewWidth, previewHeight, settings);
+    const { width: previewWidth, height: previewHeight } =
+      getPreviewDimensions(settings);
+    return await arrangeImages(
+      imagesToRandomize,
+      previewWidth,
+      previewHeight,
+      settings,
+    );
   }
-  
+
   // Pick a random valid layout combination
-  const randomCombination = validCombinations[Math.floor(Math.random() * validCombinations.length)];
-  console.log('Selected layout:', randomCombination.layout);
-  
+  const randomCombination =
+    validCombinations[Math.floor(Math.random() * validCombinations.length)];
+  console.log("Selected layout:", randomCombination.layout);
+
   // Use the images in their current order but apply the random layout structure
-  const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-  
+  const { width: previewWidth, height: previewHeight } =
+    getPreviewDimensions(settings);
+
   // Create a custom arrangement by forcing the specific layout combination
   return await arrangeImagesWithForcedLayout(
-    imagesToRandomize, 
-    randomCombination.layout, 
-    previewWidth, 
-    previewHeight, 
-    settings
+    imagesToRandomize,
+    randomCombination.layout,
+    previewWidth,
+    previewHeight,
+    settings,
   );
 }
 
@@ -105,19 +132,27 @@ export async function randomizeLayoutStructure(images, settings) {
  * @param {Object} settings - Layout settings
  * @returns {Promise<Array>} Array of images with forced layout structure
  */
-async function arrangeImagesWithForcedLayout(images, layoutStructure, previewWidth, previewHeight, settings) {
-  console.log('arrangeImagesWithForcedLayout called with:', {
+async function arrangeImagesWithForcedLayout(
+  images,
+  layoutStructure,
+  previewWidth,
+  previewHeight,
+  settings,
+) {
+  console.log("arrangeImagesWithForcedLayout called with:", {
     imageCount: images?.length,
     layoutStructure,
   });
 
   if (!images || images.length === 0) {
-    console.log('No images provided, returning empty array');
+    console.log("No images provided, returning empty array");
     return [];
   }
 
   if (!layoutStructure || layoutStructure.length === 0) {
-    console.log('No layout structure provided, falling back to regular arrangement');
+    console.log(
+      "No layout structure provided, falling back to regular arrangement",
+    );
     return await arrangeImages(images, previewWidth, previewHeight, settings);
   }
 
@@ -128,16 +163,24 @@ async function arrangeImagesWithForcedLayout(images, layoutStructure, previewWid
       _forcedLayout: layoutStructure, // Add our forced layout as a special property
     };
 
-    console.log('Using forced layout:', layoutStructure);
+    console.log("Using forced layout:", layoutStructure);
 
     // Use the existing arrangeImages function with our forced layout
-    const result = await arrangeImages(images, previewWidth, previewHeight, forcedSettings);
-    
-    console.log('arrangeImagesWithForcedLayout result:', result.length, 'images positioned');
-    return result;
+    const result = await arrangeImages(
+      images,
+      previewWidth,
+      previewHeight,
+      forcedSettings,
+    );
 
+    console.log(
+      "arrangeImagesWithForcedLayout result:",
+      result.length,
+      "images positioned",
+    );
+    return result;
   } catch (error) {
-    console.error('Error in arrangeImagesWithForcedLayout:', error);
+    console.error("Error in arrangeImagesWithForcedLayout:", error);
     // Fallback to regular arrangement if there's an error
     return await arrangeImages(images, previewWidth, previewHeight, settings);
   }
@@ -158,21 +201,29 @@ export async function randomizePageLayout(images, settings) {
  * @param {number} maxImagesPerRow - Maximum images per row allowed
  * @returns {Array} Array of valid layout combinations
  */
-function generateValidLayoutCombinations(totalImages, maxRows, maxImagesPerRow) {
+function generateValidLayoutCombinations(
+  totalImages,
+  maxRows,
+  maxImagesPerRow,
+) {
   const combinations = [];
-  
+
   // Generate all possible ways to distribute images across rows
   for (let numRows = 1; numRows <= Math.min(maxRows, totalImages); numRows++) {
-    const rowCombinations = generateRowCombinations(totalImages, numRows, maxImagesPerRow);
+    const rowCombinations = generateRowCombinations(
+      totalImages,
+      numRows,
+      maxImagesPerRow,
+    );
     // Convert plain arrays to objects with layout property
     for (const layout of rowCombinations) {
       combinations.push({
         numRows: numRows,
-        layout: layout
+        layout: layout,
       });
     }
   }
-  
+
   return combinations;
 }
 
@@ -185,33 +236,40 @@ function generateValidLayoutCombinations(totalImages, maxRows, maxImagesPerRow) 
  */
 function generateRowCombinations(totalImages, numRows, maxImagesPerRow) {
   const combinations = [];
-  
-  function backtrack(rowIndex = 0, remainingImages = totalImages, currentCombination = []) {
+
+  function backtrack(
+    rowIndex = 0,
+    remainingImages = totalImages,
+    currentCombination = [],
+  ) {
     if (rowIndex === numRows) {
       if (remainingImages === 0) {
         combinations.push([...currentCombination]);
       }
       return;
     }
-    
+
     // Calculate min and max images for this row
     // Allow 0 images in a row to enable layouts like [4,0] or [0,4]
     const minImagesThisRow = 0;
     const maxImagesThisRow = Math.min(maxImagesPerRow, remainingImages);
-    
-    for (let imagesInRow = minImagesThisRow; imagesInRow <= maxImagesThisRow; imagesInRow++) {
-      backtrack(
-        rowIndex + 1,
-        remainingImages - imagesInRow,
-        [...currentCombination, imagesInRow]
-      );
+
+    for (
+      let imagesInRow = minImagesThisRow;
+      imagesInRow <= maxImagesThisRow;
+      imagesInRow++
+    ) {
+      backtrack(rowIndex + 1, remainingImages - imagesInRow, [
+        ...currentCombination,
+        imagesInRow,
+      ]);
     }
   }
-  
+
   backtrack();
-  
+
   // Filter out combinations where all rows are empty (shouldn't happen with totalImages > 0)
-  return combinations.filter(combo => combo.some(count => count > 0));
+  return combinations.filter((combo) => combo.some((count) => count > 0));
 }
 
 /**
