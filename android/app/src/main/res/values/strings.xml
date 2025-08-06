@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tales</string>
+    <string name="title_activity_main">Tales</string>
+    <string name="package_name">com.tales.app</string>
+    <string name="custom_url_scheme">com.tales.app</string>
+</resources>
