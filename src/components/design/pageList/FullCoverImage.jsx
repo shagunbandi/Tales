@@ -30,10 +30,6 @@ const FullCoverImage = ({
       },
     });
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log(`[FULL COVER DRAG DEBUG] Image ${image.id} - isDragging:`, isDragging, 'transform:', transform);
-  }, [isDragging, transform, image.id]);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `${pageId}-${image.id}-drop`,
@@ -127,10 +123,9 @@ const FullCoverImage = ({
 
   // Combine refs properly using useCallback
   const setRefs = useCallback((node) => {
-    console.log(`[FULL COVER REF DEBUG] Setting refs for image ${image.id}`, node);
     setDraggableRef(node);
     setDroppableRef(node);
-  }, [setDraggableRef, setDroppableRef, image.id]);
+  }, [setDraggableRef, setDroppableRef]);
 
   const containerStyle = {
     left: image.x ?? 0,

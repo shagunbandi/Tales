@@ -44,27 +44,20 @@ export const useImageManagement = (settings = null) => {
 
   const handleDragEnd = useCallback(
     async (event) => {
-      console.log('[DRAG END DEBUG] handleDragEnd called:', event);
       const { active, over } = event;
-      console.log('[DRAG END DEBUG] active:', active, 'over:', over);
 
-      if (!over) {
-        console.log('[DRAG END DEBUG] No drop target, returning');
-        return;
-      }
+      if (!over) return;
 
       // Extract source and destination information from the new API
       const sourceId = active.data.current?.sourceId;
       const sourceIndex = active.data.current?.sourceIndex;
       const destinationId = over.id;
       const destinationData = over.data.current;
-      console.log('[DRAG END DEBUG] sourceId:', sourceId, 'sourceIndex:', sourceIndex, 'destinationId:', destinationId, 'destinationData:', destinationData);
 
       if (
         sourceId === "available-images" &&
         destinationId.startsWith("page-")
       ) {
-        console.log('[DRAG DEBUG] Available images to page drag detected');
         const imageIndex = sourceIndex;
         const pageId = destinationId;
         const imageToMove = availableImages[imageIndex];
@@ -157,7 +150,6 @@ export const useImageManagement = (settings = null) => {
           }
         });
       } else if (sourceId === destinationId && sourceId.startsWith("page-")) {
-        console.log('[DRAG DEBUG] Same page reorder drag detected');
         const pageId = sourceId;
         setPages((prev) =>
           prev.map((page) => {
@@ -194,7 +186,6 @@ export const useImageManagement = (settings = null) => {
         sourceId.startsWith("page-") &&
         destinationId === "available-images"
       ) {
-        console.log('[DRAG DEBUG] Page to available images drag detected');
         const pageId = sourceId;
         const imageIndex = sourceIndex;
         const currentPages = pages;
@@ -272,9 +263,7 @@ export const useImageManagement = (settings = null) => {
         const destPageId = destinationData.pageId;
         const destImageIndex = destinationData.imageIndex;
 
-        console.log('[DRAG SWAP DEBUG] sourcePageId:', sourcePageId, 'destPageId:', destPageId, 'sourceImageIndex:', sourceImageIndex, 'destImageIndex:', destImageIndex);
         if (sourcePageId === destPageId && sourceImageIndex !== destImageIndex) {
-          console.log('[DRAG SWAP DEBUG] Performing image swap within same page');
           // Swap images within the same page
           setPages((prev) =>
             prev.map((page) => {
@@ -309,7 +298,6 @@ export const useImageManagement = (settings = null) => {
             })
           );
         } else if (sourcePageId !== destPageId) {
-          console.log('[DRAG SWAP DEBUG] Performing image move between different pages');
           // Move image from one page to another (treat as page-to-page move)
           const currentPages = pages;
           const sourcePage = currentPages.find((p) => p.id === sourcePageId);
@@ -329,7 +317,6 @@ export const useImageManagement = (settings = null) => {
 
             // Check if destination page has space
             if (destPage.images.length >= maxImagesPerPage && settings.designStyle === "full_cover") {
-              console.log('[DRAG SWAP DEBUG] Destination page is full, cannot move image');
               return;
             }
 
@@ -395,8 +382,6 @@ export const useImageManagement = (settings = null) => {
         sourceId !== destinationId &&
         !destinationId.includes("-drop")
       ) {
-        console.log('[DRAG DEBUG] Page to different page drag detected');
-        console.log('[DRAG DEBUG] sourcePageId:', sourceId, 'destPageId:', destinationId, 'imageIndex:', sourceIndex);
         // Moving image from one page to another page
         const sourcePageId = sourceId;
         const destPageId = destinationId;
@@ -479,8 +464,6 @@ export const useImageManagement = (settings = null) => {
             })
           );
         }
-      } else {
-        console.log('[DRAG DEBUG] Unhandled drag scenario - sourceId:', sourceId, 'destinationId:', destinationId, 'destinationData:', destinationData);
       }
     },
     [availableImages, pages, settings],

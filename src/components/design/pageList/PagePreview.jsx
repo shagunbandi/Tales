@@ -249,11 +249,6 @@ const DraggablePageImage = ({
       },
     });
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log(`[DRAG DEBUG] Image ${image.id} - isDragging:`, isDragging, 'transform:', transform);
-    console.log(`[DRAG DEBUG] Image ${image.id} - attributes:`, attributes, 'listeners:', listeners);
-  }, [isDragging, transform, image.id, attributes, listeners]);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `${pageId}-${image.id}-drop`,
@@ -310,10 +305,9 @@ const DraggablePageImage = ({
 
   // Combine refs properly using useCallback
   const setRefs = useCallback((node) => {
-    console.log(`[REF DEBUG] Setting refs for image ${image.id}`, node);
     setDraggableRef(node);
     setDroppableRef(node);
-  }, [setDraggableRef, setDroppableRef, image.id]);
+  }, [setDraggableRef, setDroppableRef]);
 
   const style = {
     left: image.x ?? 0,
@@ -346,12 +340,6 @@ const DraggablePageImage = ({
       style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onPointerDown={(e) => {
-        console.log(`[POINTER DEBUG] PointerDown on image ${image.id}`, e);
-      }}
-      onDragStart={(e) => {
-        console.log(`[DRAG DEBUG] DragStart on image ${image.id}`, e);
-      }}
     >
       <img
         src={image.src}
