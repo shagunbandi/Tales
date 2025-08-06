@@ -31,6 +31,9 @@ const DesignTab = ({
   onMoveImageToPreviousPage,
   onMoveImageToNextPage,
   onSwapImagesInPage,
+  onSaveAlbum,
+  currentAlbumId,
+  currentAlbumName,
   settings,
 }) => {
   return (
@@ -61,7 +64,11 @@ const DesignTab = ({
             <PagesHeader
               isProcessing={isProcessing}
               availableImages={availableImages}
+              totalImages={totalImages}
               onAutoArrange={onAutoArrange}
+              onSaveAlbum={onSaveAlbum}
+              currentAlbumId={currentAlbumId}
+              currentAlbumName={currentAlbumName}
             />
 
             <PagesList

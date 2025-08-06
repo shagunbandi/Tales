@@ -9,6 +9,12 @@ const TabNavigation = ({
 }) => {
   const tabs = [
     {
+      id: "albums",
+      label: "📁 My Albums",
+      disabled: false, // Albums tab is always accessible
+      isSpecial: true,
+    },
+    {
       id: "upload",
       label: "1. Upload Images",
       disabled: activeTab !== "upload" && totalImages > 0,
@@ -54,7 +60,13 @@ const TabNavigation = ({
             }
           }}
           className={
-            tab.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+            tab.disabled 
+              ? "cursor-not-allowed opacity-50" 
+              : tab.isSpecial 
+                ? "cursor-pointer font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" 
+                : activeTab === tab.id
+                  ? "cursor-pointer font-semibold text-gray-900 dark:text-white"
+                  : "cursor-pointer"
           }
         >
           {tab.label}

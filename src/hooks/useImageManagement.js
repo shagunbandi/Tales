@@ -20,6 +20,7 @@ import {
   resetPageLayoutState,
 } from "../utils/layoutCycling.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
+import { storageManager } from "../utils/storageUtils.js";
 
 export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
@@ -677,6 +678,161 @@ export const useImageManagement = (settings = null) => {
     }
   }, [pages, settings]);
 
+  // Album storage functionality - with auto-overwrite support
+  const saveCurrentAsAlbum = useCallback(async (albumName, albumDescription = '', existingId = null) => {
+    if (!albumName?.trim()) {
+      toast.error('Please provide a name for the album');
+      return null;
+    }
+
+    if (pages.length === 0 && availableImages.length === 0) {
+      toast.error('No images to save. Please add some images first.');
+      return null;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Generate thumbnail from first page
+      const thumbnail = await storageManager.generateThumbnail(pages);
+      
+      let albumId = existingId;
+      let originalCreatedTime = Date.now();
+      
+      // If we have an existing ID, preserve the original created time
+      if (existingId) {
+        try {
+          const existingAlbum = await storageManager.getAlbum(existingId);
+          if (existingAlbum) {
+            originalCreatedTime = existingAlbum.created;
+          }
+        } catch (error) {
+          console.warn('Could not fetch existing album for created time:', error);
+        }
+      } else {
+        // Generate new ID for new albums
+        albumId = storageManager.generateAlbumId();
+      }
+      
+      const albumToSave = {
+        id: albumId,
+        name: albumName.trim(),
+        description: albumDescription.trim(),
+        created: originalCreatedTime,
+        modified: Date.now(),
+        settings: settings || {},
+        pages: pages,
+        availableImages: availableImages,
+        totalImages: pages.reduce((sum, page) => sum + page.images.length, 0) + availableImages.length,
+        thumbnail
+      };
+
+      const savedId = await storageManager.saveAlbum(albumToSave);
+      
+      if (existingId) {
+        toast.success(`💾 Album "${albumName}" updated successfully!`, {
+          icon: '✅',
+        });
+      } else {
+        toast.success(`💾 Album "${albumName}" saved successfully!`, {
+          icon: '🎉',
+        });
+      }
+
+      return savedId;
+    } catch (error) {
+      console.error('Error saving album:', error);
+      toast.error('Failed to save album. Please try again.');
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [pages, availableImages, settings]);
+
+  const loadAlbumById = useCallback(async (albumId) => {
+    setIsProcessing(true);
+    try {
+      const album = await storageManager.getAlbum(albumId);
+      
+      if (!album) {
+        toast.error('Album not found');
+        return false;
+      }
+
+      // Replace current state with loaded album data
+      setPages(album.pages || []);
+      setAvailableImages(album.availableImages || []);
+      
+      toast.success(`Album "${album.name}" loaded successfully!`);
+      return album;
+    } catch (error) {
+      console.error('Error loading album:', error);
+      toast.error('Failed to load album');
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
+  const clearCurrentWork = useCallback(() => {
+    setPages([]);
+    setAvailableImages([]);
+    toast.success('Work area cleared');
+  }, []);
+
+  const getCurrentAlbumData = useCallback(() => {
+    return {
+      pages,
+      availableImages,
+      totalImages: pages.reduce((sum, page) => sum + page.images.length, 0) + availableImages.length,
+      settings: settings || {}
+    };
+  }, [pages, availableImages, settings]);
+
+  const loadAlbumData = useCallback((albumData) => {
+    if (!albumData) {
+      toast.error('Invalid album data');
+      return false;
+    }
+
+    try {
+      setPages(albumData.pages || []);
+      setAvailableImages(albumData.availableImages || []);
+      return true;
+    } catch (error) {
+      console.error('Error loading album data:', error);
+      toast.error('Failed to load album data');
+      return false;
+    }
+  }, []);
+
+  // Auto-save functionality (optional)
+  const enableAutoSave = useCallback((albumId, intervalMs = 30000) => {
+    let autoSaveInterval;
+    
+    const performAutoSave = async () => {
+      if (pages.length > 0 || availableImages.length > 0) {
+        try {
+          const album = await storageManager.getAlbum(albumId);
+          if (album) {
+            await saveCurrentAsAlbum(album.name, album.description, albumId);
+          }
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+          // Don't show error toast for auto-save failures
+        }
+      }
+    };
+
+    autoSaveInterval = setInterval(performAutoSave, intervalMs);
+    
+    // Return cleanup function
+    return () => {
+      if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+      }
+    };
+  }, [pages, availableImages, saveCurrentAsAlbum]);
+
   const totalImages =
     pages.reduce((sum, page) => sum + page.images.length, 0) +
     availableImages.length;
@@ -707,5 +863,13 @@ export const useImageManagement = (settings = null) => {
     moveImageToNextPage,
     swapImagesInPage,
     handleGeneratePDF,
+    
+    // Album storage methods
+    saveCurrentAsAlbum,
+    loadAlbumById,
+    clearCurrentWork,
+    getCurrentAlbumData,
+    loadAlbumData,
+    enableAutoSave,
   };
 };

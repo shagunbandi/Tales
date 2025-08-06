@@ -6,19 +6,24 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useImageManagement } from "./hooks/useImageManagement";
+import { useAutoSave } from "./hooks/useAutoSave";
 import { DEFAULT_SETTINGS } from "./constants";
 import TabNavigation from "./components/TabNavigation";
 import UploadTab from "./components/UploadTab";
 import DesignStyleTab from "./components/DesignStyleTab";
 import DesignTab from "./components/DesignTab";
 import SettingsTab from "./components/SettingsTab";
+import AlbumsTab from "./components/AlbumsTab";
 import AppHeader from "./components/AppHeader";
 import { DarkThemeToggle } from "flowbite-react";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("upload");
+  const [activeTab, setActiveTab] = useState("albums");
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [currentAlbumId, setCurrentAlbumId] = useState(null);
+  const [currentAlbumName, setCurrentAlbumName] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -54,7 +59,32 @@ function App() {
     moveImageToNextPage,
     swapImagesInPage,
     handleGeneratePDF,
+    // Album storage methods
+    saveCurrentAsAlbum,
+    loadAlbumById,
+    clearCurrentWork,
+    getCurrentAlbumData,
+    loadAlbumData,
+    enableAutoSave,
   } = useImageManagement(settings);
+
+  // Auto-save functionality
+  const {
+    lastSaveTime,
+    isAutoSaving,
+    enableAutoSave: enableAutoSaveHook,
+    disableAutoSave,
+    manualSave,
+    hasUnsavedChanges
+  } = useAutoSave({
+    pages,
+    availableImages,
+    saveCurrentAsAlbum,
+    enabled: totalImages > 0 && (activeTab === 'design' || activeTab === 'settings'), // Only auto-save when working on design
+    intervalMs: 60000, // 1 minute
+    currentAlbumId,
+    currentAlbumName
+  });
 
   // Validation function to check if settings are valid
   const validateSettings = () => {
@@ -120,6 +150,47 @@ function App() {
     input.click();
   };
 
+  // Enhanced album loading that sets current album info for auto-save
+  const handleLoadAlbum = async (albumId) => {
+    const album = await loadAlbumById(albumId);
+    if (album) {
+      setCurrentAlbumId(album.id);
+      setCurrentAlbumName(album.name);
+      
+      // Restore the album's settings
+      if (album.settings) {
+        setSettings(prevSettings => ({
+          ...prevSettings,
+          ...album.settings
+        }));
+        toast.success(`🎨 Restored settings: ${album.settings.designStyle === 'full_cover' ? 'Full Cover' : 'Classic'} design`, {
+          duration: 3000,
+          icon: '⚙️'
+        });
+      }
+      
+      setActiveTab('design'); // Navigate to design tab after loading
+    }
+    return album;
+  };
+
+  // Enhanced save function that updates current album info
+  const handleSaveAlbum = async (albumName, albumDescription = '', existingId = null) => {
+    const savedId = await saveCurrentAsAlbum(albumName, albumDescription, existingId);
+    if (savedId) {
+      setCurrentAlbumId(savedId);
+      setCurrentAlbumName(albumName);
+    }
+    return savedId;
+  };
+
+  // Clear current album info when clearing work
+  const handleClearWork = () => {
+    clearCurrentWork();
+    setCurrentAlbumId(null);
+    setCurrentAlbumName('');
+  };
+
   // Redirect to design style when images are uploaded
   React.useEffect(() => {
     if (totalImages > 0 && activeTab === "upload") {
@@ -140,7 +211,12 @@ function App() {
       <div className="absolute top-4 right-4 z-50">
         <DarkThemeToggle />
       </div>
-      <AppHeader />
+      <AppHeader 
+        isAutoSaving={isAutoSaving}
+        lastSaveTime={lastSaveTime}
+        hasUnsavedChanges={hasUnsavedChanges}
+        currentAlbumName={currentAlbumName}
+      />
 
       <TabNavigation
         activeTab={activeTab}
@@ -150,6 +226,18 @@ function App() {
       />
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        {activeTab === "albums" && (
+          <AlbumsTab
+            saveCurrentAsAlbum={handleSaveAlbum}
+            loadAlbumById={handleLoadAlbum}
+            clearCurrentWork={handleClearWork}
+            getCurrentAlbumData={getCurrentAlbumData}
+            totalImages={totalImages}
+            isProcessing={isProcessing}
+            setActiveTab={setActiveTab}
+          />
+        )}
+
         {activeTab === "upload" && (
           <UploadTab
             handleFiles={handleFiles}
@@ -201,6 +289,9 @@ function App() {
             onMoveImageToPreviousPage={moveImageToPreviousPage}
             onMoveImageToNextPage={moveImageToNextPage}
             onSwapImagesInPage={swapImagesInPage}
+            onSaveAlbum={handleSaveAlbum}
+            currentAlbumId={currentAlbumId}
+            currentAlbumName={currentAlbumName}
             settings={settings}
           />
         )}

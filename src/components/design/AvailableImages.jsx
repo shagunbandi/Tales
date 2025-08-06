@@ -97,7 +97,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
       <div className="aspect-square">
         <img
           src={image.src}
-          alt={image.file.name}
+          alt={image.file?.name || image.name || 'Image'}
           className="h-full w-full object-cover"
         />
         <button
@@ -113,7 +113,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
       </div>
       <div className="p-2">
         <p className="truncate text-xs text-gray-600 dark:text-gray-300">
-          {image.file.name}
+          {image.file?.name || image.name || 'Untitled'}
         </p>
       </div>
     </div>

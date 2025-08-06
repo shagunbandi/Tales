@@ -1,6 +1,12 @@
 import React from "react";
+import AutoSaveIndicator from "./AutoSaveIndicator";
 
-const AppHeader = () => {
+const AppHeader = ({ 
+  isAutoSaving, 
+  lastSaveTime, 
+  hasUnsavedChanges, 
+  currentAlbumName 
+}) => {
   return (
     <div className="my-8 p-5 text-center">
       <div className="relative inline-block">
@@ -23,6 +29,16 @@ const AppHeader = () => {
           className="h-2 w-2 animate-pulse rounded-full bg-indigo-400"
           style={{ animationDelay: "0.4s" }}
         ></div>
+      </div>
+      
+      {/* Auto-save indicator */}
+      <div className="mt-3">
+        <AutoSaveIndicator
+          isAutoSaving={isAutoSaving}
+          lastSaveTime={lastSaveTime}
+          hasUnsavedChanges={hasUnsavedChanges}
+          currentAlbumName={currentAlbumName}
+        />
       </div>
     </div>
   );
