@@ -5,6 +5,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { Toaster } from "react-hot-toast";
 import { useImageManagement } from "./hooks/useImageManagement";
 import { DEFAULT_SETTINGS } from "./constants";
 import TabNavigation from "./components/TabNavigation";
@@ -31,7 +32,6 @@ function App() {
     pages,
     availableImages,
     isProcessing,
-    error,
     progress,
     totalImages,
     handleFiles,
@@ -54,7 +54,6 @@ function App() {
     moveImageToNextPage,
     swapImagesInPage,
     handleGeneratePDF,
-    setError,
   } = useImageManagement(settings);
 
   // Validation function to check if settings are valid
@@ -207,11 +206,41 @@ function App() {
         )}
       </DndContext>
 
-      {error && (
-        <div className="fixed top-4 right-4 z-50 rounded-lg bg-red-500 px-4 py-2 text-white shadow-lg dark:bg-red-600">
-          {error}
-        </div>
-      )}
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 4000,
+          dismissible: true,
+          style: {
+            background: '#363636',
+            color: '#fff',
+            padding: '12px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            maxWidth: '350px',
+          },
+          success: {
+            style: {
+              background: '#22c55e',
+              color: '#fff',
+            },
+            iconTheme: {
+              primary: '#fff',
+              secondary: '#22c55e',
+            },
+          },
+          error: {
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+            },
+            iconTheme: {
+              primary: '#fff',
+              secondary: '#ef4444',
+            },
+          },
+        }}
+      />
     </div>
   );
 }

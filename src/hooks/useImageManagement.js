@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import toast from "react-hot-toast";
 import { processFiles } from "../utils/imageUtils.js";
 import {
   getRandomColor,
@@ -24,7 +25,6 @@ export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
   const [availableImages, setAvailableImages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState("");
   const [progress, setProgress] = useState(null);
 
   /**
@@ -146,7 +146,6 @@ export const useImageManagement = (settings = null) => {
 
   const handleFiles = useCallback(
     async (files) => {
-      setError("");
       setIsProcessing(true);
 
       try {
@@ -156,8 +155,9 @@ export const useImageManagement = (settings = null) => {
           settings,
         );
         setAvailableImages((prev) => [...prev, ...processedImages]);
+        toast.success(`Successfully processed ${processedImages.length} image${processedImages.length !== 1 ? 's' : ''}!`);
       } catch (err) {
-        setError(err.message);
+        toast.error(err.message);
       } finally {
         setIsProcessing(false);
       }
@@ -185,55 +185,51 @@ export const useImageManagement = (settings = null) => {
         const pageId = destinationId;
         const imageToMove = availableImages[imageIndex];
 
+        // First check if we can add the image to the target page
+        const targetPage = pages.find((p) => p.id === pageId);
+
+        // Calculate max images per page considering both settings
+        const maxImagesPerRow = settings.maxImagesPerRow || 4;
+        const maxNumberOfRows = settings.maxNumberOfRows || 2;
+        const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
+        const maxImagesPerPage = Math.min(
+          maxImagesFromGrid,
+          settings.imagesPerPage || maxImagesFromGrid,
+        );
+
+        if (
+          settings.designStyle === "full_cover" &&
+          targetPage &&
+          targetPage.images.length >= maxImagesPerPage
+        ) {
+          // Show error toast and don't move the image
+          toast.error(`Cannot add image: Page already has the maximum of ${maxImagesPerPage} images. Please remove some images first or add a new page.`);
+          return;
+        }
+
+        // If we get here, we can move the image
         setAvailableImages((prev) =>
           prev.filter((_, index) => index !== imageIndex),
         );
 
         setPages((prev) => {
-          const targetPage = prev.find((p) => p.id === pageId);
+          // Normal behavior - add to existing page
+          return prev.map((page) => {
+            if (page.id === pageId) {
+              const newImages = [...page.images];
+              // Add to the end of the page images
+              newImages.push(imageToMove);
 
-          // Calculate max images per page considering both settings
-          const maxImagesPerRow = settings.maxImagesPerRow || 4;
-          const maxNumberOfRows = settings.maxNumberOfRows || 2;
-          const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
-          const maxImagesPerPage = Math.min(
-            maxImagesFromGrid,
-            settings.imagesPerPage || maxImagesFromGrid,
-          );
-          if (
-            settings.designStyle === "full_cover" &&
-            targetPage &&
-            targetPage.images.length >= maxImagesPerPage
-          ) {
-            // Create a new page for the image
-            const arrangedImages = preserveManualLayout([imageToMove]);
-            const newPage = {
-              id: `page-${Date.now()}`,
-              images: arrangedImages,
-              color: getRandomColor(),
-            };
+              // Preserve manual layout without auto-arranging
+              const arrangedImages = preserveManualLayout(newImages);
 
-            // Add the new page to the list
-            return [...prev, newPage];
-          } else {
-            // Normal behavior - add to existing page
-            return prev.map((page) => {
-              if (page.id === pageId) {
-                const newImages = [...page.images];
-                // Add to the end of the page images
-                newImages.push(imageToMove);
-
-                // Preserve manual layout without auto-arranging
-                const arrangedImages = preserveManualLayout(newImages);
-
-                return {
-                  ...page,
-                  images: arrangedImages,
-                };
-              }
-              return page;
-            });
-          }
+              return {
+                ...page,
+                images: arrangedImages,
+              };
+            }
+            return page;
+          });
         });
       }
     },
@@ -328,8 +324,9 @@ export const useImageManagement = (settings = null) => {
 
       setPages((prevPages) => [...prevPages, ...arrangedPages]);
       setAvailableImages(remainingImages);
+      toast.success(`Successfully arranged images into ${arrangedPages.length} page${arrangedPages.length !== 1 ? 's' : ''}!`);
     } catch (err) {
-      setError(`Failed to auto-arrange images: ${err.message}`);
+      toast.error(`Failed to auto-arrange images: ${err.message}`);
     } finally {
       setIsProcessing(false);
       setProgress(null);
@@ -599,6 +596,7 @@ export const useImageManagement = (settings = null) => {
 
       // Check if destination page has space
       if (destPage.images.length >= maxImagesPerPage && settings.designStyle === "full_cover") {
+        toast.error(`Cannot move image: Destination page already has the maximum of ${maxImagesPerPage} images. Please remove some images first.`);
         return;
       }
 
@@ -670,8 +668,9 @@ export const useImageManagement = (settings = null) => {
       await generatePDF(pages, settings, (progressData) => {
         setProgress(progressData);
       });
+      toast.success("PDF generated successfully!");
     } catch (err) {
-      setError(`Failed to generate PDF: ${err.message}`);
+      toast.error(`Failed to generate PDF: ${err.message}`);
     } finally {
       setIsProcessing(false);
       setProgress(null);
@@ -686,7 +685,6 @@ export const useImageManagement = (settings = null) => {
     pages,
     availableImages,
     isProcessing,
-    error,
     progress,
     totalImages,
     handleFiles,
@@ -709,6 +707,5 @@ export const useImageManagement = (settings = null) => {
     moveImageToNextPage,
     swapImagesInPage,
     handleGeneratePDF,
-    setError,
   };
 };
