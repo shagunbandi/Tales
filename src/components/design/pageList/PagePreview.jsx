@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { Button } from "flowbite-react";
 import {
@@ -7,6 +7,10 @@ import {
   HiArrowLeft,
   HiRefresh,
   HiViewGrid,
+  HiChevronLeft,
+  HiChevronRight,
+  HiChevronUp,
+  HiChevronDown,
 } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
 import FullCoverImage from "./FullCoverImage.jsx";
@@ -14,6 +18,7 @@ import FullCoverImage from "./FullCoverImage.jsx";
 const PagePreview = ({
   page,
   pageIndex,
+  pages,
   onChangeColor,
   onRemovePage,
   onMoveImageBack,
@@ -22,6 +27,9 @@ const PagePreview = ({
   onRandomizePage,
   onRandomizeLayout,
   onUpdateImagePosition,
+  onMoveImageToPreviousPage,
+  onMoveImageToNextPage,
+  onSwapImagesInPage,
   settings,
 }) => {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -174,10 +182,15 @@ const PagePreview = ({
                         key={`${page.id}-${image.id}`}
                         image={image}
                         pageId={page.id}
+                        pageIndex={pageIndex}
                         index={index}
+                        pages={pages}
                         settings={settings}
                         onMoveImageBack={onMoveImageBack}
                         onUpdateImagePosition={onUpdateImagePosition}
+                        onMoveImageToPreviousPage={onMoveImageToPreviousPage}
+                        onMoveImageToNextPage={onMoveImageToNextPage}
+                        onSwapImagesInPage={onSwapImagesInPage}
                       />
                     );
                   } else {
@@ -186,9 +199,14 @@ const PagePreview = ({
                         key={`${page.id}-${image.id}`}
                         image={image}
                         pageId={page.id}
+                        pageIndex={pageIndex}
                         index={index}
+                        pages={pages}
                         settings={settings}
                         onMoveImageBack={onMoveImageBack}
+                        onMoveImageToPreviousPage={onMoveImageToPreviousPage}
+                        onMoveImageToNextPage={onMoveImageToNextPage}
+                        onSwapImagesInPage={onSwapImagesInPage}
                       />
                     );
                   }
@@ -210,13 +228,18 @@ const PagePreview = ({
 const DraggablePageImage = ({
   image,
   pageId,
+  pageIndex,
   index,
+  pages,
   settings,
   onMoveImageBack,
+  onMoveImageToPreviousPage,
+  onMoveImageToNextPage,
+  onSwapImagesInPage,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
+  const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging } =
     useDraggable({
       id: `${pageId}-${image.id}`,
       data: {
@@ -226,15 +249,71 @@ const DraggablePageImage = ({
       },
     });
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log(`[DRAG DEBUG] Image ${image.id} - isDragging:`, isDragging, 'transform:', transform);
+    console.log(`[DRAG DEBUG] Image ${image.id} - attributes:`, attributes, 'listeners:', listeners);
+  }, [isDragging, transform, image.id, attributes, listeners]);
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `${pageId}-${image.id}-drop`,
+    data: {
+      type: "image-swap",
+      pageId,
+      imageIndex: index,
+    },
+  });
+
   const handleMoveBack = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     onMoveImageBack(pageId, index);
+  };
+
+  const handleMoveToPreviousPage = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (pageIndex > 0) {
+      onMoveImageToPreviousPage(pageId, index, pages[pageIndex - 1].id);
+    }
+  };
+
+  const handleMoveToNextPage = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (pageIndex < pages.length - 1) {
+      onMoveImageToNextPage(pageId, index, pages[pageIndex + 1].id);
+    }
+  };
+
+  const handleMoveLeft = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (index > 0) {
+      onSwapImagesInPage(pageId, index, index - 1);
+    }
+  };
+
+  const handleMoveRight = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const currentPage = pages.find(p => p.id === pageId);
+    if (currentPage && index < currentPage.images.length - 1) {
+      onSwapImagesInPage(pageId, index, index + 1);
+    }
   };
 
   if (!image?.src) return null;
 
   const isFullCover =
     settings?.designStyle === "full_cover" || image.fullCoverMode;
+
+  // Combine refs properly using useCallback
+  const setRefs = useCallback((node) => {
+    console.log(`[REF DEBUG] Setting refs for image ${image.id}`, node);
+    setDraggableRef(node);
+    setDroppableRef(node);
+  }, [setDraggableRef, setDroppableRef, image.id]);
 
   const style = {
     left: image.x ?? 0,
@@ -252,15 +331,27 @@ const DraggablePageImage = ({
   // Use object-contain for classic layout to maintain aspect ratios
   const objectFitClass = isFullCover ? "object-cover" : "object-contain";
 
+  const currentPage = pages.find(p => p.id === pageId);
+  const canMoveLeft = index > 0;
+  const canMoveRight = currentPage && index < currentPage.images.length - 1;
+  const canMoveToPreviousPage = pageIndex > 0;
+  const canMoveToNextPage = pageIndex < pages.length - 1;
+
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       {...attributes}
       {...listeners}
-      className={`absolute cursor-move ${isDragging ? "z-50 opacity-50" : ""}`}
+      className={`absolute cursor-move ${isDragging ? "z-[9999] opacity-75" : ""} ${isOver ? "ring-2 ring-blue-400" : ""}`}
       style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onPointerDown={(e) => {
+        console.log(`[POINTER DEBUG] PointerDown on image ${image.id}`, e);
+      }}
+      onDragStart={(e) => {
+        console.log(`[DRAG DEBUG] DragStart on image ${image.id}`, e);
+      }}
     >
       <img
         src={image.src}
@@ -268,13 +359,71 @@ const DraggablePageImage = ({
         className={`h-full w-full rounded ${objectFitClass}`}
       />
       {isHovered && !isDragging && (
-        <button
-          onClick={handleMoveBack}
-          className="absolute top-1 right-1 z-10 rounded-full bg-red-500 p-1 text-xs text-white shadow-lg hover:bg-red-600"
-          title="Move back to available images"
-        >
-          <HiArrowLeft className="h-3 w-3" />
-        </button>
+        <>
+          {/* Move back to available images */}
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={handleMoveBack}
+            className="absolute top-1 right-1 z-10 rounded-full bg-red-500 p-1 text-xs text-white shadow-lg hover:bg-red-600"
+            title="Move back to available images"
+          >
+            <HiArrowLeft className="h-3 w-3" />
+          </button>
+
+          {/* Navigation buttons */}
+          <div className="absolute bottom-1 left-1 z-10 flex gap-1">
+            {/* Move to previous page */}
+            {canMoveToPreviousPage && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleMoveToPreviousPage}
+                className="rounded-full bg-blue-500 p-1 text-xs text-white shadow-lg hover:bg-blue-600"
+                title="Move to previous page"
+              >
+                <HiChevronUp className="h-3 w-3" />
+              </button>
+            )}
+
+            {/* Move to next page */}
+            {canMoveToNextPage && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleMoveToNextPage}
+                className="rounded-full bg-blue-500 p-1 text-xs text-white shadow-lg hover:bg-blue-600"
+                title="Move to next page"
+              >
+                <HiChevronDown className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Position adjustment buttons */}
+          <div className="absolute bottom-1 right-1 z-10 flex gap-1">
+            {/* Move left within page */}
+            {canMoveLeft && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleMoveLeft}
+                className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
+                title="Move left"
+              >
+                <HiChevronLeft className="h-3 w-3" />
+              </button>
+            )}
+
+            {/* Move right within page */}
+            {canMoveRight && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleMoveRight}
+                className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
+                title="Move right"
+              >
+                <HiChevronRight className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

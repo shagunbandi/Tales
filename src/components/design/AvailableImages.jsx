@@ -17,7 +17,7 @@ const AvailableImages = ({
   });
 
   return (
-    <div className="min-w-0">
+    <div className="flex h-full min-w-0 flex-col">
       <div className="mb-4 flex flex-col gap-2">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
@@ -33,8 +33,11 @@ const AvailableImages = ({
         </Button>
       </div>
 
-      <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
-        <div ref={setDroppableRef} className="max-h-96 overflow-y-auto">
+      <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50 flex-1 min-h-0">
+        <div 
+          ref={setDroppableRef} 
+          className="h-full overflow-y-auto"
+        >
           <div className="grid grid-cols-2 gap-3">
             {availableImages.map((image, index) => (
               <DraggableImage

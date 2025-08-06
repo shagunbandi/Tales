@@ -48,6 +48,9 @@ function App() {
     randomizePage,
     randomizeLayout,
     updateImagePosition,
+    moveImageToPreviousPage,
+    moveImageToNextPage,
+    swapImagesInPage,
     handleGeneratePDF,
     setError,
   } = useImageManagement(settings);
@@ -192,8 +195,10 @@ function App() {
             onRandomizePage={randomizePage}
             onRandomizeLayout={randomizeLayout}
             onUpdateImagePosition={updateImagePosition}
+            onMoveImageToPreviousPage={moveImageToPreviousPage}
+            onMoveImageToNextPage={moveImageToNextPage}
+            onSwapImagesInPage={swapImagesInPage}
             settings={settings}
-            onSettingsChange={setSettings}
           />
         )}
       </DndContext>

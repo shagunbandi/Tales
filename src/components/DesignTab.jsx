@@ -26,8 +26,10 @@ const DesignTab = ({
   onRandomizePage,
   onRandomizeLayout,
   onUpdateImagePosition,
+  onMoveImageToPreviousPage,
+  onMoveImageToNextPage,
+  onSwapImagesInPage,
   settings,
-  onSettingsChange,
 }) => {
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -38,20 +40,22 @@ const DesignTab = ({
         </Card>
       )}
 
-      <Card>
-        <div className="flex flex-col gap-6 lg:flex-row">
-          {/* Available Images */}
-          <div className="w-full lg:w-1/3 lg:min-w-0">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        {/* Available Images - Sticky Sidebar */}
+        <div className="w-full lg:sticky lg:top-6 lg:w-1/3 lg:min-w-0 lg:self-start">
+          <Card className="h-fit lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden">
             <AvailableImages
               availableImages={availableImages}
               removeAvailableImage={onRemoveAvailableImage}
               totalImages={totalImages}
               onAddMoreImages={onAddMoreImages}
             />
-          </div>
+          </Card>
+        </div>
 
-          {/* Pages Design */}
-          <div className="w-full lg:w-2/3 lg:min-w-0">
+        {/* Pages Design */}
+        <div className="w-full lg:w-2/3 lg:min-w-0">
+          <Card>
             <PagesHeader
               isProcessing={isProcessing}
               availableImages={availableImages}
@@ -70,6 +74,9 @@ const DesignTab = ({
               onRandomizePage={onRandomizePage}
               onRandomizeLayout={onRandomizeLayout}
               onUpdateImagePosition={onUpdateImagePosition}
+              onMoveImageToPreviousPage={onMoveImageToPreviousPage}
+              onMoveImageToNextPage={onMoveImageToNextPage}
+              onSwapImagesInPage={onSwapImagesInPage}
               settings={settings}
             />
 
@@ -78,9 +85,9 @@ const DesignTab = ({
               pages={pages}
               isProcessing={isProcessing}
             />
-          </div>
+          </Card>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

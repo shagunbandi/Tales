@@ -14,6 +14,9 @@ const PagesList = ({
   onRandomizePage,
   onRandomizeLayout,
   onUpdateImagePosition,
+  onMoveImageToPreviousPage,
+  onMoveImageToNextPage,
+  onSwapImagesInPage,
   settings,
 }) => {
   return (
@@ -35,6 +38,7 @@ const PagesList = ({
             <PagePreview
               page={page}
               pageIndex={pageIndex}
+              pages={pages}
               onChangeColor={onChangePageColor}
               onRemovePage={onRemovePage}
               onMoveImageBack={onMoveImageBack}
@@ -43,6 +47,9 @@ const PagesList = ({
               onRandomizePage={onRandomizePage}
               onRandomizeLayout={onRandomizeLayout}
               onUpdateImagePosition={onUpdateImagePosition}
+              onMoveImageToPreviousPage={onMoveImageToPreviousPage}
+              onMoveImageToNextPage={onMoveImageToNextPage}
+              onSwapImagesInPage={onSwapImagesInPage}
               isLastPage={pageIndex === pages.length - 1}
               settings={settings}
             />

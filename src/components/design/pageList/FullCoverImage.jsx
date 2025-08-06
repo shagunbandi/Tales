@@ -1,27 +1,92 @@
-import React, { useState } from "react";
-import { HiX, HiPencil } from "react-icons/hi";
+import React, { useState, useCallback } from "react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { HiPencil, HiArrowLeft, HiChevronLeft, HiChevronRight, HiChevronUp, HiChevronDown } from "react-icons/hi";
 import ImageEditModal from "../../modals/ImageEditModal.jsx";
 import { cropImageWithScaleAndPosition } from "../../../utils/imageCropUtils.js";
 
 const FullCoverImage = ({
   image,
   pageId,
+  pageIndex,
   index,
+  pages,
   settings,
   onMoveImageBack,
   onUpdateImagePosition,
+  onMoveImageToPreviousPage,
+  onMoveImageToNextPage,
+  onSwapImagesInPage,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging } =
+    useDraggable({
+      id: `${pageId}-${image.id}`,
+      data: {
+        sourceId: pageId,
+        sourceIndex: index,
+        image,
+      },
+    });
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log(`[FULL COVER DRAG DEBUG] Image ${image.id} - isDragging:`, isDragging, 'transform:', transform);
+  }, [isDragging, transform, image.id]);
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `${pageId}-${image.id}-drop`,
+    data: {
+      type: "image-swap",
+      pageId,
+      imageIndex: index,
+    },
+  });
+
   const handleMoveBack = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     onMoveImageBack(pageId, index);
   };
 
   const handleEditClick = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     setIsModalOpen(true);
+  };
+
+  const handleMoveToPreviousPage = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (pageIndex > 0) {
+      onMoveImageToPreviousPage(pageId, index, pages[pageIndex - 1].id);
+    }
+  };
+
+  const handleMoveToNextPage = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (pageIndex < pages.length - 1) {
+      onMoveImageToNextPage(pageId, index, pages[pageIndex + 1].id);
+    }
+  };
+
+  const handleMoveLeft = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (index > 0) {
+      onSwapImagesInPage(pageId, index, index - 1);
+    }
+  };
+
+  const handleMoveRight = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const currentPage = pages.find(p => p.id === pageId);
+    if (currentPage && index < currentPage.images.length - 1) {
+      onSwapImagesInPage(pageId, index, index + 1);
+    }
   };
 
   const handleModalSave = async (editData) => {
@@ -60,12 +125,30 @@ const FullCoverImage = ({
 
   if (!image?.src) return null;
 
+  // Combine refs properly using useCallback
+  const setRefs = useCallback((node) => {
+    console.log(`[FULL COVER REF DEBUG] Setting refs for image ${image.id}`, node);
+    setDraggableRef(node);
+    setDroppableRef(node);
+  }, [setDraggableRef, setDroppableRef, image.id]);
+
   const containerStyle = {
     left: image.x ?? 0,
     top: image.y ?? 0,
     width: image.previewWidth ?? 100,
     height: image.previewHeight ?? 100,
+    ...(transform
+      ? {
+          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        }
+      : {}),
   };
+
+  const currentPage = pages.find(p => p.id === pageId);
+  const canMoveLeft = index > 0;
+  const canMoveRight = currentPage && index < currentPage.images.length - 1;
+  const canMoveToPreviousPage = pageIndex > 0;
+  const canMoveToNextPage = pageIndex < pages.length - 1;
 
   // If we have a cropped image, use it directly without transforms
   const imageStyle = {
@@ -78,9 +161,12 @@ const FullCoverImage = ({
   return (
     <>
       <div
-        className={`absolute overflow-hidden ${
+        ref={setRefs}
+        {...attributes}
+        {...listeners}
+        className={`absolute overflow-hidden cursor-move ${
           isHovered ? 'border border-gray-300' : ''
-        }`}
+        } ${isDragging ? "z-[9999] opacity-75" : ""} ${isOver ? "ring-2 ring-blue-400" : ""}`}
         style={containerStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -88,32 +174,82 @@ const FullCoverImage = ({
         <img
           src={image.src}
           alt={image.file?.name || "Image"}
-          className="select-none"
+          className="select-none pointer-events-none"
           style={imageStyle}
-          onClick={handleEditClick}
           draggable={false}
         />
         
-        {isHovered && (
+        {isHovered && !isDragging && (
           <>
             <button
-              onClick={handleMoveBack}
-              className="absolute top-1 right-1 z-10 rounded-full bg-red-500 p-1 text-xs text-white shadow-lg hover:bg-red-600"
-              title="Remove from page"
-            >
-              <HiX className="h-3 w-3" />
-            </button>
-            
-            <button
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={handleEditClick}
               className="absolute top-1 left-1 z-10 rounded-full bg-blue-500 p-1 text-xs text-white shadow-lg hover:bg-blue-600"
-              title="Edit image position"
+              title="Edit image position and crop"
             >
               <HiPencil className="h-3 w-3" />
             </button>
-            
-            <div className="absolute bottom-1 left-1 z-10 rounded bg-black bg-opacity-50 px-1 py-0.5 text-xs text-white">
-              Click to edit
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={handleMoveBack}
+              className="absolute top-1 right-1 z-10 rounded-full bg-red-500 p-1 text-xs text-white shadow-lg hover:bg-red-600"
+              title="Move back to available images"
+            >
+              <HiArrowLeft className="h-3 w-3" />
+            </button>
+
+            {/* Navigation buttons */}
+            <div className="absolute bottom-1 left-1 z-10 flex gap-1">
+              {/* Move to previous page */}
+              {canMoveToPreviousPage && (
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={handleMoveToPreviousPage}
+                  className="rounded-full bg-purple-500 p-1 text-xs text-white shadow-lg hover:bg-purple-600"
+                  title="Move to previous page"
+                >
+                  <HiChevronUp className="h-3 w-3" />
+                </button>
+              )}
+
+              {/* Move to next page */}
+              {canMoveToNextPage && (
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={handleMoveToNextPage}
+                  className="rounded-full bg-purple-500 p-1 text-xs text-white shadow-lg hover:bg-purple-600"
+                  title="Move to next page"
+                >
+                  <HiChevronDown className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Position adjustment buttons */}
+            <div className="absolute bottom-1 right-1 z-10 flex gap-1">
+              {/* Move left within page */}
+              {canMoveLeft && (
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={handleMoveLeft}
+                  className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
+                  title="Move left"
+                >
+                  <HiChevronLeft className="h-3 w-3" />
+                </button>
+              )}
+
+              {/* Move right within page */}
+              {canMoveRight && (
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={handleMoveRight}
+                  className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
+                  title="Move right"
+                >
+                  <HiChevronRight className="h-3 w-3" />
+                </button>
+              )}
             </div>
           </>
         )}
