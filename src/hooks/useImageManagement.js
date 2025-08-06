@@ -11,7 +11,13 @@ import {
   randomizePageLayout,
   shuffleImagesInLayout,
   randomizeLayoutStructure,
+  cycleLayoutStructure,
 } from "../utils/randomizeUtils.js";
+import {
+  nextPageLayout,
+  previousPageLayout,
+  resetPageLayoutState,
+} from "../utils/layoutCycling.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
 
 export const useImageManagement = (settings = null) => {
@@ -20,6 +26,102 @@ export const useImageManagement = (settings = null) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(null);
+
+  /**
+   * Detect the current layout structure from positioned images
+   * @param {Array} images - Array of images with position data
+   * @returns {Array} Layout structure like [2, 2, 1] for 2 images in row 0, 2 in row 1, 1 in row 2
+   */
+  const detectCurrentLayout = useCallback((images) => {
+    if (!images || images.length === 0) return [];
+    
+    // Group images by row index
+    const rowGroups = {};
+    images.forEach(image => {
+      const row = image.rowIndex || 0;
+      rowGroups[row] = (rowGroups[row] || 0) + 1;
+    });
+    
+    // Convert to layout array
+    const maxRow = Math.max(...Object.keys(rowGroups).map(Number));
+    const layout = [];
+    for (let i = 0; i <= maxRow; i++) {
+      layout.push(rowGroups[i] || 0);
+    }
+    
+    return layout;
+  }, []);
+
+  /**
+   * Place images in specific order while maintaining exact layout structure
+   * @param {Array} images - Array of images in desired order
+   * @param {Array} layoutStructure - Layout structure like [2, 2, 1]
+   * @returns {Array} Images positioned according to the fixed layout structure
+   */
+  const placeImagesInOrder = useCallback((images, layoutStructure) => {
+    if (!images || images.length === 0 || !layoutStructure || layoutStructure.length === 0) {
+      return images;
+    }
+    
+    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+    const numRows = layoutStructure.length;
+    const rowHeight = previewHeight / numRows;
+    
+    const positionedImages = [];
+    let imageIndex = 0;
+    
+    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+      const imagesInRow = layoutStructure[rowIndex];
+      const cellWidth = previewWidth / imagesInRow;
+      
+      for (let colIndex = 0; colIndex < imagesInRow; colIndex++) {
+        if (imageIndex < images.length) {
+          const image = images[imageIndex];
+          positionedImages.push({
+            ...image,
+            x: colIndex * cellWidth,
+            y: rowIndex * rowHeight,
+            previewWidth: cellWidth,
+            previewHeight: rowHeight,
+            rowIndex,
+            colIndex,
+          });
+          imageIndex++;
+        }
+      }
+    }
+    
+    return positionedImages;
+  }, [settings]);
+
+  /**
+   * Preserve manual image positions without auto-arranging
+   * Used for drag and drop operations where user controls positioning
+   */
+  const preserveManualLayout = useCallback((images) => {
+    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+    
+    // Simple grid positioning that preserves order but doesn't use smart algorithms
+    return images.map((image, index) => {
+      const maxImagesPerRow = settings?.maxImagesPerRow || 4;
+      const rowIndex = Math.floor(index / maxImagesPerRow);
+      const colIndex = index % maxImagesPerRow;
+      const imagesInThisRow = Math.min(maxImagesPerRow, images.length - rowIndex * maxImagesPerRow);
+      
+      const cellWidth = previewWidth / imagesInThisRow;
+      const cellHeight = previewHeight / Math.ceil(images.length / maxImagesPerRow);
+      
+      return {
+        ...image,
+        x: colIndex * cellWidth,
+        y: rowIndex * cellHeight,
+        previewWidth: cellWidth,
+        previewHeight: cellHeight,
+        rowIndex,
+        colIndex,
+      };
+    });
+  }, [settings]);
 
   const handleFiles = useCallback(
     async (files) => {
@@ -52,8 +154,8 @@ export const useImageManagement = (settings = null) => {
       const sourceId = active.data.current?.sourceId;
       const sourceIndex = active.data.current?.sourceIndex;
       const destinationId = over.id;
-      const destinationData = over.data.current;
 
+      // Only allow dragging from available images to pages
       if (
         sourceId === "available-images" &&
         destinationId.startsWith("page-")
@@ -83,36 +185,12 @@ export const useImageManagement = (settings = null) => {
             targetPage.images.length >= maxImagesPerPage
           ) {
             // Create a new page for the image
+            const arrangedImages = preserveManualLayout([imageToMove]);
             const newPage = {
               id: `page-${Date.now()}`,
-              images: [],
+              images: arrangedImages,
               color: getRandomColor(),
             };
-
-            // Add the image to the new page
-            const { width: previewWidth, height: previewHeight } =
-              getPreviewDimensions(settings);
-            arrangeImages(
-              [imageToMove],
-              previewWidth,
-              previewHeight,
-              settings,
-            ).then((arrangedImages) => {
-              setPages((currentPages) => {
-                const pageIndex = currentPages.findIndex(
-                  (p) => p.id === newPage.id,
-                );
-                if (pageIndex !== -1) {
-                  const updatedPages = [...currentPages];
-                  updatedPages[pageIndex] = {
-                    ...newPage,
-                    images: arrangedImages,
-                  };
-                  return updatedPages;
-                }
-                return currentPages;
-              });
-            });
 
             // Add the new page to the list
             return [...prev, newPage];
@@ -124,349 +202,21 @@ export const useImageManagement = (settings = null) => {
                 // Add to the end of the page images
                 newImages.push(imageToMove);
 
-                // Use shared layout function (now async)
-                const { width: previewWidth, height: previewHeight } =
-                  getPreviewDimensions(settings);
-                arrangeImages(
-                  newImages,
-                  previewWidth,
-                  previewHeight,
-                  settings,
-                ).then((arrangedImages) => {
-                  setPages((currentPages) =>
-                    currentPages.map((currentPage) =>
-                      currentPage.id === pageId
-                        ? { ...currentPage, images: arrangedImages }
-                        : currentPage,
-                    ),
-                  );
-                });
+                // Preserve manual layout without auto-arranging
+                const arrangedImages = preserveManualLayout(newImages);
 
-                // Return current state while async operation completes
-                return page;
+                return {
+                  ...page,
+                  images: arrangedImages,
+                };
               }
               return page;
             });
           }
         });
-      } else if (sourceId === destinationId && sourceId.startsWith("page-")) {
-        const pageId = sourceId;
-        setPages((prev) =>
-          prev.map((page) => {
-            if (page.id === pageId) {
-              const newImages = [...page.images];
-              const [moved] = newImages.splice(sourceIndex, 1);
-              newImages.splice(sourceIndex, 0, moved); // Keep at same position for now
-
-              // Use shared layout function (now async)
-              const { width: previewWidth, height: previewHeight } =
-                getPreviewDimensions(settings);
-              arrangeImages(
-                newImages,
-                previewWidth,
-                previewHeight,
-                settings,
-              ).then((arrangedImages) => {
-                setPages((currentPages) =>
-                  currentPages.map((currentPage) =>
-                    currentPage.id === pageId
-                      ? { ...currentPage, images: arrangedImages }
-                      : currentPage,
-                  ),
-                );
-              });
-
-              // Return current state while async operation completes
-              return page;
-            }
-            return page;
-          }),
-        );
-      } else if (
-        sourceId.startsWith("page-") &&
-        destinationId === "available-images"
-      ) {
-        const pageId = sourceId;
-        const imageIndex = sourceIndex;
-        const currentPages = pages;
-        const currentPage = currentPages.find((p) => p.id === pageId);
-
-        if (currentPage && currentPage.images[imageIndex]) {
-          const imageToRemove = currentPage.images[imageIndex];
-
-          // Restore original image if it was cropped
-          const originalImage = imageToRemove.originalSrc
-            ? {
-                ...imageToRemove,
-                src: imageToRemove.originalSrc,
-                originalSrc: undefined, // Remove the originalSrc property
-                // Remove cropping-related properties
-                previewWidth: undefined,
-                previewHeight: undefined,
-                x: undefined,
-                y: undefined,
-                rowIndex: undefined,
-                colIndex: undefined,
-              }
-            : imageToRemove;
-
-          setAvailableImages((current) => {
-            const newAvailable = [...current];
-            const insertIndex = findCorrectInsertPosition(
-              newAvailable,
-              originalImage.originalIndex,
-            );
-            newAvailable.splice(insertIndex, 0, originalImage);
-            return newAvailable;
-          });
-        }
-
-        setPages((prev) =>
-          prev.map((page) => {
-            if (page.id === pageId) {
-              const newImages = [...page.images];
-              newImages.splice(imageIndex, 1);
-
-              // Auto-arrange the remaining images on the page
-              if (newImages.length > 0) {
-                const { width: previewWidth, height: previewHeight } =
-                  getPreviewDimensions(settings);
-                arrangeImages(
-                  newImages,
-                  previewWidth,
-                  previewHeight,
-                  settings,
-                ).then((arrangedImages) => {
-                  setPages((currentPages) =>
-                    currentPages.map((currentPage) =>
-                      currentPage.id === pageId
-                        ? { ...currentPage, images: arrangedImages }
-                        : currentPage,
-                    ),
-                  );
-                });
-              }
-
-              return { ...page, images: newImages };
-            }
-            return page;
-          }),
-        );
-      } else if (
-        sourceId.startsWith("page-") &&
-        destinationId.includes("-drop") &&
-        destinationData?.type === "image-swap"
-      ) {
-        // Image swapping within the same page or between pages
-        const sourcePageId = sourceId;
-        const sourceImageIndex = sourceIndex;
-        const destPageId = destinationData.pageId;
-        const destImageIndex = destinationData.imageIndex;
-
-        if (sourcePageId === destPageId && sourceImageIndex !== destImageIndex) {
-          // Swap images within the same page
-          setPages((prev) =>
-            prev.map((page) => {
-              if (page.id === sourcePageId) {
-                const newImages = [...page.images];
-                if (newImages[sourceImageIndex] && newImages[destImageIndex]) {
-                  // Swap the images
-                  [newImages[sourceImageIndex], newImages[destImageIndex]] = [newImages[destImageIndex], newImages[sourceImageIndex]];
-                  
-                  // Auto-arrange images on the page
-                  const { width: previewWidth, height: previewHeight } =
-                    getPreviewDimensions(settings);
-                  arrangeImages(
-                    newImages,
-                    previewWidth,
-                    previewHeight,
-                    settings,
-                  ).then((arrangedImages) => {
-                    setPages((currentPages) =>
-                      currentPages.map((currentPage) =>
-                        currentPage.id === sourcePageId
-                          ? { ...currentPage, images: arrangedImages }
-                          : currentPage,
-                      ),
-                    );
-                  });
-                  
-                  return { ...page, images: newImages };
-                }
-              }
-              return page;
-            })
-          );
-        } else if (sourcePageId !== destPageId) {
-          // Move image from one page to another (treat as page-to-page move)
-          const currentPages = pages;
-          const sourcePage = currentPages.find((p) => p.id === sourcePageId);
-          const destPage = currentPages.find((p) => p.id === destPageId);
-
-          if (sourcePage && destPage && sourcePage.images[sourceImageIndex]) {
-            const imageToMove = sourcePage.images[sourceImageIndex];
-
-            // Calculate max images per page for destination
-            const maxImagesPerRow = settings.maxImagesPerRow || 4;
-            const maxNumberOfRows = settings.maxNumberOfRows || 2;
-            const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
-            const maxImagesPerPage = Math.min(
-              maxImagesFromGrid,
-              settings.imagesPerPage || maxImagesFromGrid,
-            );
-
-            // Check if destination page has space
-            if (destPage.images.length >= maxImagesPerPage && settings.designStyle === "full_cover") {
-              return;
-            }
-
-            setPages((prev) => 
-              prev.map((page) => {
-                if (page.id === sourcePageId) {
-                  // Remove image from source page
-                  const newImages = [...page.images];
-                  newImages.splice(sourceImageIndex, 1);
-                  
-                  // Auto-arrange remaining images on source page
-                  if (newImages.length > 0) {
-                    const { width: previewWidth, height: previewHeight } =
-                      getPreviewDimensions(settings);
-                    arrangeImages(
-                      newImages,
-                      previewWidth,
-                      previewHeight,
-                      settings,
-                    ).then((arrangedImages) => {
-                      setPages((currentPages) =>
-                        currentPages.map((currentPage) =>
-                          currentPage.id === sourcePageId
-                            ? { ...currentPage, images: arrangedImages }
-                            : currentPage,
-                        ),
-                      );
-                    });
-                  }
-                  return { ...page, images: newImages };
-                } else if (page.id === destPageId) {
-                  // Add image to destination page
-                  const newImages = [...page.images, imageToMove];
-                  
-                  // Auto-arrange images on destination page
-                  const { width: previewWidth, height: previewHeight } =
-                    getPreviewDimensions(settings);
-                  arrangeImages(
-                    newImages,
-                    previewWidth,
-                    previewHeight,
-                    settings,
-                  ).then((arrangedImages) => {
-                    setPages((currentPages) =>
-                      currentPages.map((currentPage) =>
-                        currentPage.id === destPageId
-                          ? { ...currentPage, images: arrangedImages }
-                          : currentPage,
-                      ),
-                    );
-                  });
-                  
-                  return { ...page, images: newImages };
-                }
-                return page;
-              })
-            );
-          }
-        }
-      } else if (
-        sourceId.startsWith("page-") &&
-        destinationId.startsWith("page-") &&
-        sourceId !== destinationId &&
-        !destinationId.includes("-drop")
-      ) {
-        // Moving image from one page to another page
-        const sourcePageId = sourceId;
-        const destPageId = destinationId;
-        const imageIndex = sourceIndex;
-
-        const currentPages = pages;
-        const sourcePage = currentPages.find((p) => p.id === sourcePageId);
-        const destPage = currentPages.find((p) => p.id === destPageId);
-
-        if (sourcePage && destPage && sourcePage.images[imageIndex]) {
-          const imageToMove = sourcePage.images[imageIndex];
-
-          // Calculate max images per page for destination
-          const maxImagesPerRow = settings.maxImagesPerRow || 4;
-          const maxNumberOfRows = settings.maxNumberOfRows || 2;
-          const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
-          const maxImagesPerPage = Math.min(
-            maxImagesFromGrid,
-            settings.imagesPerPage || maxImagesFromGrid,
-          );
-
-          // Check if destination page has space
-          if (destPage.images.length >= maxImagesPerPage && settings.designStyle === "full_cover") {
-            // Don't allow move if destination is full in full cover mode
-            return;
-          }
-
-          setPages((prev) => 
-            prev.map((page) => {
-              if (page.id === sourcePageId) {
-                // Remove image from source page
-                const newImages = [...page.images];
-                newImages.splice(imageIndex, 1);
-                
-                // Auto-arrange remaining images on source page
-                if (newImages.length > 0) {
-                  const { width: previewWidth, height: previewHeight } =
-                    getPreviewDimensions(settings);
-                  arrangeImages(
-                    newImages,
-                    previewWidth,
-                    previewHeight,
-                    settings,
-                  ).then((arrangedImages) => {
-                    setPages((currentPages) =>
-                      currentPages.map((currentPage) =>
-                        currentPage.id === sourcePageId
-                          ? { ...currentPage, images: arrangedImages }
-                          : currentPage,
-                      ),
-                    );
-                  });
-                }
-                return { ...page, images: newImages };
-              } else if (page.id === destPageId) {
-                // Add image to destination page
-                const newImages = [...page.images, imageToMove];
-                
-                // Auto-arrange images on destination page
-                const { width: previewWidth, height: previewHeight } =
-                  getPreviewDimensions(settings);
-                arrangeImages(
-                  newImages,
-                  previewWidth,
-                  previewHeight,
-                  settings,
-                ).then((arrangedImages) => {
-                  setPages((currentPages) =>
-                    currentPages.map((currentPage) =>
-                      currentPage.id === destPageId
-                        ? { ...currentPage, images: arrangedImages }
-                        : currentPage,
-                    ),
-                  );
-                });
-                
-                return { ...page, images: newImages };
-              }
-              return page;
-            })
-          );
-        }
       }
     },
-    [availableImages, pages, settings],
+    [availableImages, pages, settings, preserveManualLayout],
   );
 
   const addPage = useCallback(() => {
@@ -742,31 +492,56 @@ export const useImageManagement = (settings = null) => {
     [settings],
   );
 
+  const nextLayout = useCallback(
+    async (pageId) => {
+      const targetPage = pages.find(page => page.id === pageId);
+      if (!targetPage || targetPage.images.length === 0) return;
+
+      try {
+        const newLayoutImages = await nextPageLayout(targetPage.images, settings, pageId);
+        
+        setPages(currentPages =>
+          currentPages.map(page =>
+            page.id === pageId
+              ? { ...page, images: newLayoutImages }
+              : page
+          )
+        );
+      } catch (error) {
+        console.error("Error in nextLayout:", error);
+      }
+    },
+    [pages, settings],
+  );
+
+  const previousLayout = useCallback(
+    async (pageId) => {
+      const targetPage = pages.find(page => page.id === pageId);
+      if (!targetPage || targetPage.images.length === 0) return;
+
+      try {
+        const newLayoutImages = await previousPageLayout(targetPage.images, settings, pageId);
+        
+        setPages(currentPages =>
+          currentPages.map(page =>
+            page.id === pageId
+              ? { ...page, images: newLayoutImages }
+              : page
+          )
+        );
+      } catch (error) {
+        console.error("Error in previousLayout:", error);
+      }
+    },
+    [pages, settings],
+  );
+
+  // Legacy function - now calls nextLayout for backward compatibility
   const randomizeLayout = useCallback(
     async (pageId) => {
-      setPages((prev) =>
-        prev.map((page) => {
-          if (page.id === pageId && page.images.length > 0) {
-            randomizeLayoutStructure(page.images, settings).then(
-              (randomizedLayoutImages) => {
-                setPages((currentPages) =>
-                  currentPages.map((currentPage) =>
-                    currentPage.id === pageId
-                      ? { ...currentPage, images: randomizedLayoutImages }
-                      : currentPage,
-                  ),
-                );
-              },
-            );
-
-            // Return current state while async operation completes
-            return page;
-          }
-          return page;
-        }),
-      );
+      return await nextLayout(pageId);
     },
-    [settings],
+    [nextLayout],
   );
 
   const updateImagePosition = useCallback((pageId, imageIndex, positionData) => {
@@ -816,49 +591,16 @@ export const useImageManagement = (settings = null) => {
             const newImages = [...page.images];
             newImages.splice(imageIndex, 1);
             
-            // Auto-arrange remaining images on source page
-            if (newImages.length > 0) {
-              const { width: previewWidth, height: previewHeight } =
-                getPreviewDimensions(settings);
-              arrangeImages(
-                newImages,
-                previewWidth,
-                previewHeight,
-                settings,
-              ).then((arrangedImages) => {
-                setPages((currentPages) =>
-                  currentPages.map((currentPage) =>
-                    currentPage.id === sourcePageId
-                      ? { ...currentPage, images: arrangedImages }
-                      : currentPage,
-                  ),
-                );
-              });
-            }
-            return { ...page, images: newImages };
+            // Preserve manual layout for remaining images on source page
+            const arrangedImages = newImages.length > 0 ? preserveManualLayout(newImages) : [];
+            return { ...page, images: arrangedImages };
           } else if (page.id === destPageId) {
             // Add image to destination page
             const newImages = [...page.images, imageToMove];
             
-            // Auto-arrange images on destination page
-            const { width: previewWidth, height: previewHeight } =
-              getPreviewDimensions(settings);
-            arrangeImages(
-              newImages,
-              previewWidth,
-              previewHeight,
-              settings,
-            ).then((arrangedImages) => {
-              setPages((currentPages) =>
-                currentPages.map((currentPage) =>
-                  currentPage.id === destPageId
-                    ? { ...currentPage, images: arrangedImages }
-                    : currentPage,
-                ),
-              );
-            });
-            
-            return { ...page, images: newImages };
+            // Preserve manual layout for images on destination page
+            const arrangedImages = preserveManualLayout(newImages);
+            return { ...page, images: arrangedImages };
           }
           return page;
         })
@@ -877,34 +619,22 @@ export const useImageManagement = (settings = null) => {
         if (page.id === pageId) {
           const newImages = [...page.images];
           if (newImages[index1] && newImages[index2]) {
+            // Detect current layout structure before swapping
+            const currentLayout = detectCurrentLayout(page.images);
+            
             // Swap the images
             [newImages[index1], newImages[index2]] = [newImages[index2], newImages[index1]];
             
-            // Auto-arrange images on the page
-            const { width: previewWidth, height: previewHeight } =
-              getPreviewDimensions(settings);
-            arrangeImages(
-              newImages,
-              previewWidth,
-              previewHeight,
-              settings,
-            ).then((arrangedImages) => {
-              setPages((currentPages) =>
-                currentPages.map((currentPage) =>
-                  currentPage.id === pageId
-                    ? { ...currentPage, images: arrangedImages }
-                    : currentPage,
-                ),
-              );
-            });
+            // Preserve exact layout structure, just swap image order
+            const arrangedImages = placeImagesInOrder(newImages, currentLayout);
             
-            return { ...page, images: newImages };
+            return { ...page, images: arrangedImages };
           }
         }
         return page;
       })
     );
-  }, [settings]);
+  }, [settings, detectCurrentLayout, placeImagesInOrder]);
 
   const handleGeneratePDF = useCallback(async () => {
     if (pages.length === 0) return;
@@ -947,6 +677,8 @@ export const useImageManagement = (settings = null) => {
     autoArrangePage,
     randomizePage,
     randomizeLayout,
+    nextLayout,
+    previousLayout,
     updateImagePosition,
     moveImageToPreviousPage,
     moveImageToNextPage,

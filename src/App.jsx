@@ -47,6 +47,8 @@ function App() {
     autoArrangePage,
     randomizePage,
     randomizeLayout,
+    nextLayout,
+    previousLayout,
     updateImagePosition,
     moveImageToPreviousPage,
     moveImageToNextPage,
@@ -194,6 +196,8 @@ function App() {
             onAutoArrangePage={autoArrangePage}
             onRandomizePage={randomizePage}
             onRandomizeLayout={randomizeLayout}
+            onNextLayout={nextLayout}
+            onPreviousLayout={previousLayout}
             onUpdateImagePosition={updateImagePosition}
             onMoveImageToPreviousPage={moveImageToPreviousPage}
             onMoveImageToNextPage={moveImageToNextPage}

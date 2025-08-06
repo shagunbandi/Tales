@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import { useDroppable, useDraggable } from "@dnd-kit/core";
+import React, { useRef, useEffect, useState } from "react";
+import { useDroppable } from "@dnd-kit/core";
 import { Button } from "flowbite-react";
 import {
   HiTrash,
@@ -26,6 +26,8 @@ const PagePreview = ({
   onAutoArrangePage,
   onRandomizePage,
   onRandomizeLayout,
+  onNextLayout,
+  onPreviousLayout,
   onUpdateImagePosition,
   onMoveImageToPreviousPage,
   onMoveImageToNextPage,
@@ -63,7 +65,7 @@ const PagePreview = ({
   return (
     <div className="mb-6 min-w-0">
       <div className="mb-4 space-y-2">
-        {/* Page info line with Randomize Layout button */}
+        {/* Page info line */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -125,12 +127,22 @@ const PagePreview = ({
               <Button
                 size="xs"
                 color="purple"
-                onClick={() => onRandomizeLayout(page.id)}
+                onClick={() => onPreviousLayout(page.id)}
                 className="flex items-center gap-1"
-                title="Change layout structure (how images are distributed across rows)"
+                title="Switch to previous layout structure"
               >
-                <HiViewGrid className="h-3 w-3" />
-                Randomize Layout
+                <HiChevronLeft className="h-3 w-3" />
+                Previous Layout
+              </Button>
+              <Button
+                size="xs"
+                color="purple"
+                onClick={() => onNextLayout(page.id)}
+                className="flex items-center gap-1"
+                title="Switch to next layout structure"
+              >
+                <HiChevronRight className="h-3 w-3" />
+                Next Layout
               </Button>
             </>
           )}
@@ -195,7 +207,7 @@ const PagePreview = ({
                     );
                   } else {
                     return (
-                      <DraggablePageImage
+                      <PageImage
                         key={`${page.id}-${image.id}`}
                         image={image}
                         pageId={page.id}
@@ -225,7 +237,7 @@ const PagePreview = ({
   );
 };
 
-const DraggablePageImage = ({
+const PageImage = ({
   image,
   pageId,
   pageIndex,
@@ -238,26 +250,6 @@ const DraggablePageImage = ({
   onSwapImagesInPage,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-
-  const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging } =
-    useDraggable({
-      id: `${pageId}-${image.id}`,
-      data: {
-        sourceId: pageId,
-        sourceIndex: index,
-        image,
-      },
-    });
-
-
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-    id: `${pageId}-${image.id}-drop`,
-    data: {
-      type: "image-swap",
-      pageId,
-      imageIndex: index,
-    },
-  });
 
   const handleMoveBack = (e) => {
     e.stopPropagation();
@@ -303,22 +295,11 @@ const DraggablePageImage = ({
   const isFullCover =
     settings?.designStyle === "full_cover" || image.fullCoverMode;
 
-  // Combine refs properly using useCallback
-  const setRefs = useCallback((node) => {
-    setDraggableRef(node);
-    setDroppableRef(node);
-  }, [setDraggableRef, setDroppableRef]);
-
   const style = {
     left: image.x ?? 0,
     top: image.y ?? 0,
     width: image.previewWidth ?? 100,
     height: image.previewHeight ?? 100,
-    ...(transform
-      ? {
-          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        }
-      : {}),
   };
 
   // Use object-cover for full cover layout to crop images for display
@@ -333,10 +314,7 @@ const DraggablePageImage = ({
 
   return (
     <div
-      ref={setRefs}
-      {...attributes}
-      {...listeners}
-      className={`absolute cursor-move ${isDragging ? "z-[9999] opacity-75" : ""} ${isOver ? "ring-2 ring-blue-400" : ""}`}
+      className="absolute"
       style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -346,11 +324,10 @@ const DraggablePageImage = ({
         alt={image.file?.name || "Image"}
         className={`h-full w-full rounded ${objectFitClass}`}
       />
-      {isHovered && !isDragging && (
+      {isHovered && (
         <>
           {/* Move back to available images */}
           <button
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={handleMoveBack}
             className="absolute top-1 right-1 z-10 rounded-full bg-red-500 p-1 text-xs text-white shadow-lg hover:bg-red-600"
             title="Move back to available images"
@@ -363,7 +340,6 @@ const DraggablePageImage = ({
             {/* Move to previous page */}
             {canMoveToPreviousPage && (
               <button
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={handleMoveToPreviousPage}
                 className="rounded-full bg-blue-500 p-1 text-xs text-white shadow-lg hover:bg-blue-600"
                 title="Move to previous page"
@@ -375,7 +351,6 @@ const DraggablePageImage = ({
             {/* Move to next page */}
             {canMoveToNextPage && (
               <button
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={handleMoveToNextPage}
                 className="rounded-full bg-blue-500 p-1 text-xs text-white shadow-lg hover:bg-blue-600"
                 title="Move to next page"
@@ -390,7 +365,6 @@ const DraggablePageImage = ({
             {/* Move left within page */}
             {canMoveLeft && (
               <button
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={handleMoveLeft}
                 className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
                 title="Move left"
@@ -402,7 +376,6 @@ const DraggablePageImage = ({
             {/* Move right within page */}
             {canMoveRight && (
               <button
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={handleMoveRight}
                 className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
                 title="Move right"

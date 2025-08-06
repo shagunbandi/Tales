@@ -1,5 +1,4 @@
-import React, { useState, useCallback } from "react";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
+import React, { useState } from "react";
 import { HiPencil, HiArrowLeft, HiChevronLeft, HiChevronRight, HiChevronUp, HiChevronDown } from "react-icons/hi";
 import ImageEditModal from "../../modals/ImageEditModal.jsx";
 import { cropImageWithScaleAndPosition } from "../../../utils/imageCropUtils.js";
@@ -20,25 +19,7 @@ const FullCoverImage = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging } =
-    useDraggable({
-      id: `${pageId}-${image.id}`,
-      data: {
-        sourceId: pageId,
-        sourceIndex: index,
-        image,
-      },
-    });
-
-
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-    id: `${pageId}-${image.id}-drop`,
-    data: {
-      type: "image-swap",
-      pageId,
-      imageIndex: index,
-    },
-  });
+  // No drag functionality - only buttons for moving images
 
   const handleMoveBack = (e) => {
     e.stopPropagation();
@@ -121,22 +102,11 @@ const FullCoverImage = ({
 
   if (!image?.src) return null;
 
-  // Combine refs properly using useCallback
-  const setRefs = useCallback((node) => {
-    setDraggableRef(node);
-    setDroppableRef(node);
-  }, [setDraggableRef, setDroppableRef]);
-
   const containerStyle = {
     left: image.x ?? 0,
     top: image.y ?? 0,
     width: image.previewWidth ?? 100,
     height: image.previewHeight ?? 100,
-    ...(transform
-      ? {
-          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        }
-      : {}),
   };
 
   const currentPage = pages.find(p => p.id === pageId);
@@ -156,12 +126,9 @@ const FullCoverImage = ({
   return (
     <>
       <div
-        ref={setRefs}
-        {...attributes}
-        {...listeners}
-        className={`absolute overflow-hidden cursor-move ${
+        className={`absolute overflow-hidden ${
           isHovered ? 'border border-gray-300' : ''
-        } ${isDragging ? "z-[9999] opacity-75" : ""} ${isOver ? "ring-2 ring-blue-400" : ""}`}
+        }`}
         style={containerStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -174,7 +141,7 @@ const FullCoverImage = ({
           draggable={false}
         />
         
-        {isHovered && !isDragging && (
+        {isHovered && (
           <>
             <button
               onPointerDown={(e) => e.stopPropagation()}

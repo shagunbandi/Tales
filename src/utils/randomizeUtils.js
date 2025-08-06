@@ -58,13 +58,18 @@ export async function shuffleImagesInLayout(images, settings) {
   return result;
 }
 
+// Store layout indices per page for circular navigation
+const pageLayoutIndices = new Map();
+
 /**
- * Randomizes the layout structure itself (changes how images are distributed across rows)
- * @param {Array} images - Array of images to arrange with random layout
+ * Cycles through layout structures in circular navigation (next layout)
+ * @param {Array} images - Array of images to arrange with next layout
  * @param {Object} settings - Layout settings including maxNumberOfRows and maxImagesPerRow
- * @returns {Promise<Array>} Array of images with new random layout structure
+ * @param {string} pageId - Unique page identifier for tracking layout index
+ * @param {number} direction - Navigation direction: 1 for next, -1 for previous
+ * @returns {Promise<Array>} Array of images with next/previous layout structure
  */
-export async function randomizeLayoutStructure(images, settings) {
+export async function cycleLayoutStructure(images, settings, pageId, direction = 1) {
   if (!images || images.length === 0) {
     return [];
   }
@@ -73,54 +78,60 @@ export async function randomizeLayoutStructure(images, settings) {
   const maxNumberOfRows = settings.maxNumberOfRows || 2;
   const maxImagesPerPage = maxImagesPerRow * maxNumberOfRows;
 
-  // Only randomize images that can fit within the page constraints
-  const imagesToRandomize = images.slice(0, maxImagesPerPage);
+  // Only cycle images that can fit within the page constraints
+  const imagesToCycle = images.slice(0, maxImagesPerPage);
 
   // Generate all possible valid layout combinations
   const validCombinations = generateValidLayoutCombinations(
-    imagesToRandomize.length,
+    imagesToCycle.length,
     maxNumberOfRows,
     maxImagesPerRow,
   );
 
-  // Debug logging to help verify combinations are generated correctly
-  console.log(
-    `Randomize Layout: ${imagesToRandomize.length} images, max ${maxNumberOfRows} rows, max ${maxImagesPerRow} per row`,
-  );
-  console.log(
-    "Valid combinations:",
-    validCombinations.map((c) => c.layout),
-  );
 
   if (validCombinations.length === 0) {
     // Fallback to original arrangement if no valid combinations found
     const { width: previewWidth, height: previewHeight } =
       getPreviewDimensions(settings);
     return await arrangeImages(
-      imagesToRandomize,
+      imagesToCycle,
       previewWidth,
       previewHeight,
       settings,
     );
   }
 
-  // Pick a random valid layout combination
-  const randomCombination =
-    validCombinations[Math.floor(Math.random() * validCombinations.length)];
-  console.log("Selected layout:", randomCombination.layout);
+  // Get or initialize the current layout index for this page
+  let currentIndex = pageLayoutIndices.get(pageId) || 0;
+  
+  // Move to next/previous layout with circular navigation
+  currentIndex = (currentIndex + direction + validCombinations.length) % validCombinations.length;
+  
+  // Update the stored index
+  pageLayoutIndices.set(pageId, currentIndex);
 
-  // Use the images in their current order but apply the random layout structure
+  const selectedCombination = validCombinations[currentIndex];
+
+  // Use the images in their current order but apply the selected layout structure
   const { width: previewWidth, height: previewHeight } =
     getPreviewDimensions(settings);
 
   // Create a custom arrangement by forcing the specific layout combination
   return await arrangeImagesWithForcedLayout(
-    imagesToRandomize,
-    randomCombination.layout,
+    imagesToCycle,
+    selectedCombination.layout,
     previewWidth,
     previewHeight,
     settings,
   );
+}
+
+/**
+ * Legacy function - now calls cycleLayoutStructure for next layout
+ * @deprecated Use cycleLayoutStructure instead
+ */
+export async function randomizeLayoutStructure(images, settings, pageId = 'default') {
+  return await cycleLayoutStructure(images, settings, pageId, 1);
 }
 
 /**
@@ -139,20 +150,12 @@ async function arrangeImagesWithForcedLayout(
   previewHeight,
   settings,
 ) {
-  console.log("arrangeImagesWithForcedLayout called with:", {
-    imageCount: images?.length,
-    layoutStructure,
-  });
 
   if (!images || images.length === 0) {
-    console.log("No images provided, returning empty array");
     return [];
   }
 
   if (!layoutStructure || layoutStructure.length === 0) {
-    console.log(
-      "No layout structure provided, falling back to regular arrangement",
-    );
     return await arrangeImages(images, previewWidth, previewHeight, settings);
   }
 
@@ -163,8 +166,6 @@ async function arrangeImagesWithForcedLayout(
       _forcedLayout: layoutStructure, // Add our forced layout as a special property
     };
 
-    console.log("Using forced layout:", layoutStructure);
-
     // Use the existing arrangeImages function with our forced layout
     const result = await arrangeImages(
       images,
@@ -173,11 +174,6 @@ async function arrangeImagesWithForcedLayout(
       forcedSettings,
     );
 
-    console.log(
-      "arrangeImagesWithForcedLayout result:",
-      result.length,
-      "images positioned",
-    );
     return result;
   } catch (error) {
     console.error("Error in arrangeImagesWithForcedLayout:", error);
@@ -250,9 +246,10 @@ function generateRowCombinations(totalImages, numRows, maxImagesPerRow) {
     }
 
     // Calculate min and max images for this row
-    // Allow 0 images in a row to enable layouts like [4,0] or [0,4]
-    const minImagesThisRow = 0;
-    const maxImagesThisRow = Math.min(maxImagesPerRow, remainingImages);
+    // Ensure no empty rows: each remaining row must have at least 1 image
+    const remainingRows = numRows - rowIndex;
+    const minImagesThisRow = remainingImages > 0 ? 1 : 0;
+    const maxImagesThisRow = Math.min(maxImagesPerRow, remainingImages - (remainingRows - 1));
 
     for (
       let imagesInRow = minImagesThisRow;
