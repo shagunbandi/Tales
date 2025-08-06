@@ -118,4 +118,9 @@ Desktop.ini
 *.elc
 auto-save-list
 tramp
-.\#* 
+.\#*
+
+# Capacitor
+ios/App/App/public
+android/app/src/main/assets/public
+capacitor.config.json
