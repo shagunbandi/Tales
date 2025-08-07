@@ -227,9 +227,6 @@ function App() {
         lastSaveTime={lastSaveTime}
         hasUnsavedChanges={hasUnsavedChanges}
         currentAlbumName={currentAlbumName}
-        onGoToAlbums={
-          activeTab !== "albums" ? () => setActiveTab("albums") : null
-        }
       />
 
       {showNavigation && (
@@ -238,6 +235,14 @@ function App() {
           setActiveTab={setActiveTab}
           totalImages={totalImages}
           hasSettingsErrors={hasSettingsErrors}
+          onGoToAlbums={
+            activeTab !== "albums"
+              ? () => {
+                  setActiveTab("albums");
+                  setShowNavigation(false);
+                }
+              : null
+          }
         />
       )}
 

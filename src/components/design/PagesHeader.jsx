@@ -140,14 +140,11 @@ const PagesHeader = ({
           <div className="flex items-center gap-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                PDF Pages - Arrange your images on pages
+                PDF Pages
               </h3>
-              {timeDisplay && lastSaveTime && (
-                <div className="mt-1 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                  <HiCheck className="h-3 w-3" />
-                  <span>{timeDisplay}</span>
-                </div>
-              )}
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Arrange your images on pages
+              </p>
             </div>
           </div>
         </div>

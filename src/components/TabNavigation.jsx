@@ -1,11 +1,13 @@
 import React from "react";
 import { Breadcrumb, BreadcrumbItem } from "flowbite-react";
+import { HiHome } from "react-icons/hi";
 
 const TabNavigation = ({
   activeTab,
   setActiveTab,
   totalImages,
   hasSettingsErrors,
+  onGoToAlbums,
 }) => {
   const tabs = [
     {
@@ -33,6 +35,21 @@ const TabNavigation = ({
       aria-label="Navigation tabs"
       className="bg-gray-50 px-5 py-3 dark:bg-gray-800"
     >
+      {/* Home icon */}
+      {onGoToAlbums && (
+        <BreadcrumbItem
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onGoToAlbums();
+          }}
+          className="cursor-pointer"
+          title="Go to My Albums"
+        >
+          <HiHome className="h-4 w-4" />
+        </BreadcrumbItem>
+      )}
+
       {tabs.map((tab) => (
         <BreadcrumbItem
           key={tab.id}
