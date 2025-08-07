@@ -1,0 +1,61 @@
+{
+  "albums": {
+    "testAlbum1": {
+      "name": "Test Album 1",
+      "description": "A test album for E2E testing"
+    },
+    "testAlbum2": {
+      "name": "Photo Collection 2024",
+      "description": "Test album with special characters and numbers"
+    }
+  },
+  "settings": {
+    "classic": {
+      "pageSize": "a4",
+      "orientation": "landscape",
+      "pageMargin": 20,
+      "imageGap": 10,
+      "maxImagesPerRow": 3,
+      "maxNumberOfRows": 2,
+      "backgroundColor": "Cream"
+    },
+    "fullCover": {
+      "pageSize": "letter",
+      "orientation": "portrait",
+      "pageMargin": 0,
+      "imageGap": 0,
+      "maxImagesPerRow": 1,
+      "maxNumberOfRows": 1,
+      "backgroundColor": "Oxford Blue"
+    },
+    "invalid": {
+      "pageMargin": -5,
+      "imageGap": 35,
+      "maxImagesPerRow": 0,
+      "maxNumberOfRows": 101
+    }
+  },
+  "testImages": {
+    "small": { "width": 200, "height": 200, "color": "#ff0000", "text": "Small" },
+    "medium": { "width": 600, "height": 400, "color": "#00ff00", "text": "Medium" },
+    "large": { "width": 1200, "height": 800, "color": "#0000ff", "text": "Large" },
+    "portrait": { "width": 400, "height": 600, "color": "#ff00ff", "text": "Portrait" },
+    "landscape": { "width": 800, "height": 400, "color": "#ffff00", "text": "Landscape" }
+  },
+  "colors": {
+    "backgrounds": [
+      "Oxford Blue",
+      "Cream", 
+      "Pastel Green",
+      "Light Khaki",
+      "Powder Blue"
+    ]
+  },
+  "errorMessages": {
+    "invalidPageMargin": "Page margin must be between 5 and 50 pixels",
+    "invalidImageGap": "Image gap must be between 0 and 30 pixels",
+    "invalidMaxImagesPerRow": "Max images per row must be at least 1",
+    "noImagesUploaded": "Please upload at least one image",
+    "unsupportedFileType": "Unsupported file type"
+  }
+}
