@@ -17,6 +17,7 @@ This comprehensive E2E test suite covers all major functionality of the Tales im
 ## Overview
 
 The Tales E2E test suite provides comprehensive coverage of the application's functionality including:
+
 - Image upload and processing
 - Tab navigation and workflow
 - Settings configuration
@@ -43,6 +44,7 @@ npm install
 ```
 
 This will install:
+
 - Cypress 14.5.3
 - start-server-and-test for coordinating dev server and tests
 - @cypress/webpack-preprocessor for advanced preprocessing
@@ -68,6 +70,7 @@ npm run e2e:dev
 ```
 
 This command:
+
 1. Starts the Vite dev server on port 5173
 2. Opens Cypress Test Runner
 3. Allows you to run tests interactively
@@ -81,6 +84,7 @@ npm run e2e:run
 ```
 
 This command:
+
 1. Starts the Vite dev server
 2. Runs all tests in headless mode
 3. Generates test reports
@@ -134,6 +138,7 @@ cypress/
 ### 1. Image Upload Functionality (`01-image-upload.cy.js`)
 
 **Covers:**
+
 - Single and multiple file uploads
 - File format validation (JPEG, PNG, WebP, GIF)
 - Image size handling (small, large, different orientations)
@@ -143,6 +148,7 @@ cypress/
 - Adding more images to existing collections
 
 **Key Test Scenarios:**
+
 - ✅ Upload single image
 - ✅ Upload multiple images in batch
 - ✅ Handle different image formats
@@ -155,6 +161,7 @@ cypress/
 ### 2. Tab Navigation and Layout Switching (`02-navigation-layout.cy.js`)
 
 **Covers:**
+
 - Tab workflow progression
 - Design style selection (Classic vs Full Cover)
 - Navigation state management
@@ -163,6 +170,7 @@ cypress/
 - Browser history integration
 
 **Key Test Scenarios:**
+
 - ✅ Follow proper workflow: Upload → Design Style → Settings → Design
 - ✅ Switch between Classic and Full Cover layouts
 - ✅ Navigate freely between completed tabs
@@ -174,6 +182,7 @@ cypress/
 ### 3. Settings Configuration (`03-settings-configuration.cy.js`)
 
 **Covers:**
+
 - Page size and orientation settings
 - Margin and gap configuration
 - Layout parameters (rows, columns, images per page)
@@ -183,6 +192,7 @@ cypress/
 - Real-time preview updates
 
 **Key Test Scenarios:**
+
 - ✅ Configure page sizes (A4, Letter, Legal)
 - ✅ Switch between landscape and portrait
 - ✅ Adjust margins and gaps with validation
@@ -195,6 +205,7 @@ cypress/
 ### 4. Drag and Drop Operations (`04-drag-and-drop.cy.js`)
 
 **Covers:**
+
 - Image dragging from available to pages
 - Moving images between pages
 - Returning images to available collection
@@ -204,6 +215,7 @@ cypress/
 - Performance with many images
 
 **Key Test Scenarios:**
+
 - ✅ Drag images from available to pages
 - ✅ Move images between different pages
 - ✅ Return images to available collection
@@ -216,6 +228,7 @@ cypress/
 ### 5. PDF Generation and Download (`05-pdf-generation.cy.js`)
 
 **Covers:**
+
 - PDF creation with current layout
 - Download functionality
 - Different page sizes and orientations
@@ -226,6 +239,7 @@ cypress/
 - Batch processing
 
 **Key Test Scenarios:**
+
 - ✅ Generate PDF with Classic layout
 - ✅ Generate PDF with Full Cover layout
 - ✅ Handle multiple pages
@@ -239,6 +253,7 @@ cypress/
 ### 6. Album Save/Load Functionality (`06-save-load-albums.cy.js`)
 
 **Covers:**
+
 - Album creation and saving
 - Loading saved albums
 - Album management (delete, search)
@@ -249,6 +264,7 @@ cypress/
 - Storage management
 
 **Key Test Scenarios:**
+
 - ✅ Save albums with name and description
 - ✅ Load albums and restore full state
 - ✅ Manage multiple albums
@@ -261,6 +277,7 @@ cypress/
 ### 7. Image Resizing and Cropping (`07-image-resizing-cropping.cy.js`)
 
 **Covers:**
+
 - Image edit modal functionality
 - Cropping with handles and aspect ratios
 - Resizing by percentage or dimensions
@@ -270,6 +287,7 @@ cypress/
 - Full Cover mode specific editing
 
 **Key Test Scenarios:**
+
 - ✅ Open image editing modal
 - ✅ Crop images with different aspect ratios
 - ✅ Resize images by percentage and dimensions
@@ -282,6 +300,7 @@ cypress/
 ### 8. Auto-Arrangement Features (`08-auto-arrangement.cy.js`)
 
 **Covers:**
+
 - Global auto-arrangement across pages
 - Page-level arrangement optimization
 - Layout pattern cycling
@@ -291,6 +310,7 @@ cypress/
 - Performance with many images
 
 **Key Test Scenarios:**
+
 - ✅ Auto-arrange all images across pages
 - ✅ Optimize individual page layouts
 - ✅ Cycle through different layout patterns
@@ -303,6 +323,7 @@ cypress/
 ### 9. Error Handling and Edge Cases (`09-error-handling.cy.js`)
 
 **Covers:**
+
 - File upload error handling
 - Memory and performance limitations
 - Network connectivity issues
@@ -313,6 +334,7 @@ cypress/
 - Graceful degradation
 
 **Key Test Scenarios:**
+
 - ✅ Handle unsupported file types
 - ✅ Manage memory limitations
 - ✅ Work offline and recover when online
@@ -328,32 +350,39 @@ cypress/
 The test suite includes extensive custom Cypress commands for reusability:
 
 ### Navigation Commands
+
 - `cy.visitTales()` - Visit the app and wait for initialization
 - `cy.navigateToTab(tabName)` - Navigate to specific tab
 
 ### Image Upload Commands
+
 - `cy.uploadTestImages(count)` - Upload test images
 - `cy.uploadSpecificTestImage(width, height, color, text)` - Upload custom test image
 
 ### Settings Commands
+
 - `cy.selectDesignStyle(style)` - Select Classic or Full Cover style
 - `cy.configureSettings(settings)` - Configure multiple settings at once
 
 ### Drag and Drop Commands
+
 - `cy.dragImageToPage(imageIndex, pageIndex)` - Drag image to specific page
 - `cy.dragImageBetweenPages(fromPage, imageIndex, toPage)` - Move image between pages
 
 ### Layout Commands
+
 - `cy.autoArrangeImages()` - Auto-arrange all images
 - `cy.randomizeLayout()` - Randomize layout
 - `cy.nextLayout(pageIndex)` - Cycle to next layout pattern
 
 ### PDF and Album Commands
+
 - `cy.generatePDF()` - Generate PDF
 - `cy.saveAsAlbum(name, description)` - Save as album
 - `cy.loadAlbum(name)` - Load existing album
 
 ### Validation Commands
+
 - `cy.verifyImageCount(count)` - Verify total image count
 - `cy.verifyPageLayout(pageIndex, expectedImages)` - Verify page layout
 - `cy.verifySettingsValue(setting, value)` - Verify setting value
@@ -362,20 +391,24 @@ The test suite includes extensive custom Cypress commands for reusability:
 ## Utilities
 
 ### Test Data Generation
+
 - `generateTestImage(width, height, color, text)` - Create test images dynamically
 - `createTestImageSet(count)` - Generate multiple varied test images
 
 ### UI Helpers
+
 - `waitForStability(selector)` - Wait for animations to complete
 - `verifyCSS(selector, properties)` - Verify CSS properties
 - `dragToCoordinates(source, x, y)` - Precise drag operations
 
 ### Environment Setup
+
 - `setupTestEnvironment()` - Initialize clean test state
 - `clearBrowserStorage()` - Clear all storage
 - `testResponsiveBreakpoints(testFn)` - Test across viewports
 
 ### Monitoring
+
 - `monitorConsoleErrors()` - Track console errors
 - `verifyNoConsoleErrors()` - Assert no errors occurred
 - `verifyBasicAccessibility(selector)` - Basic a11y checks
@@ -383,24 +416,28 @@ The test suite includes extensive custom Cypress commands for reusability:
 ## Best Practices
 
 ### Test Organization
+
 1. **Group related tests** using descriptive `describe` blocks
 2. **Use beforeEach** for common setup to ensure test isolation
 3. **Keep tests focused** on single functionality
 4. **Use data-testid** attributes for reliable element selection
 
 ### Test Data Management
+
 1. **Generate test data** dynamically rather than using static files
 2. **Clean up after tests** to prevent interference
 3. **Use realistic test data** that matches real user scenarios
 4. **Parameterize tests** for different input combinations
 
 ### Assertions and Waits
+
 1. **Use appropriate waits** for async operations
 2. **Assert on meaningful states** rather than implementation details
 3. **Provide clear error messages** in custom assertions
 4. **Test both success and failure paths**
 
 ### Performance Considerations
+
 1. **Minimize test execution time** with efficient selectors
 2. **Use custom commands** to reduce code duplication
 3. **Run tests in parallel** when possible
@@ -411,39 +448,43 @@ The test suite includes extensive custom Cypress commands for reusability:
 ### Common Issues
 
 #### Tests Failing Due to Timing
+
 ```javascript
 // Instead of fixed waits
-cy.wait(5000)
+cy.wait(5000);
 
 // Use proper assertions
-cy.get('[data-testid="element"]').should('be.visible')
-cy.get('[data-testid="processing"]').should('not.exist')
+cy.get('[data-testid="element"]').should("be.visible");
+cy.get('[data-testid="processing"]').should("not.exist");
 ```
 
 #### Element Not Found
+
 ```javascript
 // Check data-testid attributes exist in components
 // Use more flexible selectors when needed
-cy.get('[data-testid="element"]').should('exist')
+cy.get('[data-testid="element"]').should("exist");
 ```
 
 #### Memory Issues with Large Tests
+
 ```javascript
 // Clear data between tests
 beforeEach(() => {
-  cy.clearAllData()
-})
+  cy.clearAllData();
+});
 
 // Use smaller test datasets when possible
-cy.uploadTestImages(3) // Instead of 20
+cy.uploadTestImages(3); // Instead of 20
 ```
 
 #### Flaky Drag and Drop Tests
+
 ```javascript
 // Ensure elements are stable before dragging
-cy.get('[data-testid="source"]').should('be.visible')
-cy.get('[data-testid="target"]').should('be.visible')
-cy.dragImageToPage(0, 0)
+cy.get('[data-testid="source"]').should("be.visible");
+cy.get('[data-testid="target"]').should("be.visible");
+cy.dragImageToPage(0, 0);
 ```
 
 ### Debug Mode

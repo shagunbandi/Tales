@@ -9,38 +9,22 @@ const TabNavigation = ({
 }) => {
   const tabs = [
     {
-      id: "albums",
-      label: "📁 My Albums",
-      disabled: false, // Albums tab is always accessible
-      isSpecial: true,
-    },
-    {
-      id: "upload",
-      label: "1. Upload Images",
-      disabled: activeTab !== "upload" && totalImages > 0,
-    },
-    {
       id: "designStyle",
-      label: "2. Design Style",
-      disabled: activeTab === "upload" || totalImages === 0,
+      label: "Design Style",
+      disabled:
+        activeTab !== "designStyle" &&
+        activeTab !== "settings" &&
+        activeTab !== "design",
     },
     {
       id: "settings",
-      label: "3. Settings",
-      disabled:
-        activeTab === "upload" ||
-        activeTab === "designStyle" ||
-        totalImages === 0,
+      label: "Settings",
+      disabled: activeTab !== "settings" && activeTab !== "design",
     },
     {
       id: "design",
-      label: "4. Design Layout",
-      disabled:
-        activeTab === "upload" ||
-        activeTab === "designStyle" ||
-        activeTab === "settings",
-      // totalImages === 0 ||
-      // hasSettingsErrors,
+      label: "Design Layout",
+      disabled: activeTab !== "design",
     },
   ];
 
@@ -60,13 +44,11 @@ const TabNavigation = ({
             }
           }}
           className={
-            tab.disabled 
-              ? "cursor-not-allowed opacity-50" 
-              : tab.isSpecial 
-                ? "cursor-pointer font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" 
-                : activeTab === tab.id
-                  ? "cursor-pointer font-semibold text-gray-900 dark:text-white"
-                  : "cursor-pointer"
+            tab.disabled
+              ? "cursor-not-allowed opacity-50"
+              : activeTab === tab.id
+                ? "cursor-pointer font-semibold text-gray-900 dark:text-white"
+                : "cursor-pointer"
           }
         >
           {tab.label}

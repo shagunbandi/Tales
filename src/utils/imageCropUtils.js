@@ -60,16 +60,25 @@ export const cropImageToCover = async (
       if (options.cropOffsetX || options.cropOffsetY) {
         const offsetX = options.cropOffsetX || 0;
         const offsetY = options.cropOffsetY || 0;
-        
+
         // Calculate the scale between preview and actual image
         // We need to convert preview offsets to image coordinate offsets
-        const previewScale = Math.max(targetWidth / cropWidth, targetHeight / cropHeight);
+        const previewScale = Math.max(
+          targetWidth / cropWidth,
+          targetHeight / cropHeight,
+        );
         const scaledOffsetX = offsetX / previewScale;
         const scaledOffsetY = offsetY / previewScale;
-        
+
         // Adjust crop position by the offset (negative because we want to move the visible area)
-        cropX = Math.max(0, Math.min(img.width - cropWidth, cropX - scaledOffsetX));
-        cropY = Math.max(0, Math.min(img.height - cropHeight, cropY - scaledOffsetY));
+        cropX = Math.max(
+          0,
+          Math.min(img.width - cropWidth, cropX - scaledOffsetX),
+        );
+        cropY = Math.max(
+          0,
+          Math.min(img.height - cropHeight, cropY - scaledOffsetY),
+        );
       }
 
       // Set canvas to the full resolution of the cropped area
@@ -324,7 +333,6 @@ export const cropImageWithScaleAndPosition = async (
       const offsetX = options.cropOffsetX || 0;
       const offsetY = options.cropOffsetY || 0;
 
-
       // Calculate how the image would be displayed with object-cover behavior
       const imageAspectRatio = img.width / img.height;
       const targetAspectRatio = targetWidth / targetHeight;
@@ -350,7 +358,10 @@ export const cropImageWithScaleAndPosition = async (
       const centerY = img.height / 2;
 
       // Convert the offset and scale back to source image coordinates
-      const sourceScale = Math.min(img.width / scaledWidth, img.height / scaledHeight);
+      const sourceScale = Math.min(
+        img.width / scaledWidth,
+        img.height / scaledHeight,
+      );
       const sourceWidth = targetWidth * sourceScale;
       const sourceHeight = targetHeight * sourceScale;
 
@@ -358,26 +369,47 @@ export const cropImageWithScaleAndPosition = async (
       const sourceOffsetX = (offsetX / scaledWidth) * img.width;
       const sourceOffsetY = (offsetY / scaledHeight) * img.height;
 
-      const sourceX = Math.max(0, Math.min(img.width - sourceWidth, centerX - sourceWidth / 2 - sourceOffsetX));
-      const sourceY = Math.max(0, Math.min(img.height - sourceHeight, centerY - sourceHeight / 2 - sourceOffsetY));
+      const sourceX = Math.max(
+        0,
+        Math.min(
+          img.width - sourceWidth,
+          centerX - sourceWidth / 2 - sourceOffsetX,
+        ),
+      );
+      const sourceY = Math.max(
+        0,
+        Math.min(
+          img.height - sourceHeight,
+          centerY - sourceHeight / 2 - sourceOffsetY,
+        ),
+      );
 
       // Calculate optimal canvas dimensions to maintain original quality
       // For PDF mode, we want higher resolution but same coordinate system
       const isPDFMode = options.pdfMode === true;
-      const sourceToTargetRatio = Math.min(img.width / targetWidth, img.height / targetHeight);
-      
+      const sourceToTargetRatio = Math.min(
+        img.width / targetWidth,
+        img.height / targetHeight,
+      );
+
       let qualityMultiplier;
       if (isPDFMode) {
         // For PDF: Use higher resolution (2-3x) for print quality
-        qualityMultiplier = Math.min(sourceToTargetRatio, Math.max(3, sourceToTargetRatio * 0.9));
+        qualityMultiplier = Math.min(
+          sourceToTargetRatio,
+          Math.max(3, sourceToTargetRatio * 0.9),
+        );
       } else {
         // For preview: Use moderate resolution (2x) for display
-        qualityMultiplier = Math.min(sourceToTargetRatio, Math.max(2, sourceToTargetRatio * 0.8));
+        qualityMultiplier = Math.min(
+          sourceToTargetRatio,
+          Math.max(2, sourceToTargetRatio * 0.8),
+        );
       }
-      
+
       const canvasWidth = Math.round(targetWidth * qualityMultiplier);
       const canvasHeight = Math.round(targetHeight * qualityMultiplier);
-      
+
       // Set canvas to optimal dimensions for quality
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
@@ -385,7 +417,7 @@ export const cropImageWithScaleAndPosition = async (
       // Enable maximum quality rendering
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      
+
       // Additional quality settings for better rendering (cross-browser)
       if (ctx.webkitImageSmoothingEnabled !== undefined) {
         ctx.webkitImageSmoothingEnabled = true;
@@ -407,12 +439,13 @@ export const cropImageWithScaleAndPosition = async (
         0,
         0,
         canvasWidth,
-        canvasHeight
+        canvasHeight,
       );
 
       // Format selection: PNG for preview (lossless), JPEG for PDF (smaller/faster)
       const format = options.format || "image/png";
-      const quality = format === "image/png" ? undefined : (options.quality || 0.95);
+      const quality =
+        format === "image/png" ? undefined : options.quality || 0.95;
       const croppedImageSrc = canvas.toDataURL(format, quality);
       resolve(croppedImageSrc);
     };

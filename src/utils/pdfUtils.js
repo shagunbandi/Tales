@@ -30,6 +30,7 @@ export const generatePDF = async (
   pages,
   settings = null,
   onProgress = null,
+  albumName = null,
 ) => {
   if (pages.length === 0) {
     throw new Error("No pages to generate PDF from");
@@ -153,16 +154,19 @@ export const generatePDF = async (
         // For full cover layout, crop the image to fit the allocated space for PDF
         if (settings.designStyle === "full_cover" || image.fullCoverMode) {
           // Check if image needs custom cropping (scale/position adjustments)
-          const needsCustomCropping = (image.scale && image.scale !== 1) || 
-                                     (image.cropOffsetX && image.cropOffsetX !== 0) || 
-                                     (image.cropOffsetY && image.cropOffsetY !== 0);
-          
+          const needsCustomCropping =
+            (image.scale && image.scale !== 1) ||
+            (image.cropOffsetX && image.cropOffsetX !== 0) ||
+            (image.cropOffsetY && image.cropOffsetY !== 0);
+
           if (needsCustomCropping) {
             // Use custom cropping for edited images
             try {
-              const { cropImageWithScaleAndPosition } = await import("./imageCropUtils.js");
+              const { cropImageWithScaleAndPosition } = await import(
+                "./imageCropUtils.js"
+              );
               const sourceImage = image.originalSrc || image.src;
-              
+
               // Use SAME base dimensions as preview for consistency
               const croppedImageSrc = await cropImageWithScaleAndPosition(
                 sourceImage,
@@ -177,7 +181,7 @@ export const generatePDF = async (
                   pdfMode: true, // Flag to indicate this is for PDF
                 },
               );
-              
+
               pdf.addImage(
                 croppedImageSrc,
                 "JPEG",
@@ -190,7 +194,10 @@ export const generatePDF = async (
                 0, // rotation
               );
             } catch (error) {
-              console.warn("Failed to crop image for PDF, using standard crop:", error);
+              console.warn(
+                "Failed to crop image for PDF, using standard crop:",
+                error,
+              );
               // Fallback to standard cropping
             }
           } else {
@@ -277,6 +284,9 @@ export const generatePDF = async (
   // Allow UI to update before saving
   await new Promise((resolve) => setTimeout(resolve, 100));
 
-  const filename = `images-${new Date().toISOString().slice(0, 10)}.pdf`;
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const filename = albumName
+    ? `${albumName.replace(/[^a-z0-9]/gi, "_")}-${dateStr}.pdf`
+    : `images-${dateStr}.pdf`;
   pdf.save(filename);
 };

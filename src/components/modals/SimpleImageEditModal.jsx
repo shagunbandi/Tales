@@ -9,7 +9,7 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
 
   useEffect(() => {
     if (isOpen && image) {
-      console.log('SimpleImageEditModal opening with:', image);
+      console.log("SimpleImageEditModal opening with:", image);
       setScale(image.scale || 1);
       setOffsetX(image.cropOffsetX || 0);
       setOffsetY(image.cropOffsetY || 0);
@@ -17,7 +17,11 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
   }, [isOpen, image]);
 
   const handleSave = () => {
-    console.log('SimpleImageEditModal saving:', { scale, cropOffsetX: offsetX, cropOffsetY: offsetY });
+    console.log("SimpleImageEditModal saving:", {
+      scale,
+      cropOffsetX: offsetX,
+      cropOffsetY: offsetY,
+    });
     onSave({
       scale,
       cropOffsetX: offsetX,
@@ -33,25 +37,25 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
   };
 
   if (!isOpen) {
-    console.log('SimpleImageEditModal not open');
+    console.log("SimpleImageEditModal not open");
     return null;
   }
 
-  console.log('SimpleImageEditModal rendering');
+  console.log("SimpleImageEditModal rendering");
 
   return (
-    <div 
+    <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: 0,
         left: 0,
-        right: 0, 
+        right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
         zIndex: 99999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -59,28 +63,37 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
         }
       }}
     >
-      <div 
+      <div
         style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '24px',
-          width: '90%',
-          maxWidth: '500px',
-          maxHeight: '80%',
-          overflow: 'auto',
+          backgroundColor: "white",
+          borderRadius: "8px",
+          padding: "24px",
+          width: "90%",
+          maxWidth: "500px",
+          maxHeight: "80%",
+          overflow: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Edit Image</h2>
-          <button 
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "bold" }}>
+            Edit Image
+          </h2>
+          <button
             onClick={onClose}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              fontSize: '24px', 
-              cursor: 'pointer',
-              padding: '4px',
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "24px",
+              cursor: "pointer",
+              padding: "4px",
             }}
           >
             ×
@@ -88,23 +101,29 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
         </div>
 
         {image && (
-          <div style={{ marginBottom: '20px' }}>
-            <img 
+          <div style={{ marginBottom: "20px" }}>
+            <img
               src={image.originalSrc || image.src}
               alt="Preview"
               style={{
-                width: '100%',
-                maxHeight: '200px',
-                objectFit: 'contain',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
+                width: "100%",
+                maxHeight: "200px",
+                objectFit: "contain",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
               }}
             />
           </div>
         )}
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "8px",
+              fontWeight: "bold",
+            }}
+          >
             Scale: {scale.toFixed(2)}x
           </label>
           <input
@@ -114,12 +133,18 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
             step="0.1"
             value={scale}
             onChange={(e) => setScale(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "8px",
+              fontWeight: "bold",
+            }}
+          >
             Horizontal Offset: {offsetX}px
           </label>
           <input
@@ -129,12 +154,18 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
             step="1"
             value={offsetX}
             onChange={(e) => setOffsetX(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+        <div style={{ marginBottom: "20px" }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "8px",
+              fontWeight: "bold",
+            }}
+          >
             Vertical Offset: {offsetY}px
           </label>
           <input
@@ -144,23 +175,29 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
             step="1"
             value={offsetY}
             onChange={(e) => setOffsetY(parseInt(e.target.value))}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "12px",
+          }}
+        >
           <Button color="gray" onClick={handleReset}>
-            <HiRefresh className="h-4 w-4 mr-2" />
+            <HiRefresh className="mr-2 h-4 w-4" />
             Reset
           </Button>
-          
-          <div style={{ display: 'flex', gap: '8px' }}>
+
+          <div style={{ display: "flex", gap: "8px" }}>
             <Button color="gray" onClick={onClose}>
-              <HiX className="h-4 w-4 mr-2" />
+              <HiX className="mr-2 h-4 w-4" />
               Cancel
             </Button>
             <Button color="blue" onClick={handleSave}>
-              <HiCheck className="h-4 w-4 mr-2" />
+              <HiCheck className="mr-2 h-4 w-4" />
               Save
             </Button>
           </div>

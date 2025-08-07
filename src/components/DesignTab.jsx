@@ -4,14 +4,12 @@ import AvailableImages from "./design/AvailableImages.jsx";
 import PagesHeader from "./design/PagesHeader.jsx";
 import PagesList from "./design/PagesList.jsx";
 import GeneratePDFButton from "./design/GeneratePDFButton.jsx";
-import ProgressBar from "./ProgressBar.jsx";
 
 const DesignTab = ({
   pages,
   availableImages,
   totalImages,
   isProcessing,
-  progress,
   onAddPage,
   onAddPageBetween,
   onRemovePage,
@@ -34,17 +32,11 @@ const DesignTab = ({
   onSaveAlbum,
   currentAlbumId,
   currentAlbumName,
+  lastSaveTime,
   settings,
 }) => {
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      {/* Progress Bar */}
-      {progress && (
-        <Card>
-          <ProgressBar progress={progress} />
-        </Card>
-      )}
-
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         {/* Available Images - Sticky Sidebar */}
         <div className="w-full lg:sticky lg:top-6 lg:w-1/3 lg:min-w-0 lg:self-start">
@@ -69,6 +61,7 @@ const DesignTab = ({
               onSaveAlbum={onSaveAlbum}
               currentAlbumId={currentAlbumId}
               currentAlbumName={currentAlbumName}
+              lastSaveTime={lastSaveTime}
             />
 
             <PagesList
@@ -89,12 +82,14 @@ const DesignTab = ({
               onMoveImageToNextPage={onMoveImageToNextPage}
               onSwapImagesInPage={onSwapImagesInPage}
               settings={settings}
+              isProcessing={isProcessing}
             />
 
             <GeneratePDFButton
               onGeneratePDF={onGeneratePDF}
               pages={pages}
               isProcessing={isProcessing}
+              currentAlbumName={currentAlbumName}
             />
           </Card>
         </div>

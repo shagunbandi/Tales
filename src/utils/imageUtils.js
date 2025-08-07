@@ -51,6 +51,7 @@ export const processFiles = async (
   files,
   availableImagesLength,
   settings = null,
+  onProgress = null,
 ) => {
   const imageFiles = files
     .filter((file) => SUPPORTED_FORMATS.includes(file.type))
@@ -63,7 +64,28 @@ export const processFiles = async (
   }
 
   const processedImages = [];
-  for (const file of imageFiles) {
+
+  if (onProgress) {
+    onProgress({
+      current: 0,
+      total: imageFiles.length,
+      message: "Starting image processing...",
+      currentFileName: "",
+    });
+  }
+
+  for (let i = 0; i < imageFiles.length; i++) {
+    const file = imageFiles[i];
+
+    if (onProgress) {
+      onProgress({
+        current: i,
+        total: imageFiles.length,
+        message: "Processing images...",
+        currentFileName: file.name,
+      });
+    }
+
     try {
       const imageData = await loadImage(file, settings);
       processedImages.push({
@@ -74,6 +96,15 @@ export const processFiles = async (
     } catch (err) {
       console.warn(`Failed to load image ${file.name}:`, err);
     }
+  }
+
+  if (onProgress) {
+    onProgress({
+      current: imageFiles.length,
+      total: imageFiles.length,
+      message: "Processing complete!",
+      currentFileName: "",
+    });
   }
 
   return processedImages;

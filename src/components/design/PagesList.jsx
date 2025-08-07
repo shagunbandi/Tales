@@ -20,6 +20,7 @@ const PagesList = ({
   onMoveImageToNextPage,
   onSwapImagesInPage,
   settings,
+  isProcessing,
 }) => {
   return (
     <div className="min-w-0 space-y-6">
@@ -56,6 +57,7 @@ const PagesList = ({
               onSwapImagesInPage={onSwapImagesInPage}
               isLastPage={pageIndex === pages.length - 1}
               settings={settings}
+              isProcessing={isProcessing}
             />
             {pageIndex < pages.length - 1 && (
               <AddPageSection

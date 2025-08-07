@@ -33,11 +33,8 @@ const AvailableImages = ({
         </Button>
       </div>
 
-      <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50 flex-1 min-h-0">
-        <div 
-          ref={setDroppableRef} 
-          className="h-full overflow-y-auto"
-        >
+      <div className="min-h-0 flex-1 border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50">
+        <div ref={setDroppableRef} className="h-full overflow-y-auto">
           <div className="grid grid-cols-2 gap-3">
             {availableImages.map((image, index) => (
               <DraggableImage
@@ -97,7 +94,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
       <div className="aspect-square">
         <img
           src={image.src}
-          alt={image.file?.name || image.name || 'Image'}
+          alt={image.file?.name || image.name || "Image"}
           className="h-full w-full object-cover"
         />
         <button
@@ -113,7 +110,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
       </div>
       <div className="p-2">
         <p className="truncate text-xs text-gray-600 dark:text-gray-300">
-          {image.file?.name || image.name || 'Untitled'}
+          {image.file?.name || image.name || "Untitled"}
         </p>
       </div>
     </div>

@@ -33,6 +33,7 @@ const PagePreview = ({
   onMoveImageToNextPage,
   onSwapImagesInPage,
   settings,
+  isProcessing,
 }) => {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: page.id,
@@ -118,31 +119,34 @@ const PagePreview = ({
                 size="xs"
                 color="blue"
                 onClick={() => onRandomizePage(page.id)}
+                disabled={isProcessing}
                 className="flex items-center gap-1"
                 title="Shuffle image positions within same layout"
               >
                 <HiRefresh className="h-3 w-3" />
-                Shuffle Images
+                {isProcessing ? "Shuffling..." : "Shuffle Images"}
               </Button>
               <Button
                 size="xs"
                 color="purple"
                 onClick={() => onPreviousLayout(page.id)}
+                disabled={isProcessing}
                 className="flex items-center gap-1"
                 title="Switch to previous layout structure"
               >
                 <HiChevronLeft className="h-3 w-3" />
-                Previous Layout
+                {isProcessing ? "Switching..." : "Previous Layout"}
               </Button>
               <Button
                 size="xs"
                 color="purple"
                 onClick={() => onNextLayout(page.id)}
+                disabled={isProcessing}
                 className="flex items-center gap-1"
                 title="Switch to next layout structure"
               >
                 <HiChevronRight className="h-3 w-3" />
-                Next Layout
+                {isProcessing ? "Switching..." : "Next Layout"}
               </Button>
             </>
           )}
@@ -169,8 +173,8 @@ const PagePreview = ({
               <div
                 ref={setDroppableRef}
                 className={`relative ${
-                  settings?.designStyle === "full_cover" 
-                    ? "border-2 border-solid" 
+                  settings?.designStyle === "full_cover"
+                    ? "border-2 border-solid"
                     : "rounded border-2 border-dashed"
                 } ${
                   isOver
@@ -186,8 +190,10 @@ const PagePreview = ({
                 }}
               >
                 {page.images.map((image, index) => {
-                  const isFullCover = settings?.designStyle === "full_cover" || image.fullCoverMode;
-                  
+                  const isFullCover =
+                    settings?.designStyle === "full_cover" ||
+                    image.fullCoverMode;
+
                   if (isFullCover) {
                     return (
                       <FullCoverImage
@@ -284,7 +290,7 @@ const PageImage = ({
   const handleMoveRight = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    const currentPage = pages.find(p => p.id === pageId);
+    const currentPage = pages.find((p) => p.id === pageId);
     if (currentPage && index < currentPage.images.length - 1) {
       onSwapImagesInPage(pageId, index, index + 1);
     }
@@ -306,7 +312,7 @@ const PageImage = ({
   // Use object-contain for classic layout to maintain aspect ratios
   const objectFitClass = isFullCover ? "object-cover" : "object-contain";
 
-  const currentPage = pages.find(p => p.id === pageId);
+  const currentPage = pages.find((p) => p.id === pageId);
   const canMoveLeft = index > 0;
   const canMoveRight = currentPage && index < currentPage.images.length - 1;
   const canMoveToPreviousPage = pageIndex > 0;
@@ -361,7 +367,7 @@ const PageImage = ({
           </div>
 
           {/* Position adjustment buttons */}
-          <div className="absolute bottom-1 right-1 z-10 flex gap-1">
+          <div className="absolute right-1 bottom-1 z-10 flex gap-1">
             {/* Move left within page */}
             {canMoveLeft && (
               <button

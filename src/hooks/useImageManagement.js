@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import toast from "react-hot-toast";
+import ProgressToast from "../components/ProgressToast.jsx";
 import { processFiles } from "../utils/imageUtils.js";
 import {
   getRandomColor,
@@ -26,7 +27,6 @@ export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
   const [availableImages, setAvailableImages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(null);
 
   /**
    * Detect the current layout structure from positioned images
@@ -35,21 +35,21 @@ export const useImageManagement = (settings = null) => {
    */
   const detectCurrentLayout = useCallback((images) => {
     if (!images || images.length === 0) return [];
-    
+
     // Group images by row index
     const rowGroups = {};
-    images.forEach(image => {
+    images.forEach((image) => {
       const row = image.rowIndex || 0;
       rowGroups[row] = (rowGroups[row] || 0) + 1;
     });
-    
+
     // Convert to layout array
     const maxRow = Math.max(...Object.keys(rowGroups).map(Number));
     const layout = [];
     for (let i = 0; i <= maxRow; i++) {
       layout.push(rowGroups[i] || 0);
     }
-    
+
     return layout;
   }, []);
 
@@ -59,105 +59,159 @@ export const useImageManagement = (settings = null) => {
    * @param {Array} layoutStructure - Layout structure like [2, 2, 1]
    * @returns {Array} Images positioned according to the fixed layout structure
    */
-  const placeImagesInOrder = useCallback((images, layoutStructure) => {
-    if (!images || images.length === 0 || !layoutStructure || layoutStructure.length === 0) {
-      return images;
-    }
-    
-    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-    const numRows = layoutStructure.length;
-    const rowHeight = previewHeight / numRows;
-    
-    const positionedImages = [];
-    let imageIndex = 0;
-    
-    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
-      const imagesInRow = layoutStructure[rowIndex];
-      const cellWidth = previewWidth / imagesInRow;
-      
-      for (let colIndex = 0; colIndex < imagesInRow; colIndex++) {
-        if (imageIndex < images.length) {
-          const image = images[imageIndex];
-          positionedImages.push({
-            ...image,
-            x: colIndex * cellWidth,
-            y: rowIndex * rowHeight,
-            previewWidth: cellWidth,
-            previewHeight: rowHeight,
-            rowIndex,
-            colIndex,
-          });
-          imageIndex++;
+  const placeImagesInOrder = useCallback(
+    (images, layoutStructure) => {
+      if (
+        !images ||
+        images.length === 0 ||
+        !layoutStructure ||
+        layoutStructure.length === 0
+      ) {
+        return images;
+      }
+
+      const { width: previewWidth, height: previewHeight } =
+        getPreviewDimensions(settings);
+      const numRows = layoutStructure.length;
+      const rowHeight = previewHeight / numRows;
+
+      const positionedImages = [];
+      let imageIndex = 0;
+
+      for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+        const imagesInRow = layoutStructure[rowIndex];
+        const cellWidth = previewWidth / imagesInRow;
+
+        for (let colIndex = 0; colIndex < imagesInRow; colIndex++) {
+          if (imageIndex < images.length) {
+            const image = images[imageIndex];
+            positionedImages.push({
+              ...image,
+              x: colIndex * cellWidth,
+              y: rowIndex * rowHeight,
+              previewWidth: cellWidth,
+              previewHeight: rowHeight,
+              rowIndex,
+              colIndex,
+            });
+            imageIndex++;
+          }
         }
       }
-    }
-    
-    return positionedImages;
-  }, [settings]);
+
+      return positionedImages;
+    },
+    [settings],
+  );
 
   /**
    * Arrange images using the appropriate layout method based on design style
    * For classical: uses proper margins, gaps, and centering
    * For full cover: maintains current layout structure
    */
-  const arrangeImagesWithCorrectLayout = useCallback(async (images, preserveLayoutStructure = false) => {
-    if (!images || images.length === 0) return [];
-    
-    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-    
-    if (settings.designStyle === "full_cover" && preserveLayoutStructure) {
-      // For full cover with structure preservation (button movements)
-      const currentLayout = detectCurrentLayout(images);
-      return placeImagesInOrder(images, currentLayout);
-    } else {
-      // For both classical (always) and full cover (when not preserving structure)
-      // This properly handles margins, gaps, and layout calculations
-      return await arrangeImages(images, previewWidth, previewHeight, settings);
-    }
-  }, [settings, detectCurrentLayout, placeImagesInOrder]);
+  const arrangeImagesWithCorrectLayout = useCallback(
+    async (images, preserveLayoutStructure = false) => {
+      if (!images || images.length === 0) return [];
+
+      const { width: previewWidth, height: previewHeight } =
+        getPreviewDimensions(settings);
+
+      if (settings.designStyle === "full_cover" && preserveLayoutStructure) {
+        // For full cover with structure preservation (button movements)
+        const currentLayout = detectCurrentLayout(images);
+        return placeImagesInOrder(images, currentLayout);
+      } else {
+        // For both classical (always) and full cover (when not preserving structure)
+        // This properly handles margins, gaps, and layout calculations
+        return await arrangeImages(
+          images,
+          previewWidth,
+          previewHeight,
+          settings,
+        );
+      }
+    },
+    [settings, detectCurrentLayout, placeImagesInOrder],
+  );
 
   /**
    * Preserve manual image positions without auto-arranging
    * Used for drag and drop operations where user controls positioning
    */
-  const preserveManualLayout = useCallback((images) => {
-    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-    
-    // Simple grid positioning that preserves order but doesn't use smart algorithms
-    return images.map((image, index) => {
-      const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-      const rowIndex = Math.floor(index / maxImagesPerRow);
-      const colIndex = index % maxImagesPerRow;
-      const imagesInThisRow = Math.min(maxImagesPerRow, images.length - rowIndex * maxImagesPerRow);
-      
-      const cellWidth = previewWidth / imagesInThisRow;
-      const cellHeight = previewHeight / Math.ceil(images.length / maxImagesPerRow);
-      
-      return {
-        ...image,
-        x: colIndex * cellWidth,
-        y: rowIndex * cellHeight,
-        previewWidth: cellWidth,
-        previewHeight: cellHeight,
-        rowIndex,
-        colIndex,
-      };
-    });
-  }, [settings]);
+  const preserveManualLayout = useCallback(
+    (images) => {
+      const { width: previewWidth, height: previewHeight } =
+        getPreviewDimensions(settings);
+
+      // Simple grid positioning that preserves order but doesn't use smart algorithms
+      return images.map((image, index) => {
+        const maxImagesPerRow = settings?.maxImagesPerRow || 4;
+        const rowIndex = Math.floor(index / maxImagesPerRow);
+        const colIndex = index % maxImagesPerRow;
+        const imagesInThisRow = Math.min(
+          maxImagesPerRow,
+          images.length - rowIndex * maxImagesPerRow,
+        );
+
+        const cellWidth = previewWidth / imagesInThisRow;
+        const cellHeight =
+          previewHeight / Math.ceil(images.length / maxImagesPerRow);
+
+        return {
+          ...image,
+          x: colIndex * cellWidth,
+          y: rowIndex * cellHeight,
+          previewWidth: cellWidth,
+          previewHeight: cellHeight,
+          rowIndex,
+          colIndex,
+        };
+      });
+    },
+    [settings],
+  );
 
   const handleFiles = useCallback(
     async (files) => {
       setIsProcessing(true);
+
+      let progressToast = null;
 
       try {
         const processedImages = await processFiles(
           files,
           availableImages.length,
           settings,
+          (progress) => {
+            const progressElement = React.createElement(ProgressToast, {
+              current: progress.current,
+              total: progress.total,
+              message: progress.message,
+              currentFileName: progress.currentFileName,
+            });
+
+            if (!progressToast) {
+              progressToast = toast.custom(progressElement, {
+                id: "image-processing",
+                duration: 0,
+              });
+            } else {
+              toast.custom(progressElement, {
+                id: "image-processing",
+                duration: 0,
+              });
+            }
+          },
         );
+
+        toast.dismiss("image-processing");
+
         setAvailableImages((prev) => [...prev, ...processedImages]);
-        toast.success(`Successfully processed ${processedImages.length} image${processedImages.length !== 1 ? 's' : ''}!`);
+        toast.success(
+          `Successfully processed ${processedImages.length} image${processedImages.length !== 1 ? "s" : ""}!`,
+        );
       } catch (err) {
+        toast.dismiss("image-processing");
         toast.error(err.message);
       } finally {
         setIsProcessing(false);
@@ -204,7 +258,9 @@ export const useImageManagement = (settings = null) => {
           targetPage.images.length >= maxImagesPerPage
         ) {
           // Show error toast and don't move the image
-          toast.error(`Cannot add image: Page already has the maximum of ${maxImagesPerPage} images. Please remove some images first or add a new page.`);
+          toast.error(
+            `Cannot add image: Page already has the maximum of ${maxImagesPerPage} images. Please remove some images first or add a new page.`,
+          );
           return;
         }
 
@@ -312,25 +368,37 @@ export const useImageManagement = (settings = null) => {
     if (availableImages.length === 0) return;
 
     setIsProcessing(true);
-    setProgress(null);
     try {
       const { arrangedPages, remainingImages } = await autoArrangeImages(
         availableImages,
         pages,
         settings,
         (progressData) => {
-          setProgress(progressData);
+          const progressElement = React.createElement(ProgressToast, {
+            current: progressData.step || 0,
+            total: progressData.total || 100,
+            message: progressData.message || "Auto-arranging images...",
+            currentFileName: "",
+          });
+
+          toast.custom(progressElement, {
+            id: "auto-arrange-progress",
+            duration: 0,
+          });
         },
       );
 
+      toast.dismiss("auto-arrange-progress");
       setPages((prevPages) => [...prevPages, ...arrangedPages]);
       setAvailableImages(remainingImages);
-      toast.success(`Successfully arranged images into ${arrangedPages.length} page${arrangedPages.length !== 1 ? 's' : ''}!`);
+      toast.success(
+        `Successfully arranged images into ${arrangedPages.length} page${arrangedPages.length !== 1 ? "s" : ""}!`,
+      );
     } catch (err) {
+      toast.dismiss("auto-arrange-progress");
       toast.error(`Failed to auto-arrange images: ${err.message}`);
     } finally {
       setIsProcessing(false);
-      setProgress(null);
     }
   }, [availableImages, pages, settings]);
 
@@ -373,26 +441,23 @@ export const useImageManagement = (settings = null) => {
 
         try {
           // Use correct layout method for remaining images
-          const arrangedImages = newImages.length > 0 
-            ? await arrangeImagesWithCorrectLayout(newImages, false)
-            : [];
+          const arrangedImages =
+            newImages.length > 0
+              ? await arrangeImagesWithCorrectLayout(newImages, false)
+              : [];
 
           setPages((prev) =>
             prev.map((page) =>
-              page.id === pageId
-                ? { ...page, images: arrangedImages }
-                : page
-            )
+              page.id === pageId ? { ...page, images: arrangedImages } : page,
+            ),
           );
         } catch (error) {
           console.error("Error in moveImageBack:", error);
           // Fallback to just removing the image
           setPages((prev) =>
             prev.map((page) =>
-              page.id === pageId
-                ? { ...page, images: newImages }
-                : page
-            )
+              page.id === pageId ? { ...page, images: newImages } : page,
+            ),
           );
         }
       }
@@ -451,25 +516,31 @@ export const useImageManagement = (settings = null) => {
 
   const autoArrangePage = useCallback(
     async (pageId) => {
+      const workingToast = toast.loading("Arranging page layout...", {
+        duration: 0,
+      });
+
       setPages((prev) =>
         prev.map((page) => {
           if (page.id === pageId && page.images.length > 0) {
             const { width: previewWidth, height: previewHeight } =
               getPreviewDimensions(settings);
-            arrangeImages(
-              page.images,
-              previewWidth,
-              previewHeight,
-              settings,
-            ).then((arrangedImages) => {
-              setPages((currentPages) =>
-                currentPages.map((currentPage) =>
-                  currentPage.id === pageId
-                    ? { ...currentPage, images: arrangedImages }
-                    : currentPage,
-                ),
-              );
-            });
+            arrangeImages(page.images, previewWidth, previewHeight, settings)
+              .then((arrangedImages) => {
+                setPages((currentPages) =>
+                  currentPages.map((currentPage) =>
+                    currentPage.id === pageId
+                      ? { ...currentPage, images: arrangedImages }
+                      : currentPage,
+                  ),
+                );
+                toast.dismiss(workingToast);
+                toast.success("Page layout updated!");
+              })
+              .catch((error) => {
+                toast.dismiss(workingToast);
+                toast.error("Failed to arrange page layout");
+              });
 
             // Return current state while async operation completes
             return page;
@@ -483,11 +554,15 @@ export const useImageManagement = (settings = null) => {
 
   const randomizePage = useCallback(
     async (pageId) => {
+      const workingToast = toast.loading("Randomizing layout...", {
+        duration: 0,
+      });
+
       setPages((prev) =>
         prev.map((page) => {
           if (page.id === pageId && page.images.length > 0) {
-            shuffleImagesInLayout(page.images, settings).then(
-              (shuffledImages) => {
+            shuffleImagesInLayout(page.images, settings)
+              .then((shuffledImages) => {
                 setPages((currentPages) =>
                   currentPages.map((currentPage) =>
                     currentPage.id === pageId
@@ -495,8 +570,13 @@ export const useImageManagement = (settings = null) => {
                       : currentPage,
                   ),
                 );
-              },
-            );
+                toast.dismiss(workingToast);
+                toast.success("Layout randomized!");
+              })
+              .catch((error) => {
+                toast.dismiss(workingToast);
+                toast.error("Failed to randomize layout");
+              });
 
             // Return current state while async operation completes
             return page;
@@ -510,21 +590,31 @@ export const useImageManagement = (settings = null) => {
 
   const nextLayout = useCallback(
     async (pageId) => {
-      const targetPage = pages.find(page => page.id === pageId);
+      const targetPage = pages.find((page) => page.id === pageId);
       if (!targetPage || targetPage.images.length === 0) return;
 
+      const workingToast = toast.loading("Switching to next layout...", {
+        duration: 0,
+      });
+
       try {
-        const newLayoutImages = await nextPageLayout(targetPage.images, settings, pageId);
-        
-        setPages(currentPages =>
-          currentPages.map(page =>
-            page.id === pageId
-              ? { ...page, images: newLayoutImages }
-              : page
-          )
+        const newLayoutImages = await nextPageLayout(
+          targetPage.images,
+          settings,
+          pageId,
         );
+
+        setPages((currentPages) =>
+          currentPages.map((page) =>
+            page.id === pageId ? { ...page, images: newLayoutImages } : page,
+          ),
+        );
+        toast.dismiss(workingToast);
+        toast.success("Switched to next layout!");
       } catch (error) {
         console.error("Error in nextLayout:", error);
+        toast.dismiss(workingToast);
+        toast.error("Failed to switch layout");
       }
     },
     [pages, settings],
@@ -532,21 +622,31 @@ export const useImageManagement = (settings = null) => {
 
   const previousLayout = useCallback(
     async (pageId) => {
-      const targetPage = pages.find(page => page.id === pageId);
+      const targetPage = pages.find((page) => page.id === pageId);
       if (!targetPage || targetPage.images.length === 0) return;
 
+      const workingToast = toast.loading("Switching to previous layout...", {
+        duration: 0,
+      });
+
       try {
-        const newLayoutImages = await previousPageLayout(targetPage.images, settings, pageId);
-        
-        setPages(currentPages =>
-          currentPages.map(page =>
-            page.id === pageId
-              ? { ...page, images: newLayoutImages }
-              : page
-          )
+        const newLayoutImages = await previousPageLayout(
+          targetPage.images,
+          settings,
+          pageId,
         );
+
+        setPages((currentPages) =>
+          currentPages.map((page) =>
+            page.id === pageId ? { ...page, images: newLayoutImages } : page,
+          ),
+        );
+        toast.dismiss(workingToast);
+        toast.success("Switched to previous layout!");
       } catch (error) {
         console.error("Error in previousLayout:", error);
+        toast.dismiss(workingToast);
+        toast.error("Failed to switch layout");
       }
     },
     [pages, settings],
@@ -560,213 +660,438 @@ export const useImageManagement = (settings = null) => {
     [nextLayout],
   );
 
-  const updateImagePosition = useCallback((pageId, imageIndex, positionData) => {
-    setPages((prev) =>
-      prev.map((page) => {
-        if (page.id === pageId) {
-          const newImages = [...page.images];
-          if (newImages[imageIndex]) {
-            newImages[imageIndex] = {
-              ...newImages[imageIndex],
-              ...positionData,
-            };
+  const updateImagePosition = useCallback(
+    (pageId, imageIndex, positionData) => {
+      setPages((prev) =>
+        prev.map((page) => {
+          if (page.id === pageId) {
+            const newImages = [...page.images];
+            if (newImages[imageIndex]) {
+              newImages[imageIndex] = {
+                ...newImages[imageIndex],
+                ...positionData,
+              };
+            }
+            return { ...page, images: newImages };
           }
-          return { ...page, images: newImages };
-        }
-        return page;
-      }),
-    );
-  }, []);
-
-  const moveImageToPreviousPage = useCallback(async (sourcePageId, imageIndex, destPageId) => {
-    const currentPages = pages;
-    const sourcePage = currentPages.find((p) => p.id === sourcePageId);
-    const destPage = currentPages.find((p) => p.id === destPageId);
-
-    if (sourcePage && destPage && sourcePage.images[imageIndex]) {
-      const imageToMove = sourcePage.images[imageIndex];
-
-      // Calculate max images per page for destination
-      const maxImagesPerRow = settings.maxImagesPerRow || 4;
-      const maxNumberOfRows = settings.maxNumberOfRows || 2;
-      const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
-      const maxImagesPerPage = Math.min(
-        maxImagesFromGrid,
-        settings.imagesPerPage || maxImagesFromGrid,
+          return page;
+        }),
       );
+    },
+    [],
+  );
 
-      // Check if destination page has space
-      if (destPage.images.length >= maxImagesPerPage && settings.designStyle === "full_cover") {
-        toast.error(`Cannot move image: Destination page already has the maximum of ${maxImagesPerPage} images. Please remove some images first.`);
-        return;
+  const moveImageToPreviousPage = useCallback(
+    async (sourcePageId, imageIndex, destPageId) => {
+      const currentPages = pages;
+      const sourcePage = currentPages.find((p) => p.id === sourcePageId);
+      const destPage = currentPages.find((p) => p.id === destPageId);
+
+      if (sourcePage && destPage && sourcePage.images[imageIndex]) {
+        const imageToMove = sourcePage.images[imageIndex];
+
+        // Calculate max images per page for destination
+        const maxImagesPerRow = settings.maxImagesPerRow || 4;
+        const maxNumberOfRows = settings.maxNumberOfRows || 2;
+        const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
+        const maxImagesPerPage = Math.min(
+          maxImagesFromGrid,
+          settings.imagesPerPage || maxImagesFromGrid,
+        );
+
+        // Check if destination page has space
+        if (
+          destPage.images.length >= maxImagesPerPage &&
+          settings.designStyle === "full_cover"
+        ) {
+          toast.error(
+            `Cannot move image: Destination page already has the maximum of ${maxImagesPerPage} images. Please remove some images first.`,
+          );
+          return;
+        }
+
+        try {
+          // Prepare new image arrays
+          const sourceNewImages = [...sourcePage.images];
+          sourceNewImages.splice(imageIndex, 1);
+          const destNewImages = [...destPage.images, imageToMove];
+
+          // Arrange both pages with correct layout
+          const [sourceArrangedImages, destArrangedImages] = await Promise.all([
+            sourceNewImages.length > 0
+              ? arrangeImagesWithCorrectLayout(sourceNewImages, false)
+              : Promise.resolve([]),
+            arrangeImagesWithCorrectLayout(destNewImages, false),
+          ]);
+
+          setPages((prev) =>
+            prev.map((page) => {
+              if (page.id === sourcePageId) {
+                return { ...page, images: sourceArrangedImages };
+              } else if (page.id === destPageId) {
+                return { ...page, images: destArrangedImages };
+              }
+              return page;
+            }),
+          );
+        } catch (error) {
+          console.error("Error in moveImageToPreviousPage:", error);
+        }
       }
+    },
+    [pages, settings, arrangeImagesWithCorrectLayout],
+  );
+
+  const moveImageToNextPage = useCallback(
+    (sourcePageId, imageIndex, destPageId) => {
+      // Same logic as moveImageToPreviousPage
+      moveImageToPreviousPage(sourcePageId, imageIndex, destPageId);
+    },
+    [moveImageToPreviousPage],
+  );
+
+  const swapImagesInPage = useCallback(
+    async (pageId, index1, index2) => {
+      const targetPage = pages.find((page) => page.id === pageId);
+      if (
+        !targetPage ||
+        !targetPage.images[index1] ||
+        !targetPage.images[index2]
+      )
+        return;
+
+      const newImages = [...targetPage.images];
+      // Swap the images
+      [newImages[index1], newImages[index2]] = [
+        newImages[index2],
+        newImages[index1],
+      ];
 
       try {
-        // Prepare new image arrays
-        const sourceNewImages = [...sourcePage.images];
-        sourceNewImages.splice(imageIndex, 1);
-        const destNewImages = [...destPage.images, imageToMove];
+        // Use correct layout method based on design style
+        const arrangedImages = await arrangeImagesWithCorrectLayout(
+          newImages,
+          true,
+        );
 
-        // Arrange both pages with correct layout
-        const [sourceArrangedImages, destArrangedImages] = await Promise.all([
-          sourceNewImages.length > 0 
-            ? arrangeImagesWithCorrectLayout(sourceNewImages, false)
-            : Promise.resolve([]),
-          arrangeImagesWithCorrectLayout(destNewImages, false)
-        ]);
-
-        setPages((prev) => 
-          prev.map((page) => {
-            if (page.id === sourcePageId) {
-              return { ...page, images: sourceArrangedImages };
-            } else if (page.id === destPageId) {
-              return { ...page, images: destArrangedImages };
-            }
-            return page;
-          })
+        setPages((prev) =>
+          prev.map((page) =>
+            page.id === pageId ? { ...page, images: arrangedImages } : page,
+          ),
         );
       } catch (error) {
-        console.error("Error in moveImageToPreviousPage:", error);
+        console.error("Error in swapImagesInPage:", error);
       }
-    }
-  }, [pages, settings, arrangeImagesWithCorrectLayout]);
+    },
+    [pages, arrangeImagesWithCorrectLayout],
+  );
 
-  const moveImageToNextPage = useCallback((sourcePageId, imageIndex, destPageId) => {
-    // Same logic as moveImageToPreviousPage
-    moveImageToPreviousPage(sourcePageId, imageIndex, destPageId);
-  }, [moveImageToPreviousPage]);
+  const handleGeneratePDF = useCallback(
+    async (albumName = null) => {
+      if (pages.length === 0) return;
 
-  const swapImagesInPage = useCallback(async (pageId, index1, index2) => {
-    const targetPage = pages.find(page => page.id === pageId);
-    if (!targetPage || !targetPage.images[index1] || !targetPage.images[index2]) return;
-    
-    const newImages = [...targetPage.images];
-    // Swap the images
-    [newImages[index1], newImages[index2]] = [newImages[index2], newImages[index1]];
-    
-    try {
-      // Use correct layout method based on design style
-      const arrangedImages = await arrangeImagesWithCorrectLayout(newImages, true);
-      
-      setPages((prev) =>
-        prev.map((page) =>
-          page.id === pageId
-            ? { ...page, images: arrangedImages }
-            : page
-        )
-      );
-    } catch (error) {
-      console.error("Error in swapImagesInPage:", error);
-    }
-  }, [pages, arrangeImagesWithCorrectLayout]);
+      setIsProcessing(true);
+      try {
+        await generatePDF(
+          pages,
+          settings,
+          (progressData) => {
+            const progressElement = React.createElement(ProgressToast, {
+              current: progressData.step || 0,
+              total: progressData.total || 100,
+              message: progressData.message || "Generating PDF...",
+              currentFileName: "",
+            });
 
-  const handleGeneratePDF = useCallback(async () => {
-    if (pages.length === 0) return;
+            toast.custom(progressElement, {
+              id: "pdf-generation-progress",
+              duration: 0,
+            });
+          },
+          albumName,
+        );
 
-    setIsProcessing(true);
-    setProgress(null);
-    try {
-      await generatePDF(pages, settings, (progressData) => {
-        setProgress(progressData);
-      });
-      toast.success("PDF generated successfully!");
-    } catch (err) {
-      toast.error(`Failed to generate PDF: ${err.message}`);
-    } finally {
-      setIsProcessing(false);
-      setProgress(null);
-    }
-  }, [pages, settings]);
+        toast.dismiss("pdf-generation-progress");
+        toast.success("PDF generated successfully!");
+      } catch (err) {
+        toast.dismiss("pdf-generation-progress");
+        toast.error(`Failed to generate PDF: ${err.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [pages, settings],
+  );
 
   // Album storage functionality - with auto-overwrite support
-  const saveCurrentAsAlbum = useCallback(async (albumName, albumDescription = '', existingId = null) => {
-    if (!albumName?.trim()) {
-      toast.error('Please provide a name for the album');
-      return null;
-    }
+  const saveCurrentAsAlbum = useCallback(
+    async (albumName, albumDescription = "", existingId = null) => {
+      if (!albumName?.trim()) {
+        toast.error("Please provide a name for the album");
+        return null;
+      }
 
-    if (pages.length === 0 && availableImages.length === 0) {
-      toast.error('No images to save. Please add some images first.');
-      return null;
-    }
+      if (pages.length === 0 && availableImages.length === 0) {
+        toast.error("No images to save. Please add some images first.");
+        return null;
+      }
 
-    setIsProcessing(true);
-    try {
-      // Generate thumbnail from first page
-      const thumbnail = await storageManager.generateThumbnail(pages);
-      
-      let albumId = existingId;
-      let originalCreatedTime = Date.now();
-      
-      // If we have an existing ID, preserve the original created time
-      if (existingId) {
-        try {
-          const existingAlbum = await storageManager.getAlbum(existingId);
-          if (existingAlbum) {
-            originalCreatedTime = existingAlbum.created;
+      setIsProcessing(true);
+
+      // Show progress toast
+      const progressElement = React.createElement(ProgressToast, {
+        current: 0,
+        total: 100,
+        message: existingId ? "Updating album..." : "Saving album...",
+        currentFileName: "",
+      });
+
+      toast.custom(progressElement, {
+        id: "save-album-progress",
+        duration: 0,
+      });
+
+      try {
+        // Step 1: Generate thumbnail from first page (20%)
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 10,
+            total: 100,
+            message: "Generating thumbnail...",
+            currentFileName: "",
+          }),
+          {
+            id: "save-album-progress",
+            duration: 0,
+          },
+        );
+
+        const thumbnail = await storageManager.generateThumbnail(pages);
+
+        // Step 2: Prepare album data (30%)
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 30,
+            total: 100,
+            message: "Preparing album data...",
+            currentFileName: "",
+          }),
+          {
+            id: "save-album-progress",
+            duration: 0,
+          },
+        );
+
+        let albumId = existingId;
+        let originalCreatedTime = Date.now();
+
+        // If we have an existing ID, preserve the original created time
+        if (existingId) {
+          try {
+            const existingAlbum = await storageManager.getAlbum(existingId);
+            if (existingAlbum) {
+              originalCreatedTime = existingAlbum.created;
+            }
+          } catch (error) {
+            console.warn(
+              "Could not fetch existing album for created time:",
+              error,
+            );
           }
-        } catch (error) {
-          console.warn('Could not fetch existing album for created time:', error);
+        } else {
+          // Generate new ID for new albums
+          albumId = storageManager.generateAlbumId();
         }
-      } else {
-        // Generate new ID for new albums
-        albumId = storageManager.generateAlbumId();
-      }
-      
-      const albumToSave = {
-        id: albumId,
-        name: albumName.trim(),
-        description: albumDescription.trim(),
-        created: originalCreatedTime,
-        modified: Date.now(),
-        settings: settings || {},
-        pages: pages,
-        availableImages: availableImages,
-        totalImages: pages.reduce((sum, page) => sum + page.images.length, 0) + availableImages.length,
-        thumbnail
-      };
 
-      const savedId = await storageManager.saveAlbum(albumToSave);
-      
-      if (existingId) {
-        toast.success(`💾 Album "${albumName}" updated successfully!`, {
-          icon: '✅',
-        });
-      } else {
-        toast.success(`💾 Album "${albumName}" saved successfully!`, {
-          icon: '🎉',
-        });
-      }
+        // Step 3: Building album structure (40%)
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 40,
+            total: 100,
+            message: "Building album structure...",
+            currentFileName: "",
+          }),
+          {
+            id: "save-album-progress",
+            duration: 0,
+          },
+        );
 
-      return savedId;
-    } catch (error) {
-      console.error('Error saving album:', error);
-      toast.error('Failed to save album. Please try again.');
-      return null;
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [pages, availableImages, settings]);
+        const albumToSave = {
+          id: albumId,
+          name: albumName.trim(),
+          description: albumDescription.trim(),
+          created: originalCreatedTime,
+          modified: Date.now(),
+          settings: settings || {},
+          pages: pages,
+          availableImages: availableImages,
+          totalImages:
+            pages.reduce((sum, page) => sum + page.images.length, 0) +
+            availableImages.length,
+          thumbnail,
+        };
+
+        // Step 4: Saving to storage (50% -> 100%)
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 50,
+            total: 100,
+            message: "Saving to storage...",
+            currentFileName: "",
+          }),
+          {
+            id: "save-album-progress",
+            duration: 0,
+          },
+        );
+
+        // Show intermediate progress during save
+        const saveProgressInterval = setInterval(() => {
+          // This will show progress from 60% to 95% while saving
+          const randomProgress = 60 + Math.floor(Math.random() * 35);
+          toast.custom(
+            React.createElement(ProgressToast, {
+              current: randomProgress,
+              total: 100,
+              message: "Saving data to storage...",
+              currentFileName: "",
+            }),
+            {
+              id: "save-album-progress",
+              duration: 0,
+            },
+          );
+        }, 1000);
+
+        const savedId = await storageManager.saveAlbum(albumToSave);
+
+        // Clear the interval
+        clearInterval(saveProgressInterval);
+
+        // Dismiss progress toast
+        toast.dismiss("save-album-progress");
+
+        if (existingId) {
+          toast.success(`💾 Album "${albumName}" updated successfully!`, {
+            icon: "✅",
+          });
+        } else {
+          toast.success(`💾 Album "${albumName}" saved successfully!`, {
+            icon: "🎉",
+          });
+        }
+
+        return savedId;
+      } catch (error) {
+        console.error("Error saving album:", error);
+        toast.dismiss("save-album-progress");
+        toast.error("Failed to save album. Please try again.");
+        return null;
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [pages, availableImages, settings],
+  );
 
   const loadAlbumById = useCallback(async (albumId) => {
     setIsProcessing(true);
+
+    // Show progress toast for loading
+    toast.custom(
+      React.createElement(ProgressToast, {
+        current: 0,
+        total: 100,
+        message: "Loading album...",
+        currentFileName: "",
+      }),
+      {
+        id: "load-album-progress",
+        duration: 0,
+      },
+    );
+
     try {
+      // Step 1: Fetching album data (30%)
+      toast.custom(
+        React.createElement(ProgressToast, {
+          current: 30,
+          total: 100,
+          message: "Fetching album data...",
+          currentFileName: "",
+        }),
+        {
+          id: "load-album-progress",
+          duration: 0,
+        },
+      );
+
       const album = await storageManager.getAlbum(albumId);
-      
+
       if (!album) {
-        toast.error('Album not found');
+        toast.dismiss("load-album-progress");
+        toast.error("Album not found");
         return false;
       }
+
+      // Step 2: Processing album data (60%)
+      toast.custom(
+        React.createElement(ProgressToast, {
+          current: 60,
+          total: 100,
+          message: "Processing album data...",
+          currentFileName: "",
+        }),
+        {
+          id: "load-album-progress",
+          duration: 0,
+        },
+      );
+
+      // Step 3: Restoring images and pages (90%)
+      toast.custom(
+        React.createElement(ProgressToast, {
+          current: 90,
+          total: 100,
+          message: "Restoring images and pages...",
+          currentFileName: "",
+        }),
+        {
+          id: "load-album-progress",
+          duration: 0,
+        },
+      );
 
       // Replace current state with loaded album data
       setPages(album.pages || []);
       setAvailableImages(album.availableImages || []);
-      
-      toast.success(`Album "${album.name}" loaded successfully!`);
+
+      // Complete (100%)
+      toast.custom(
+        React.createElement(ProgressToast, {
+          current: 100,
+          total: 100,
+          message: "Album loaded successfully!",
+          currentFileName: "",
+        }),
+        {
+          id: "load-album-progress",
+          duration: 0,
+        },
+      );
+
+      // Dismiss progress toast and show success
+      setTimeout(() => {
+        toast.dismiss("load-album-progress");
+        toast.success(`Album "${album.name}" loaded successfully!`);
+      }, 500);
+
       return album;
     } catch (error) {
-      console.error('Error loading album:', error);
-      toast.error('Failed to load album');
+      console.error("Error loading album:", error);
+      toast.dismiss("load-album-progress");
+      toast.error("Failed to load album");
       return false;
     } finally {
       setIsProcessing(false);
@@ -776,21 +1101,23 @@ export const useImageManagement = (settings = null) => {
   const clearCurrentWork = useCallback(() => {
     setPages([]);
     setAvailableImages([]);
-    toast.success('Work area cleared');
+    toast.success("Work area cleared");
   }, []);
 
   const getCurrentAlbumData = useCallback(() => {
     return {
       pages,
       availableImages,
-      totalImages: pages.reduce((sum, page) => sum + page.images.length, 0) + availableImages.length,
-      settings: settings || {}
+      totalImages:
+        pages.reduce((sum, page) => sum + page.images.length, 0) +
+        availableImages.length,
+      settings: settings || {},
     };
   }, [pages, availableImages, settings]);
 
   const loadAlbumData = useCallback((albumData) => {
     if (!albumData) {
-      toast.error('Invalid album data');
+      toast.error("Invalid album data");
       return false;
     }
 
@@ -799,39 +1126,42 @@ export const useImageManagement = (settings = null) => {
       setAvailableImages(albumData.availableImages || []);
       return true;
     } catch (error) {
-      console.error('Error loading album data:', error);
-      toast.error('Failed to load album data');
+      console.error("Error loading album data:", error);
+      toast.error("Failed to load album data");
       return false;
     }
   }, []);
 
   // Auto-save functionality (optional)
-  const enableAutoSave = useCallback((albumId, intervalMs = 30000) => {
-    let autoSaveInterval;
-    
-    const performAutoSave = async () => {
-      if (pages.length > 0 || availableImages.length > 0) {
-        try {
-          const album = await storageManager.getAlbum(albumId);
-          if (album) {
-            await saveCurrentAsAlbum(album.name, album.description, albumId);
-          }
-        } catch (error) {
-          console.error('Auto-save failed:', error);
-          // Don't show error toast for auto-save failures
-        }
-      }
-    };
+  const enableAutoSave = useCallback(
+    (albumId, intervalMs = 300000) => {
+      let autoSaveInterval;
 
-    autoSaveInterval = setInterval(performAutoSave, intervalMs);
-    
-    // Return cleanup function
-    return () => {
-      if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-      }
-    };
-  }, [pages, availableImages, saveCurrentAsAlbum]);
+      const performAutoSave = async () => {
+        if (pages.length > 0 || availableImages.length > 0) {
+          try {
+            const album = await storageManager.getAlbum(albumId);
+            if (album) {
+              await saveCurrentAsAlbum(album.name, album.description, albumId);
+            }
+          } catch (error) {
+            console.error("Auto-save failed:", error);
+            // Don't show error toast for auto-save failures
+          }
+        }
+      };
+
+      autoSaveInterval = setInterval(performAutoSave, intervalMs);
+
+      // Return cleanup function
+      return () => {
+        if (autoSaveInterval) {
+          clearInterval(autoSaveInterval);
+        }
+      };
+    },
+    [pages, availableImages, saveCurrentAsAlbum],
+  );
 
   const totalImages =
     pages.reduce((sum, page) => sum + page.images.length, 0) +
@@ -841,7 +1171,6 @@ export const useImageManagement = (settings = null) => {
     pages,
     availableImages,
     isProcessing,
-    progress,
     totalImages,
     handleFiles,
     handleDragEnd,
@@ -863,7 +1192,7 @@ export const useImageManagement = (settings = null) => {
     moveImageToNextPage,
     swapImagesInPage,
     handleGeneratePDF,
-    
+
     // Album storage methods
     saveCurrentAsAlbum,
     loadAlbumById,

@@ -1,27 +1,27 @@
-import React from 'react';
-import { Badge, Spinner } from 'flowbite-react';
-import { HiCheck, HiClock, HiExclamation } from 'react-icons/hi';
+import React from "react";
+import { Badge, Spinner } from "flowbite-react";
+import { HiCheck, HiClock, HiExclamation } from "react-icons/hi";
 
-const AutoSaveIndicator = ({ 
-  isAutoSaving, 
-  lastSaveTime, 
-  hasUnsavedChanges, 
-  currentAlbumName 
+const AutoSaveIndicator = ({
+  isAutoSaving,
+  lastSaveTime,
+  hasUnsavedChanges,
+  currentAlbumName,
 }) => {
   const formatLastSaveTime = (timestamp) => {
     if (!timestamp) return null;
-    
+
     const now = Date.now();
     const diff = now - timestamp;
     const minutes = Math.floor(diff / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
-    
+
     if (minutes > 0) {
       return `${minutes}m ago`;
     } else if (seconds > 0) {
       return `${seconds}s ago`;
     } else {
-      return 'just now';
+      return "just now";
     }
   };
 

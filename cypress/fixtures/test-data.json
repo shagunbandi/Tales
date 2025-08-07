@@ -36,16 +36,41 @@
     }
   },
   "testImages": {
-    "small": { "width": 200, "height": 200, "color": "#ff0000", "text": "Small" },
-    "medium": { "width": 600, "height": 400, "color": "#00ff00", "text": "Medium" },
-    "large": { "width": 1200, "height": 800, "color": "#0000ff", "text": "Large" },
-    "portrait": { "width": 400, "height": 600, "color": "#ff00ff", "text": "Portrait" },
-    "landscape": { "width": 800, "height": 400, "color": "#ffff00", "text": "Landscape" }
+    "small": {
+      "width": 200,
+      "height": 200,
+      "color": "#ff0000",
+      "text": "Small"
+    },
+    "medium": {
+      "width": 600,
+      "height": 400,
+      "color": "#00ff00",
+      "text": "Medium"
+    },
+    "large": {
+      "width": 1200,
+      "height": 800,
+      "color": "#0000ff",
+      "text": "Large"
+    },
+    "portrait": {
+      "width": 400,
+      "height": 600,
+      "color": "#ff00ff",
+      "text": "Portrait"
+    },
+    "landscape": {
+      "width": 800,
+      "height": 400,
+      "color": "#ffff00",
+      "text": "Landscape"
+    }
   },
   "colors": {
     "backgrounds": [
       "Oxford Blue",
-      "Cream", 
+      "Cream",
       "Pastel Green",
       "Light Khaki",
       "Powder Blue"

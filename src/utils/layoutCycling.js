@@ -15,21 +15,35 @@ const pageLayoutState = new Map();
  * @param {number} maxNumberOfRows - Maximum number of rows
  * @returns {Array} Array of layout arrays like [[4], [1,3], [2,2], [3,1]]
  */
-function generateAllValidLayouts(totalImages, maxImagesPerRow, maxNumberOfRows) {
+function generateAllValidLayouts(
+  totalImages,
+  maxImagesPerRow,
+  maxNumberOfRows,
+) {
   if (totalImages === 0) return [];
   if (totalImages === 1) return [[1]];
 
   const validLayouts = [];
 
   // Try different numbers of rows
-  for (let numRows = 1; numRows <= Math.min(maxNumberOfRows, totalImages); numRows++) {
-    const layouts = generateLayoutsForRows(totalImages, numRows, maxImagesPerRow);
+  for (
+    let numRows = 1;
+    numRows <= Math.min(maxNumberOfRows, totalImages);
+    numRows++
+  ) {
+    const layouts = generateLayoutsForRows(
+      totalImages,
+      numRows,
+      maxImagesPerRow,
+    );
     validLayouts.push(...layouts);
   }
 
   // Remove duplicates and return
-  return validLayouts.filter((layout, index, self) => 
-    index === self.findIndex(l => JSON.stringify(l) === JSON.stringify(layout))
+  return validLayouts.filter(
+    (layout, index, self) =>
+      index ===
+      self.findIndex((l) => JSON.stringify(l) === JSON.stringify(layout)),
   );
 }
 
@@ -55,12 +69,23 @@ function generateLayoutsForRows(totalImages, numRows, maxImagesPerRow) {
     // Calculate constraints for this row
     const remainingRows = numRows - rowIndex;
     const minImagesThisRow = 1; // Allow at least 1 image per row
-    const maxImagesThisRow = Math.min(maxImagesPerRow, remainingImages - (remainingRows - 1));
+    const maxImagesThisRow = Math.min(
+      maxImagesPerRow,
+      remainingImages - (remainingRows - 1),
+    );
 
     // Try all valid numbers of images for this row
-    for (let imagesInRow = minImagesThisRow; imagesInRow <= maxImagesThisRow; imagesInRow++) {
+    for (
+      let imagesInRow = minImagesThisRow;
+      imagesInRow <= maxImagesThisRow;
+      imagesInRow++
+    ) {
       currentLayout[rowIndex] = imagesInRow;
-      generateCombination(rowIndex + 1, remainingImages - imagesInRow, currentLayout);
+      generateCombination(
+        rowIndex + 1,
+        remainingImages - imagesInRow,
+        currentLayout,
+      );
     }
   }
 
@@ -78,7 +103,7 @@ function getLayoutState(pageId, availableLayouts) {
   if (!pageLayoutState.has(pageId)) {
     pageLayoutState.set(pageId, {
       currentIndex: 0,
-      layouts: availableLayouts
+      layouts: availableLayouts,
     });
   }
   return pageLayoutState.get(pageId);
@@ -122,7 +147,11 @@ async function cyclePageLayout(images, settings, pageId, direction) {
   // Generate available layouts for this number of images
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
   const maxNumberOfRows = settings?.maxNumberOfRows || 2;
-  const availableLayouts = generateAllValidLayouts(images.length, maxImagesPerRow, maxNumberOfRows);
+  const availableLayouts = generateAllValidLayouts(
+    images.length,
+    maxImagesPerRow,
+    maxNumberOfRows,
+  );
 
   if (availableLayouts.length === 0) {
     return images;
@@ -130,8 +159,10 @@ async function cyclePageLayout(images, settings, pageId, direction) {
 
   // Get current state and move to next/previous
   const state = getLayoutState(pageId, availableLayouts);
-  state.currentIndex = (state.currentIndex + direction + availableLayouts.length) % availableLayouts.length;
-  
+  state.currentIndex =
+    (state.currentIndex + direction + availableLayouts.length) %
+    availableLayouts.length;
+
   const selectedLayout = availableLayouts[state.currentIndex];
 
   // Apply the selected layout
@@ -146,16 +177,22 @@ async function cyclePageLayout(images, settings, pageId, direction) {
  * @returns {Promise<Array>} Arranged images
  */
 async function applyLayoutToImages(images, layout, settings) {
-  const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-  
+  const { width: previewWidth, height: previewHeight } =
+    getPreviewDimensions(settings);
+
   // Create settings with forced layout
   const forcedSettings = {
     ...settings,
-    _forcedLayout: layout
+    _forcedLayout: layout,
   };
-  
+
   try {
-    const result = await arrangeImages(images, previewWidth, previewHeight, forcedSettings);
+    const result = await arrangeImages(
+      images,
+      previewWidth,
+      previewHeight,
+      forcedSettings,
+    );
     return result;
   } catch (error) {
     console.error("Error applying layout:", error);
@@ -171,23 +208,24 @@ async function applyLayoutToImages(images, layout, settings) {
  */
 function verifyLayoutApplication(arrangedImages, expectedLayout) {
   const rows = {};
-  
-  arrangedImages.forEach(img => {
+
+  arrangedImages.forEach((img) => {
     if (img.rowIndex !== undefined) {
       rows[img.rowIndex] = (rows[img.rowIndex] || 0) + 1;
     }
   });
-  
+
   const actualLayout = Object.keys(rows)
     .sort((a, b) => parseInt(a) - parseInt(b))
-    .map(key => rows[key]);
-  
-  const isCorrect = JSON.stringify(actualLayout) === JSON.stringify(expectedLayout);
-  
+    .map((key) => rows[key]);
+
+  const isCorrect =
+    JSON.stringify(actualLayout) === JSON.stringify(expectedLayout);
+
   return {
     isCorrect,
     actualLayout,
-    expectedLayout
+    expectedLayout,
   };
 }
 
@@ -207,10 +245,10 @@ export function resetPageLayoutState(pageId) {
 export function getCurrentLayoutInfo(pageId) {
   const state = pageLayoutState.get(pageId);
   if (!state) return null;
-  
+
   return {
     currentIndex: state.currentIndex,
     currentLayout: state.layouts[state.currentIndex],
-    totalLayouts: state.layouts.length
+    totalLayouts: state.layouts.length,
   };
 }

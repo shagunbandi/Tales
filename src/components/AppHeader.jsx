@@ -1,14 +1,32 @@
 import React from "react";
+import { Button } from "flowbite-react";
+import { HiCollection } from "react-icons/hi";
 import AutoSaveIndicator from "./AutoSaveIndicator";
 
-const AppHeader = ({ 
-  isAutoSaving, 
-  lastSaveTime, 
-  hasUnsavedChanges, 
-  currentAlbumName 
+const AppHeader = ({
+  isAutoSaving,
+  lastSaveTime,
+  hasUnsavedChanges,
+  currentAlbumName,
+  onGoToAlbums,
 }) => {
   return (
-    <div className="my-8 p-5 text-center">
+    <div className="relative my-8 p-5 text-center">
+      {/* My Albums button - positioned in top left */}
+      {onGoToAlbums && (
+        <div className="absolute top-0 left-5">
+          <Button
+            onClick={onGoToAlbums}
+            size="sm"
+            color="blue"
+            className="flex items-center gap-2"
+          >
+            <HiCollection className="h-4 w-4" />
+            My Albums
+          </Button>
+        </div>
+      )}
+
       <div className="relative inline-block">
         <p className="animate-pulse bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-600 bg-clip-text text-5xl font-bold text-transparent">
           Tales
@@ -30,7 +48,7 @@ const AppHeader = ({
           style={{ animationDelay: "0.4s" }}
         ></div>
       </div>
-      
+
       {/* Auto-save indicator */}
       <div className="mt-3">
         <AutoSaveIndicator

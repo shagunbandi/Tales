@@ -19,10 +19,10 @@ const ImageEditModal = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(null);
-  
+
   // Work with original image source
   const originalImageSrc = image?.originalSrc || image?.src;
-  
+
   const imageRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -40,25 +40,29 @@ const ImageEditModal = ({
   // Calculate image display properties for drag functionality
   // IMPORTANT: Use the ACTUAL container dimensions, not scaled modal dimensions
   const calculateImageDimensions = useCallback(() => {
-    if (!imageRef.current) return { width: 0, height: 0, baseWidth: 0, baseHeight: 0 };
-    
+    if (!imageRef.current)
+      return { width: 0, height: 0, baseWidth: 0, baseHeight: 0 };
+
     const imageWidth = imageRef.current.naturalWidth || 100;
     const imageHeight = imageRef.current.naturalHeight || 100;
     const imageAspectRatio = imageWidth / imageHeight;
     const containerAspectRatio = containerWidth / containerHeight;
-    
+
     // Use the ACTUAL container dimensions (same as preview/PDF)
     // Don't scale down - this ensures consistency across modal, preview, and PDF
     const actualWidth = containerWidth;
     const actualHeight = containerHeight;
-    
+
     // Calculate modal display size (for UI only)
     const maxModalWidth = 400;
     const maxModalHeight = 300;
     let modalDisplayWidth, modalDisplayHeight, modalScale;
-    
+
     if (actualWidth > maxModalWidth || actualHeight > maxModalHeight) {
-      modalScale = Math.min(maxModalWidth / actualWidth, maxModalHeight / actualHeight);
+      modalScale = Math.min(
+        maxModalWidth / actualWidth,
+        maxModalHeight / actualHeight,
+      );
       modalDisplayWidth = actualWidth * modalScale;
       modalDisplayHeight = actualHeight * modalScale;
     } else {
@@ -66,7 +70,7 @@ const ImageEditModal = ({
       modalDisplayWidth = actualWidth;
       modalDisplayHeight = actualHeight;
     }
-    
+
     // Calculate how the image would be displayed with object-cover behavior
     // Use ACTUAL dimensions for calculations, not modal display dimensions
     let baseWidth, baseHeight;
@@ -79,22 +83,21 @@ const ImageEditModal = ({
       baseWidth = actualWidth;
       baseHeight = baseWidth / imageAspectRatio;
     }
-    
+
     // For modal display, calculate object-cover size directly using modal container dimensions
     // This ensures the image properly fills the modal container while maintaining coordinate consistency
     let modalImageWidth, modalImageHeight;
     const modalContainerAspectRatio = modalDisplayWidth / modalDisplayHeight;
-    
+
     if (imageAspectRatio > modalContainerAspectRatio) {
       // Image is wider relative to modal container - scale to modal height
       modalImageHeight = modalDisplayHeight;
       modalImageWidth = modalImageHeight * imageAspectRatio;
     } else {
-      // Image is taller relative to modal container - scale to modal width  
+      // Image is taller relative to modal container - scale to modal width
       modalImageWidth = modalDisplayWidth;
       modalImageHeight = modalImageWidth / imageAspectRatio;
     }
-    
 
     return {
       width: baseWidth * scale,
@@ -112,59 +115,70 @@ const ImageEditModal = ({
   }, [containerWidth, containerHeight, scale]);
 
   // Handle mouse events for dragging
-  const handleMouseDown = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    setDragStart({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      startX: position.x,
-      startY: position.y,
-    });
-    setIsDragging(true);
-  }, [position]);
+  const handleMouseDown = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-  const handleMouseMove = useCallback((e) => {
-    if (!isDragging || !dragStart || !containerRef.current) return;
-    
-    e.preventDefault();
-    const rect = containerRef.current.getBoundingClientRect();
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
-    
-    const deltaX = currentX - dragStart.x;
-    const deltaY = currentY - dragStart.y;
-    
-    const newX = dragStart.startX + deltaX;
-    const newY = dragStart.startY + deltaY;
-    
-    // Calculate constraints based on ACTUAL dimensions (not modal display dimensions)
-    const imageDimensions = calculateImageDimensions(); 
-    const scaledWidth = imageDimensions.baseWidth * scale;
-    const scaledHeight = imageDimensions.baseHeight * scale;
-    
-    // Use ACTUAL container dimensions for constraint calculations
-    const maxOffsetX = Math.max(0, (scaledWidth - imageDimensions.actualWidth) / 2);
-    const maxOffsetY = Math.max(0, (scaledHeight - imageDimensions.actualHeight) / 2);
-    
-    
-    // Convert modal mouse movement to actual coordinate system
-    const modalToActualRatio = 1 / imageDimensions.modalScale;
-    const actualDeltaX = deltaX * modalToActualRatio;
-    const actualDeltaY = deltaY * modalToActualRatio;
-    
-    const actualNewX = dragStart.startX + actualDeltaX;
-    const actualNewY = dragStart.startY + actualDeltaY;
-    
-    setPosition({
-      x: Math.max(-maxOffsetX, Math.min(maxOffsetX, actualNewX)),
-      y: Math.max(-maxOffsetY, Math.min(maxOffsetY, actualNewY)),
-    });
-  }, [isDragging, dragStart, calculateImageDimensions, scale]);
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      setDragStart({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+        startX: position.x,
+        startY: position.y,
+      });
+      setIsDragging(true);
+    },
+    [position],
+  );
+
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!isDragging || !dragStart || !containerRef.current) return;
+
+      e.preventDefault();
+      const rect = containerRef.current.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+
+      const deltaX = currentX - dragStart.x;
+      const deltaY = currentY - dragStart.y;
+
+      const newX = dragStart.startX + deltaX;
+      const newY = dragStart.startY + deltaY;
+
+      // Calculate constraints based on ACTUAL dimensions (not modal display dimensions)
+      const imageDimensions = calculateImageDimensions();
+      const scaledWidth = imageDimensions.baseWidth * scale;
+      const scaledHeight = imageDimensions.baseHeight * scale;
+
+      // Use ACTUAL container dimensions for constraint calculations
+      const maxOffsetX = Math.max(
+        0,
+        (scaledWidth - imageDimensions.actualWidth) / 2,
+      );
+      const maxOffsetY = Math.max(
+        0,
+        (scaledHeight - imageDimensions.actualHeight) / 2,
+      );
+
+      // Convert modal mouse movement to actual coordinate system
+      const modalToActualRatio = 1 / imageDimensions.modalScale;
+      const actualDeltaX = deltaX * modalToActualRatio;
+      const actualDeltaY = deltaY * modalToActualRatio;
+
+      const actualNewX = dragStart.startX + actualDeltaX;
+      const actualNewY = dragStart.startY + actualDeltaY;
+
+      setPosition({
+        x: Math.max(-maxOffsetX, Math.min(maxOffsetX, actualNewX)),
+        y: Math.max(-maxOffsetY, Math.min(maxOffsetY, actualNewY)),
+      });
+    },
+    [isDragging, dragStart, calculateImageDimensions, scale],
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -174,11 +188,11 @@ const ImageEditModal = ({
   // Add global mouse event listeners
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
@@ -209,18 +223,18 @@ const ImageEditModal = ({
   // Handle escape key
   useEffect(() => {
     const handleEscapeKey = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscapeKey);
+      document.addEventListener("keydown", handleEscapeKey);
       // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
       return () => {
-        document.removeEventListener('keydown', handleEscapeKey);
-        document.body.style.overflow = 'unset';
+        document.removeEventListener("keydown", handleEscapeKey);
+        document.body.style.overflow = "unset";
       };
     }
   }, [isOpen, onClose]);
@@ -232,34 +246,34 @@ const ImageEditModal = ({
   const imageDimensions = calculateImageDimensions();
 
   const modalContent = (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 dark:bg-opacity-80"
+    <div
+      className="bg-opacity-75 dark:bg-opacity-80 fixed inset-0 z-50 flex items-center justify-center bg-gray-900"
       onClick={handleBackdropClick}
     >
-      <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden"
+      <div
+        className="mx-4 max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
             Edit Image Position & Scale
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
           >
             <HiX className="h-6 w-6" />
           </button>
         </div>
-        
+
         {/* Body */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="max-h-[70vh] space-y-6 overflow-y-auto p-6">
           {/* Preview Container */}
           <div className="flex justify-center">
             <div
               ref={containerRef}
-              className="relative border-2 border-gray-300 dark:border-gray-600 overflow-hidden cursor-move bg-gray-100 dark:bg-gray-700 rounded"
+              className="relative cursor-move overflow-hidden rounded border-2 border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-700"
               style={{
                 width: imageDimensions.modalDisplayWidth,
                 height: imageDimensions.modalDisplayHeight,
@@ -273,12 +287,11 @@ const ImageEditModal = ({
                 style={{
                   width: imageDimensions.modalImageWidth,
                   height: imageDimensions.modalImageHeight,
-                  left: '50%',
-                  top: '50%',
+                  left: "50%",
+                  top: "50%",
                   transform: `translate(-50%, -50%) translate(${position.x * imageDimensions.modalScale}px, ${position.y * imageDimensions.modalScale}px) scale(${scale})`,
-                  transformOrigin: 'center',
-                  cursor: isDragging ? 'grabbing' : 'grab',
-                  
+                  transformOrigin: "center",
+                  cursor: isDragging ? "grabbing" : "grab",
                 }}
                 onMouseDown={handleMouseDown}
                 draggable={false}
@@ -286,22 +299,34 @@ const ImageEditModal = ({
                   // Image loaded successfully
                 }}
               />
-              
+
               {/* Guidelines - Rule of thirds */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute w-full h-px bg-white bg-opacity-50 shadow-sm" style={{ top: '33.33%' }} />
-                <div className="absolute w-full h-px bg-white bg-opacity-50 shadow-sm" style={{ top: '66.66%' }} />
-                <div className="absolute h-full w-px bg-white bg-opacity-50 shadow-sm" style={{ left: '33.33%' }} />
-                <div className="absolute h-full w-px bg-white bg-opacity-50 shadow-sm" style={{ left: '66.66%' }} />
+              <div className="pointer-events-none absolute inset-0">
+                <div
+                  className="bg-opacity-50 absolute h-px w-full bg-white shadow-sm"
+                  style={{ top: "33.33%" }}
+                />
+                <div
+                  className="bg-opacity-50 absolute h-px w-full bg-white shadow-sm"
+                  style={{ top: "66.66%" }}
+                />
+                <div
+                  className="bg-opacity-50 absolute h-full w-px bg-white shadow-sm"
+                  style={{ left: "33.33%" }}
+                />
+                <div
+                  className="bg-opacity-50 absolute h-full w-px bg-white shadow-sm"
+                  style={{ left: "66.66%" }}
+                />
               </div>
             </div>
           </div>
-          
+
           {/* Controls */}
           <div className="space-y-6">
             {/* Scale Control */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+              <label className="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-200">
                 Scale: {scale.toFixed(2)}x
               </label>
               <input
@@ -311,33 +336,40 @@ const ImageEditModal = ({
                 step="0.1"
                 value={scale}
                 onChange={(e) => setScale(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
+                className="slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
               />
             </div>
-            
+
             {/* Position Display */}
-            <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+            <div className="rounded bg-gray-50 p-3 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-400">
               <div className="flex justify-between">
-                <span>Position: X: {Math.round(position.x)}, Y: {Math.round(position.y)}</span>
+                <span>
+                  Position: X: {Math.round(position.x)}, Y:{" "}
+                  {Math.round(position.y)}
+                </span>
                 <span>Scale: {scale.toFixed(2)}x</span>
               </div>
             </div>
-            
+
             {/* Instructions */}
-            <div className="text-sm text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900 p-4 rounded border-l-4 border-blue-400">
-              <div className="font-medium text-blue-800 dark:text-blue-200 mb-2">How to use:</div>
+            <div className="rounded border-l-4 border-blue-400 bg-blue-50 p-4 text-sm text-gray-500 dark:bg-blue-900 dark:text-gray-400">
+              <div className="mb-2 font-medium text-blue-800 dark:text-blue-200">
+                How to use:
+              </div>
               <ul className="space-y-1 text-blue-700 dark:text-blue-300">
                 <li>• Drag the image to reposition it within the frame</li>
                 <li>• Use the scale slider to resize the image</li>
                 <li>• Grid lines help with rule-of-thirds composition</li>
-                <li>• Changes preview exactly how they'll appear in your PDF</li>
+                <li>
+                  • Changes preview exactly how they'll appear in your PDF
+                </li>
               </ul>
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
-        <div className="flex justify-between items-center p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
           <Button
             color="gray"
             onClick={handleReset}
@@ -346,7 +378,7 @@ const ImageEditModal = ({
             <HiRefresh className="h-4 w-4" />
             Reset to Default
           </Button>
-          
+
           <div className="flex gap-3">
             <Button
               color="gray"

@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { HiPencil, HiArrowLeft, HiChevronLeft, HiChevronRight, HiChevronUp, HiChevronDown } from "react-icons/hi";
+import {
+  HiPencil,
+  HiArrowLeft,
+  HiChevronLeft,
+  HiChevronRight,
+  HiChevronUp,
+  HiChevronDown,
+} from "react-icons/hi";
 import ImageEditModal from "../../modals/ImageEditModal.jsx";
 import { cropImageWithScaleAndPosition } from "../../../utils/imageCropUtils.js";
 
@@ -60,7 +67,7 @@ const FullCoverImage = ({
   const handleMoveRight = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    const currentPage = pages.find(p => p.id === pageId);
+    const currentPage = pages.find((p) => p.id === pageId);
     if (currentPage && index < currentPage.images.length - 1) {
       onSwapImagesInPage(pageId, index, index + 1);
     }
@@ -70,11 +77,11 @@ const FullCoverImage = ({
     try {
       // Create a cropped version of the image based on the edit data
       const originalSrc = image.originalSrc || image.src;
-      
+
       // Use EXACT same dimensions as preview and PDF
       const previewWidth = image.previewWidth ?? 100;
       const previewHeight = image.previewHeight ?? 100;
-      
+
       const croppedImageSrc = await cropImageWithScaleAndPosition(
         originalSrc,
         previewWidth,
@@ -83,10 +90,10 @@ const FullCoverImage = ({
           scale: editData.scale,
           cropOffsetX: editData.cropOffsetX,
           cropOffsetY: editData.cropOffsetY,
-          format: 'image/png', // PNG for lossless quality
-        }
+          format: "image/png", // PNG for lossless quality
+        },
       );
-      
+
       // Update the image with the cropped version and the edit data
       onUpdateImagePosition(pageId, index, {
         ...editData,
@@ -94,7 +101,7 @@ const FullCoverImage = ({
         originalSrc: originalSrc, // Preserve the original for future edits
       });
     } catch (error) {
-      console.error('Failed to crop image:', error);
+      console.error("Failed to crop image:", error);
       // Fallback to just updating the position data
       onUpdateImagePosition(pageId, index, editData);
     }
@@ -109,7 +116,7 @@ const FullCoverImage = ({
     height: image.previewHeight ?? 100,
   };
 
-  const currentPage = pages.find(p => p.id === pageId);
+  const currentPage = pages.find((p) => p.id === pageId);
   const canMoveLeft = index > 0;
   const canMoveRight = currentPage && index < currentPage.images.length - 1;
   const canMoveToPreviousPage = pageIndex > 0;
@@ -117,17 +124,17 @@ const FullCoverImage = ({
 
   // If we have a cropped image, use it directly without transforms
   const imageStyle = {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover', // The cropped image should fill the container exactly
-    cursor: 'pointer',
+    width: "100%",
+    height: "100%",
+    objectFit: "cover", // The cropped image should fill the container exactly
+    cursor: "pointer",
   };
 
   return (
     <>
       <div
         className={`absolute overflow-hidden ${
-          isHovered ? 'border border-gray-300' : ''
+          isHovered ? "border border-gray-300" : ""
         }`}
         style={containerStyle}
         onMouseEnter={() => setIsHovered(true)}
@@ -136,11 +143,11 @@ const FullCoverImage = ({
         <img
           src={image.src}
           alt={image.file?.name || "Image"}
-          className="select-none pointer-events-none"
+          className="pointer-events-none select-none"
           style={imageStyle}
           draggable={false}
         />
-        
+
         {isHovered && (
           <>
             <button
@@ -188,7 +195,7 @@ const FullCoverImage = ({
             </div>
 
             {/* Position adjustment buttons */}
-            <div className="absolute bottom-1 right-1 z-10 flex gap-1">
+            <div className="absolute right-1 bottom-1 z-10 flex gap-1">
               {/* Move left within page */}
               {canMoveLeft && (
                 <button
@@ -216,7 +223,7 @@ const FullCoverImage = ({
           </>
         )}
       </div>
-      
+
       <ImageEditModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

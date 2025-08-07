@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import toast from 'react-hot-toast';
+import { useEffect, useRef, useState, useCallback } from "react";
+import toast from "react-hot-toast";
 
 /**
  * Hook for auto-saving album data every minute
@@ -11,7 +11,7 @@ export const useAutoSave = ({
   enabled = false,
   intervalMs = 60000, // 1 minute
   currentAlbumId = null,
-  currentAlbumName = 'Auto-saved Album'
+  currentAlbumName = "Auto-saved Album",
 }) => {
   const [lastSaveTime, setLastSaveTime] = useState(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -23,11 +23,11 @@ export const useAutoSave = ({
       pages: pages.length,
       availableImages: availableImages.length,
       // Simple hash of page contents for change detection
-      pagesHash: pages.map(page => ({
+      pagesHash: pages.map((page) => ({
         id: page.id,
         imageCount: page.images.length,
-        color: page.color
-      }))
+        color: page.color,
+      })),
     };
 
     const lastData = lastDataRef.current;
@@ -36,14 +36,19 @@ export const useAutoSave = ({
     // Check for changes
     if (currentData.pages !== lastData.pages) return true;
     if (currentData.availableImages !== lastData.availableImages) return true;
-    
+
     // Check page changes
     if (currentData.pagesHash.length !== lastData.pagesHash.length) return true;
-    
+
     for (let i = 0; i < currentData.pagesHash.length; i++) {
       const current = currentData.pagesHash[i];
       const last = lastData.pagesHash[i];
-      if (!last || current.id !== last.id || current.imageCount !== last.imageCount || current.color !== last.color) {
+      if (
+        !last ||
+        current.id !== last.id ||
+        current.imageCount !== last.imageCount ||
+        current.color !== last.color
+      ) {
         return true;
       }
     }
@@ -58,51 +63,60 @@ export const useAutoSave = ({
 
     setIsAutoSaving(true);
     try {
-      const albumName = currentAlbumName || 'Auto-saved Album';
+      const albumName = currentAlbumName || "Auto-saved Album";
       const savedId = await saveCurrentAsAlbum(
         albumName,
-        'Automatically saved work',
-        currentAlbumId
+        "Automatically saved work",
+        currentAlbumId,
       );
 
       if (savedId) {
         setLastSaveTime(Date.now());
-        
+
         // Update last data reference
         lastDataRef.current = {
           pages: pages.length,
           availableImages: availableImages.length,
-          pagesHash: pages.map(page => ({
+          pagesHash: pages.map((page) => ({
             id: page.id,
             imageCount: page.images.length,
-            color: page.color
-          }))
+            color: page.color,
+          })),
         };
 
         // Show subtle success toast
-        toast.success('🤖 Auto-saved your work', {
+        toast.success("🤖 Auto-saved your work", {
           duration: 2000,
           style: {
-            background: '#10b981',
-            color: '#ffffff',
-            fontSize: '13px',
+            background: "#10b981",
+            color: "#ffffff",
+            fontSize: "13px",
           },
-          icon: '💾',
+          icon: "💾",
         });
       }
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      console.error("Auto-save failed:", error);
       // Don't show error toast for auto-save failures to avoid noise
     } finally {
       setIsAutoSaving(false);
     }
-  }, [enabled, isAutoSaving, pages, availableImages, hasChanges, saveCurrentAsAlbum, currentAlbumId, currentAlbumName]);
+  }, [
+    enabled,
+    isAutoSaving,
+    pages,
+    availableImages,
+    hasChanges,
+    saveCurrentAsAlbum,
+    currentAlbumId,
+    currentAlbumName,
+  ]);
 
   // Start auto-save interval
   useEffect(() => {
     if (enabled && pages.length > 0) {
       intervalRef.current = setInterval(performAutoSave, intervalMs);
-      
+
       return () => {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
@@ -144,6 +158,6 @@ export const useAutoSave = ({
     enableAutoSave,
     disableAutoSave,
     manualSave,
-    hasUnsavedChanges: hasChanges()
+    hasUnsavedChanges: hasChanges(),
   };
 };

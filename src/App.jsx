@@ -11,7 +11,6 @@ import { useImageManagement } from "./hooks/useImageManagement";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { DEFAULT_SETTINGS } from "./constants";
 import TabNavigation from "./components/TabNavigation";
-import UploadTab from "./components/UploadTab";
 import DesignStyleTab from "./components/DesignStyleTab";
 import DesignTab from "./components/DesignTab";
 import SettingsTab from "./components/SettingsTab";
@@ -23,7 +22,8 @@ function App() {
   const [activeTab, setActiveTab] = useState("albums");
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [currentAlbumId, setCurrentAlbumId] = useState(null);
-  const [currentAlbumName, setCurrentAlbumName] = useState('');
+  const [currentAlbumName, setCurrentAlbumName] = useState("");
+  const [showNavigation, setShowNavigation] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -37,7 +37,6 @@ function App() {
     pages,
     availableImages,
     isProcessing,
-    progress,
     totalImages,
     handleFiles,
     handleDragEnd,
@@ -75,15 +74,16 @@ function App() {
     enableAutoSave: enableAutoSaveHook,
     disableAutoSave,
     manualSave,
-    hasUnsavedChanges
+    hasUnsavedChanges,
   } = useAutoSave({
     pages,
     availableImages,
     saveCurrentAsAlbum,
-    enabled: totalImages > 0 && (activeTab === 'design' || activeTab === 'settings'), // Only auto-save when working on design
+    enabled:
+      totalImages > 0 && (activeTab === "design" || activeTab === "settings"), // Only auto-save when working on design
     intervalMs: 60000, // 1 minute
     currentAlbumId,
-    currentAlbumName
+    currentAlbumName,
   });
 
   // Validation function to check if settings are valid
@@ -156,27 +156,38 @@ function App() {
     if (album) {
       setCurrentAlbumId(album.id);
       setCurrentAlbumName(album.name);
-      
+
       // Restore the album's settings
       if (album.settings) {
-        setSettings(prevSettings => ({
+        setSettings((prevSettings) => ({
           ...prevSettings,
-          ...album.settings
+          ...album.settings,
         }));
-        toast.success(`🎨 Restored settings: ${album.settings.designStyle === 'full_cover' ? 'Full Cover' : 'Classic'} design`, {
-          duration: 3000,
-          icon: '⚙️'
-        });
+        toast.success(
+          `🎨 Restored settings: ${album.settings.designStyle === "full_cover" ? "Full Cover" : "Classic"} design`,
+          {
+            duration: 3000,
+            icon: "⚙️",
+          },
+        );
       }
-      
-      setActiveTab('design'); // Navigate to design tab after loading
+
+      setActiveTab("design"); // Navigate to design tab after loading
     }
     return album;
   };
 
   // Enhanced save function that updates current album info
-  const handleSaveAlbum = async (albumName, albumDescription = '', existingId = null) => {
-    const savedId = await saveCurrentAsAlbum(albumName, albumDescription, existingId);
+  const handleSaveAlbum = async (
+    albumName,
+    albumDescription = "",
+    existingId = null,
+  ) => {
+    const savedId = await saveCurrentAsAlbum(
+      albumName,
+      albumDescription,
+      existingId,
+    );
     if (savedId) {
       setCurrentAlbumId(savedId);
       setCurrentAlbumName(albumName);
@@ -188,7 +199,7 @@ function App() {
   const handleClearWork = () => {
     clearCurrentWork();
     setCurrentAlbumId(null);
-    setCurrentAlbumName('');
+    setCurrentAlbumName("");
   };
 
   // Redirect to design style when images are uploaded
@@ -211,19 +222,24 @@ function App() {
       <div className="absolute top-4 right-4 z-50">
         <DarkThemeToggle />
       </div>
-      <AppHeader 
+      <AppHeader
         isAutoSaving={isAutoSaving}
         lastSaveTime={lastSaveTime}
         hasUnsavedChanges={hasUnsavedChanges}
         currentAlbumName={currentAlbumName}
+        onGoToAlbums={
+          activeTab !== "albums" ? () => setActiveTab("albums") : null
+        }
       />
 
-      <TabNavigation
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        totalImages={totalImages}
-        hasSettingsErrors={hasSettingsErrors}
-      />
+      {showNavigation && (
+        <TabNavigation
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          totalImages={totalImages}
+          hasSettingsErrors={hasSettingsErrors}
+        />
+      )}
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         {activeTab === "albums" && (
@@ -235,15 +251,9 @@ function App() {
             totalImages={totalImages}
             isProcessing={isProcessing}
             setActiveTab={setActiveTab}
-          />
-        )}
-
-        {activeTab === "upload" && (
-          <UploadTab
-            handleFiles={handleFiles}
-            isProcessing={isProcessing}
-            totalImages={totalImages}
-            setActiveTab={setActiveTab}
+            setShowNavigation={setShowNavigation}
+            setCurrentAlbumName={setCurrentAlbumName}
+            setCurrentAlbumId={setCurrentAlbumId}
           />
         )}
 
@@ -269,7 +279,6 @@ function App() {
             availableImages={availableImages}
             totalImages={totalImages}
             isProcessing={isProcessing}
-            progress={progress}
             onAddPage={addPage}
             onAddPageBetween={addPageBetween}
             onRemovePage={removePage}
@@ -292,6 +301,7 @@ function App() {
             onSaveAlbum={handleSaveAlbum}
             currentAlbumId={currentAlbumId}
             currentAlbumName={currentAlbumName}
+            lastSaveTime={lastSaveTime}
             settings={settings}
           />
         )}
@@ -303,31 +313,31 @@ function App() {
           duration: 4000,
           dismissible: true,
           style: {
-            background: '#363636',
-            color: '#fff',
-            padding: '12px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            maxWidth: '350px',
+            background: "#363636",
+            color: "#fff",
+            padding: "12px",
+            borderRadius: "8px",
+            fontSize: "14px",
+            maxWidth: "350px",
           },
           success: {
             style: {
-              background: '#22c55e',
-              color: '#fff',
+              background: "#22c55e",
+              color: "#fff",
             },
             iconTheme: {
-              primary: '#fff',
-              secondary: '#22c55e',
+              primary: "#fff",
+              secondary: "#22c55e",
             },
           },
           error: {
             style: {
-              background: '#ef4444',
-              color: '#fff',
+              background: "#ef4444",
+              color: "#fff",
             },
             iconTheme: {
-              primary: '#fff',
-              secondary: '#ef4444',
+              primary: "#fff",
+              secondary: "#ef4444",
             },
           },
         }}

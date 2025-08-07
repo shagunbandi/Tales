@@ -69,7 +69,12 @@ const pageLayoutIndices = new Map();
  * @param {number} direction - Navigation direction: 1 for next, -1 for previous
  * @returns {Promise<Array>} Array of images with next/previous layout structure
  */
-export async function cycleLayoutStructure(images, settings, pageId, direction = 1) {
+export async function cycleLayoutStructure(
+  images,
+  settings,
+  pageId,
+  direction = 1,
+) {
   if (!images || images.length === 0) {
     return [];
   }
@@ -88,7 +93,6 @@ export async function cycleLayoutStructure(images, settings, pageId, direction =
     maxImagesPerRow,
   );
 
-
   if (validCombinations.length === 0) {
     // Fallback to original arrangement if no valid combinations found
     const { width: previewWidth, height: previewHeight } =
@@ -103,10 +107,12 @@ export async function cycleLayoutStructure(images, settings, pageId, direction =
 
   // Get or initialize the current layout index for this page
   let currentIndex = pageLayoutIndices.get(pageId) || 0;
-  
+
   // Move to next/previous layout with circular navigation
-  currentIndex = (currentIndex + direction + validCombinations.length) % validCombinations.length;
-  
+  currentIndex =
+    (currentIndex + direction + validCombinations.length) %
+    validCombinations.length;
+
   // Update the stored index
   pageLayoutIndices.set(pageId, currentIndex);
 
@@ -130,7 +136,11 @@ export async function cycleLayoutStructure(images, settings, pageId, direction =
  * Legacy function - now calls cycleLayoutStructure for next layout
  * @deprecated Use cycleLayoutStructure instead
  */
-export async function randomizeLayoutStructure(images, settings, pageId = 'default') {
+export async function randomizeLayoutStructure(
+  images,
+  settings,
+  pageId = "default",
+) {
   return await cycleLayoutStructure(images, settings, pageId, 1);
 }
 
@@ -150,7 +160,6 @@ async function arrangeImagesWithForcedLayout(
   previewHeight,
   settings,
 ) {
-
   if (!images || images.length === 0) {
     return [];
   }
@@ -249,7 +258,10 @@ function generateRowCombinations(totalImages, numRows, maxImagesPerRow) {
     // Ensure no empty rows: each remaining row must have at least 1 image
     const remainingRows = numRows - rowIndex;
     const minImagesThisRow = remainingImages > 0 ? 1 : 0;
-    const maxImagesThisRow = Math.min(maxImagesPerRow, remainingImages - (remainingRows - 1));
+    const maxImagesThisRow = Math.min(
+      maxImagesPerRow,
+      remainingImages - (remainingRows - 1),
+    );
 
     for (
       let imagesInRow = minImagesThisRow;
