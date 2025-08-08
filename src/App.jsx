@@ -248,72 +248,81 @@ function App() {
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         {activeTab === "albums" && (
-          <AlbumsTab
-            saveCurrentAsAlbum={handleSaveAlbum}
-            loadAlbumById={handleLoadAlbum}
-            clearCurrentWork={handleClearWork}
-            getCurrentAlbumData={getCurrentAlbumData}
-            totalImages={totalImages}
-            isProcessing={isProcessing}
-            setActiveTab={setActiveTab}
-            setShowNavigation={setShowNavigation}
-            setCurrentAlbumName={setCurrentAlbumName}
-            setCurrentAlbumId={setCurrentAlbumId}
-          />
+          <div data-testid="albums-tab">
+            <AlbumsTab
+              saveCurrentAsAlbum={handleSaveAlbum}
+              loadAlbumById={handleLoadAlbum}
+              clearCurrentWork={handleClearWork}
+              getCurrentAlbumData={getCurrentAlbumData}
+              totalImages={totalImages}
+              isProcessing={isProcessing}
+              setActiveTab={setActiveTab}
+              setShowNavigation={setShowNavigation}
+              setCurrentAlbumName={setCurrentAlbumName}
+              setCurrentAlbumId={setCurrentAlbumId}
+            />
+          </div>
         )}
 
         {activeTab === "designStyle" && (
-          <DesignStyleTab
-            settings={settings}
-            onSettingsChange={setSettings}
-            onNext={handleNextToSettings}
-          />
+          <div data-testid="design-style-tab">
+            <DesignStyleTab
+              settings={settings}
+              onSettingsChange={setSettings}
+              onNext={handleNextToSettings}
+            />
+          </div>
         )}
 
         {activeTab === "settings" && (
-          <SettingsTab
-            settings={settings}
-            onSettingsChange={setSettings}
-            onNext={handleNextToDesign}
-          />
+          <div data-testid="settings-tab">
+            <SettingsTab
+              settings={settings}
+              onSettingsChange={setSettings}
+              onNext={handleNextToDesign}
+            />
+          </div>
         )}
 
         {activeTab === "design" && (
-          <DesignTab
-            pages={pages}
-            availableImages={availableImages}
-            totalImages={totalImages}
-            isProcessing={isProcessing}
-            onAddPage={addPage}
-            onAddPageBetween={addPageBetween}
-            onRemovePage={removePage}
-            onChangePageColor={changePageColor}
-            onRemoveAvailableImage={removeAvailableImage}
-            onAddMoreImages={addMoreImages}
-            onGeneratePDF={handleGeneratePDF}
-            onAutoArrange={autoArrangeImagesToPages}
-            onMoveImageBack={moveImageBack}
-            onMoveAllImagesBack={moveAllImagesBack}
-            onAutoArrangePage={autoArrangePage}
-            onRandomizePage={randomizePage}
-            onRandomizeLayout={randomizeLayout}
-            onNextLayout={nextLayout}
-            onPreviousLayout={previousLayout}
-            onUpdateImagePosition={updateImagePosition}
-            onMoveImageToPreviousPage={moveImageToPreviousPage}
-            onMoveImageToNextPage={moveImageToNextPage}
-            onSwapImagesInPage={swapImagesInPage}
-            onSaveAlbum={handleSaveAlbum}
-            currentAlbumId={currentAlbumId}
-            currentAlbumName={currentAlbumName}
-            lastSaveTime={lastSaveTime}
-            settings={settings}
-          />
+          <div data-testid="design-tab">
+            <DesignTab
+              pages={pages}
+              availableImages={availableImages}
+              totalImages={totalImages}
+              isProcessing={isProcessing}
+              onAddPage={addPage}
+              onAddPageBetween={addPageBetween}
+              onRemovePage={removePage}
+              onChangePageColor={changePageColor}
+              onRemoveAvailableImage={removeAvailableImage}
+              onAddMoreImages={addMoreImages}
+              onGeneratePDF={handleGeneratePDF}
+              onAutoArrange={autoArrangeImagesToPages}
+              onMoveImageBack={moveImageBack}
+              onMoveAllImagesBack={moveAllImagesBack}
+              onAutoArrangePage={autoArrangePage}
+              onRandomizePage={randomizePage}
+              onRandomizeLayout={randomizeLayout}
+              onNextLayout={nextLayout}
+              onPreviousLayout={previousLayout}
+              onUpdateImagePosition={updateImagePosition}
+              onMoveImageToPreviousPage={moveImageToPreviousPage}
+              onMoveImageToNextPage={moveImageToNextPage}
+              onSwapImagesInPage={swapImagesInPage}
+              onSaveAlbum={handleSaveAlbum}
+              currentAlbumId={currentAlbumId}
+              currentAlbumName={currentAlbumName}
+              lastSaveTime={lastSaveTime}
+              settings={settings}
+            />
+          </div>
         )}
       </DndContext>
 
       <Toaster
         position="bottom-right"
+        containerStyle={{ "data-testid": "toast-container" }}
         toastOptions={{
           duration: 4000,
           dismissible: true,

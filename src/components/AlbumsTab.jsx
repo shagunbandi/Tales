@@ -269,6 +269,7 @@ const AlbumsTab = ({
               onClick={() => setShowCreateModal(true)}
               className="w-full bg-blue-600 hover:bg-blue-700"
               size="sm"
+              data-testid="create-new-album-button"
             >
               <HiPlus className="mr-2 h-4 w-4" />
               Create Album
@@ -281,6 +282,7 @@ const AlbumsTab = ({
           <Card
             key={album.id}
             className="group transition-shadow hover:shadow-lg"
+            data-testid={`album-card-${album.id}`}
           >
             {/* Thumbnail */}
             {album.thumbnail ? (
@@ -327,6 +329,7 @@ const AlbumsTab = ({
                   size="xs"
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                   disabled={isLoading || isProcessing}
+                  data-testid={`load-album-${album.id}`}
                 >
                   Load
                 </Button>
@@ -338,6 +341,7 @@ const AlbumsTab = ({
                   size="xs"
                   className="border-red-500 bg-red-500 text-white hover:border-red-600 hover:bg-red-600 dark:border-red-600 dark:bg-red-600 dark:hover:border-red-700 dark:hover:bg-red-700"
                   disabled={isLoading || isProcessing}
+                  data-testid={`delete-album-${album.id}`}
                 >
                   <HiTrash className="h-4 w-4" />
                 </Button>
@@ -353,6 +357,7 @@ const AlbumsTab = ({
           show={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           size="md"
+          data-testid="create-album-modal"
         >
           <div className="p-6">
             <div className="mb-4 flex items-center">
@@ -373,6 +378,7 @@ const AlbumsTab = ({
                   onChange={(e) => setAlbumName(e.target.value)}
                   className="mt-1"
                   autoFocus
+                  data-testid="album-name-input"
                 />
               </div>
               <div>
@@ -400,11 +406,16 @@ const AlbumsTab = ({
                 onClick={handleCreateNewAlbum}
                 disabled={!albumName.trim()}
                 className="bg-blue-600 hover:bg-blue-700"
+                data-testid="create-album-confirm"
               >
                 <HiPlus className="mr-2 h-4 w-4" />
                 Create & Continue
               </Button>
-              <Button color="gray" onClick={() => setShowCreateModal(false)}>
+              <Button 
+                color="gray" 
+                onClick={() => setShowCreateModal(false)}
+                data-testid="create-album-cancel"
+              >
                 Cancel
               </Button>
             </div>

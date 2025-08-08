@@ -23,14 +23,14 @@ const PagesList = ({
   isProcessing,
 }) => {
   return (
-    <div className="min-w-0 space-y-6">
+    <div className="min-w-0 space-y-6" data-testid="pages-list">
       <AddPageSection
         onAddPage={() => onAddPageBetween("start")}
         title="Add page at the beginning"
       />
 
       {pages.length === 0 ? (
-        <div className="py-12 text-center">
+        <div className="py-12 text-center" data-testid="no-pages-message">
           <p className="text-gray-500 dark:text-gray-400">
             No pages yet. Add a page to get started!
           </p>

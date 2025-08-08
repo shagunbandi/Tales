@@ -64,7 +64,7 @@ const PagePreview = ({
   }, [previewDimensions.width]);
 
   return (
-    <div className="mb-6 min-w-0">
+    <div className="mb-6 min-w-0" data-testid={`page-preview-${pageIndex}`}>
       <div className="mb-4 space-y-2">
         {/* Page info line */}
         <div className="flex items-center justify-between">

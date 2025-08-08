@@ -27,13 +27,13 @@ const AvailableImages = ({
             {availableImages.length} of {totalImages} images
           </p>
         </div>
-        <Button size="sm" color="blue" onClick={onAddMoreImages}>
+        <Button size="sm" color="blue" onClick={onAddMoreImages} data-testid="add-more-images-button">
           <HiPlus className="mr-1 h-4 w-4" />
           Add More
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50">
+      <div className="min-h-0 flex-1 border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50" data-testid="available-images">
         <div ref={setDroppableRef} className="h-full overflow-y-auto">
           <div className="grid grid-cols-2 gap-3">
             {availableImages.map((image, index) => (
