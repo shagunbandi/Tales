@@ -22,6 +22,7 @@ const PagesList = ({
   onSwapImagesInPage,
   settings,
   isProcessing,
+  isPageProcessing,
 }) => {
   return (
     <div className="min-w-0 space-y-6" data-testid="pages-list">
@@ -62,6 +63,7 @@ const PagesList = ({
               isLastPage={pageIndex === pages.length - 1}
               settings={settings}
               isProcessing={isProcessing}
+              isPageBusy={isPageProcessing ? isPageProcessing(page.id) : false}
             />
             {pageIndex < pages.length - 1 && (
               <div data-testid={`add-page-after-${pageIndex}`}>

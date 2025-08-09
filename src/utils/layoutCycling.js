@@ -13,6 +13,62 @@ import { getLayoutOptions, convertToFullCoverFormat } from "./hardcodedLayouts.j
 // Store the current layout index for each page
 const pageLayoutState = new Map();
 
+// Cache for valid layout combinations keyed by totalImages/maxImagesPerRow/maxNumberOfRows
+const validLayoutsCache = new Map();
+
+function getCachedValidLayouts(totalImages, maxImagesPerRow, maxNumberOfRows) {
+  const key = `${totalImages}|${maxImagesPerRow}|${maxNumberOfRows}`;
+  if (validLayoutsCache.has(key)) {
+    return validLayoutsCache.get(key);
+  }
+  const layouts = generateAllValidLayouts(
+    totalImages,
+    maxImagesPerRow,
+    maxNumberOfRows,
+  );
+  validLayoutsCache.set(key, layouts);
+  return layouts;
+}
+
+function ensureFullCoverState(pageId, images, settings) {
+  const fullCoverPageId = `fullcover_${pageId}`.startsWith("fullcover_")
+    ? pageId
+    : `fullcover_${pageId}`;
+
+  if (pageLayoutState.has(fullCoverPageId)) {
+    return pageLayoutState.get(fullCoverPageId);
+  }
+
+  const paperSize = settings?.pageSize?.toUpperCase() || "A4";
+  const imageCount = images?.length || 0;
+
+  const state = {
+    currentIndex: 0,
+    layouts: [],
+  };
+
+  if (imageCount > 0) {
+    // GRID options from hardcoded layouts
+    const hardcodedLayouts = getLayoutOptions(paperSize, imageCount) || [];
+    for (const layout of hardcodedLayouts) {
+      state.layouts.push({ type: FULL_COVER_LAYOUT_TYPES.GRID, layout });
+    }
+
+    // FLEXIBLE options from count helper
+    const flexibleCount = getFlexibleLayoutCount(imageCount);
+    for (let i = 0; i < flexibleCount; i++) {
+      state.layouts.push({ type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE, layoutIndex: i });
+    }
+  }
+
+  pageLayoutState.set(fullCoverPageId, state);
+  return state;
+}
+
+function isFullCoverStateId(id) {
+  return typeof id === "string" && id.startsWith("fullcover_");
+}
+
 /**
  * Store the currently selected hardcoded layout for a full cover page
  * This enables consistent reapplication when images are moved between pages
@@ -163,19 +219,55 @@ export async function previousPageLayout(images, settings, pageId) {
  * @returns {Object} Current layout info with index and total count
  */
 export function getCurrentLayoutInfo(pageId, images, settings) {
+  // Support calls with only pageId (tests rely on this)
+  if (images === undefined && settings === undefined) {
+    // If pageId refers to fullcover state, read from state directly
+    if (isFullCoverStateId(pageId)) {
+      const state = pageLayoutState.get(pageId);
+      if (!state || !state.layouts || state.layouts.length === 0) {
+        return null;
+      }
+      const current = state.layouts[state.currentIndex] || null;
+      return {
+        currentIndex: (state.currentIndex ?? 0) + 1,
+        totalLayouts: state.layouts.length,
+        currentLayout: current,
+      };
+    }
+    // Classic path without images/settings: no info
+    return null;
+  }
+
   if (!images || images.length === 0) {
     return { currentIndex: 0, totalLayouts: 0 };
   }
 
   // Check if we're in full cover mode
   if (settings?.designStyle === "full_cover") {
-    return getCurrentFullCoverLayoutInfo(pageId, images, settings);
+    // Ensure state and return info derived from it combined with applied detection
+    const fullCoverPageId = `fullcover_${pageId}`;
+    const state = ensureFullCoverState(fullCoverPageId, images, settings);
+
+    if (!state.layouts || state.layouts.length === 0) {
+      return { currentIndex: 0, totalLayouts: 0, currentLayout: null };
+    }
+
+    // Attempt to detect the current applied hardcoded layout name
+    const info = getCurrentFullCoverLayoutInfo(pageId, images, settings);
+    // Merge with state info so consumers get current layout object/type
+    const current = state.layouts[state.currentIndex] || null;
+    return {
+      currentIndex: Math.max(1, info.currentIndex || state.currentIndex + 1),
+      totalLayouts: Math.max(info.totalLayouts || 0, state.layouts.length),
+      currentLayout: current,
+      currentLayoutName: info.currentLayoutName || null,
+    };
   }
 
   // Classic layout
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
   const maxNumberOfRows = settings?.maxNumberOfRows || 4;
-  const availableLayouts = generateAllValidLayouts(
+  const availableLayouts = getCachedValidLayouts(
     images.length,
     maxImagesPerRow,
     maxNumberOfRows,
@@ -213,7 +305,7 @@ async function cyclePageLayout(images, settings, pageId, direction) {
   // Classic layout cycling (original implementation)
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
   const maxNumberOfRows = settings?.maxNumberOfRows || 4;
-  const availableLayouts = generateAllValidLayouts(
+  const availableLayouts = getCachedValidLayouts(
     images.length,
     maxImagesPerRow,
     maxNumberOfRows,
@@ -397,11 +489,49 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
  * @returns {Promise<Array>} Arranged images with new layout
  */
 async function cycleFullCoverLayout(images, settings, pageId, direction) {
-  // Full cover mode now uses hardcoded layouts exclusively via modal selection
-  // Layout cycling (previous/next) is disabled for full cover mode
-  // This function should not be called, but return images as-is for safety
-  console.warn("Layout cycling is disabled for full cover mode. Use the layout selection modal instead.");
-  return images;
+  const fullCoverPageId = `fullcover_${pageId}`;
+  const state = ensureFullCoverState(fullCoverPageId, images, settings);
+
+  if (!state.layouts || state.layouts.length === 0) {
+    return images;
+  }
+
+  state.currentIndex =
+    (state.currentIndex + direction + state.layouts.length) %
+    state.layouts.length;
+
+  const selected = state.layouts[state.currentIndex];
+  const { width: previewWidth, height: previewHeight } =
+    getPreviewDimensions(settings);
+
+  try {
+    if (selected.type === FULL_COVER_LAYOUT_TYPES.GRID && selected.layout) {
+      return convertToFullCoverFormat(
+        selected.layout,
+        images,
+        previewWidth,
+        previewHeight,
+      );
+    }
+
+    // FLEXIBLE path delegates to arrangeImagesFullCover with a forced variation
+    const layoutSettings = {
+      ...settings,
+      _fullCoverLayoutType: FULL_COVER_LAYOUT_TYPES.FLEXIBLE,
+      _forcedFlexibleLayout: selected.layoutIndex ?? 0,
+    };
+
+    const { arrangeImagesFullCover } = await import("./fullCoverLayoutUtils.js");
+    return await arrangeImagesFullCover(
+      images,
+      previewWidth,
+      previewHeight,
+      layoutSettings,
+    );
+  } catch (error) {
+    console.error("Error cycling full cover layout:", error);
+    return images;
+  }
 }
 
 /**
@@ -471,7 +601,7 @@ function getCurrentFullCoverLayoutInfo(pageId, images, settings) {
   const hardcodedLayouts = getLayoutOptions(paperSize, images.length);
   
   if (hardcodedLayouts.length === 0) {
-    return { currentIndex: 0, totalLayouts: 0, currentLayoutName: null };
+    return { currentIndex: 0, totalLayouts: 0, currentLayoutName: null, currentLayout: null };
   }
 
   // Try to detect which layout is currently applied by checking image positions
@@ -496,9 +626,15 @@ function getCurrentFullCoverLayoutInfo(pageId, images, settings) {
     currentLayoutIndex = 1;
   }
 
+  // Provide current layout object/type from state if available
+  const fullCoverPageId = `fullcover_${pageId}`;
+  const state = pageLayoutState.get(fullCoverPageId);
+  const current = state?.layouts?.[state.currentIndex] || null;
+
   return {
     currentIndex: currentLayoutIndex,
     totalLayouts: hardcodedLayouts.length,
     currentLayoutName,
+    currentLayout: current,
   };
 }

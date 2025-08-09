@@ -38,6 +38,7 @@ const PagePreview = ({
   onSwapImagesInPage,
   settings,
   isProcessing,
+  isPageBusy,
 }) => {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: page.id,
@@ -151,26 +152,26 @@ const PagePreview = ({
                 size="xs"
                 color="blue"
                 onClick={() => onRandomizePage(page.id)}
-                disabled={isProcessing}
+                disabled={isPageBusy}
                 className="flex items-center gap-1"
                 title="Shuffle image positions within same layout"
                 data-testid={`shuffle-images-${pageIndex}`}
               >
                 <HiRefresh className="h-3 w-3" />
-                {isProcessing ? "Shuffling..." : "Shuffle Images"}
+                {isPageBusy ? "Shuffling..." : "Shuffle Images"}
               </Button>
               {hasHardcodedLayoutsForPage ? (
                 <Button
                   size="xs"
                   color="purple"
                   onClick={handleOpenLayoutModal}
-                  disabled={isProcessing}
+                  disabled={isPageBusy}
                   className="flex items-center gap-1"
                   title="Choose from available layout templates"
                   data-testid={`choose-layout-${pageIndex}`}
                 >
                   <HiViewGrid className="h-3 w-3" />
-                  {isProcessing ? "Processing..." : "Choose Layout"}
+                  {isPageBusy ? "Processing..." : "Choose Layout"}
                 </Button>
               ) : (
                 <>
@@ -178,25 +179,25 @@ const PagePreview = ({
                     size="xs"
                     color="purple"
                     onClick={() => onPreviousLayout(page.id)}
-                    disabled={isProcessing}
+                    disabled={isPageBusy}
                     className="flex items-center gap-1"
                     title="Switch to previous layout structure"
                     data-testid={`prev-layout-${pageIndex}`}
                   >
                     <HiChevronLeft className="h-3 w-3" />
-                    {isProcessing ? "Switching..." : "Previous Layout"}
+                    {isPageBusy ? "Switching..." : "Previous Layout"}
                   </Button>
                   <Button
                     size="xs"
                     color="purple"
                     onClick={() => onNextLayout(page.id)}
-                    disabled={isProcessing}
+                    disabled={isPageBusy}
                     className="flex items-center gap-1"
                     title="Switch to next layout structure"
                     data-testid={`next-layout-${pageIndex}`}
                   >
                     <HiChevronRight className="h-3 w-3" />
-                    {isProcessing ? "Switching..." : "Next Layout"}
+                    {isPageBusy ? "Switching..." : "Next Layout"}
                   </Button>
                 </>
               )}

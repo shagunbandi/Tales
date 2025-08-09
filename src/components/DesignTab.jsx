@@ -34,8 +34,9 @@ const DesignTab = ({
   currentAlbumId,
   currentAlbumName,
   lastSaveTime,
-  settings,
-}) => {
+     settings,
+   isPageProcessing,
+ }) => {
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
@@ -88,6 +89,7 @@ const DesignTab = ({
               onSwapImagesInPage={onSwapImagesInPage}
               settings={settings}
               isProcessing={isProcessing}
+              isPageProcessing={isPageProcessing}
             />
 
             <GeneratePDFButton

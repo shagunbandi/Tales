@@ -68,6 +68,7 @@ function App() {
     getCurrentAlbumData,
     loadAlbumData,
     enableAutoSave,
+    isPageProcessing,
   } = useImageManagement(settings);
 
   // Auto-save functionality
@@ -342,6 +343,7 @@ function App() {
               currentAlbumName={currentAlbumName}
               lastSaveTime={lastSaveTime}
               settings={settings}
+              isPageProcessing={isPageProcessing}
             />
           </div>
         )}

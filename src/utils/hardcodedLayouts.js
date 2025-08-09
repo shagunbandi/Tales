@@ -1669,8 +1669,8 @@ function filterValidLayouts(layouts) {
   return filtered;
 }
 
-// Apply filtering to remove invalid layouts
-export const HARDCODED_LAYOUTS = filterValidLayouts(HARDCODED_LAYOUTS_RAW);
+// Use pre-validated hardcoded layouts (no runtime filtering)
+export const HARDCODED_LAYOUTS = HARDCODED_LAYOUTS_RAW;
 
 /**
  * Get current layout ID from positioned images (reverse engineering)

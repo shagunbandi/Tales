@@ -353,18 +353,32 @@ export const useImageManagement = (settings = null) => {
           (a, b) => a.originalIndex - b.originalIndex,
         );
 
+        // Merge sortedImages back into availableImages in a single pass by originalIndex
         setAvailableImages((current) => {
-          let newAvailable = [...current];
+          const result = [];
+          let i = 0; // pointer in current
+          let j = 0; // pointer in sortedImages
 
-          sortedImages.forEach((image) => {
-            const insertIndex = findCorrectInsertPosition(
-              newAvailable,
-              image.originalIndex,
-            );
-            newAvailable.splice(insertIndex, 0, image);
-          });
+          while (i < current.length && j < sortedImages.length) {
+            if ((current[i]?.originalIndex ?? Infinity) <= (sortedImages[j]?.originalIndex ?? Infinity)) {
+              result.push(current[i]);
+              i++;
+            } else {
+              result.push(sortedImages[j]);
+              j++;
+            }
+          }
 
-          return newAvailable;
+          while (i < current.length) {
+            result.push(current[i]);
+            i++;
+          }
+          while (j < sortedImages.length) {
+            result.push(sortedImages[j]);
+            j++;
+          }
+
+          return result;
         });
       }
 
@@ -667,46 +681,32 @@ export const useImageManagement = (settings = null) => {
     [pages, settings, isProcessing],
   );
 
+  // Track per-page processing state for layout changes to avoid global re-renders
+  const [pageProcessing, setPageProcessing] = useState(new Set());
+
+  const markPageProcessing = useCallback((pageId, processing) => {
+    setPageProcessing((prev) => {
+      const next = new Set(prev);
+      if (processing) {
+        next.add(pageId);
+      } else {
+        next.delete(pageId);
+      }
+      return next;
+    });
+  }, []);
+
   const nextLayout = useCallback(
     async (pageId) => {
       const targetPage = pages.find((page) => page.id === pageId);
       if (!targetPage || targetPage.images.length === 0) return;
 
-      // Prevent multiple simultaneous operations
-      if (isProcessing) return;
+      // Prevent multiple simultaneous operations for this page only
+      if (pageProcessing.has(pageId)) return;
 
-      setIsProcessing(true);
-
-      const progressElement = React.createElement(ProgressToast, {
-        current: 0,
-        total: 100,
-        message: "Switching to next layout...",
-        currentFileName: "",
-        showBlocking: true,
-      });
-
-      toast.custom(progressElement, {
-        id: "next-layout-progress",
-        duration: 0,
-      });
+      markPageProcessing(pageId, true);
 
       try {
-        // Show intermediate progress
-        await new Promise(resolve => setTimeout(resolve, 200));
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: 50,
-            total: 100,
-            message: "Calculating new layout...",
-            currentFileName: "",
-            showBlocking: true,
-          }),
-          {
-            id: "next-layout-progress",
-            duration: 0,
-          },
-        );
-
         const newLayoutImages = await nextPageLayout(
           targetPage.images,
           settings,
@@ -718,18 +718,13 @@ export const useImageManagement = (settings = null) => {
             page.id === pageId ? { ...page, images: newLayoutImages } : page,
           ),
         );
-
-        toast.dismiss("next-layout-progress");
-        toast.success("Switched to next layout!");
       } catch (error) {
         console.error("Error in nextLayout:", error);
-        toast.dismiss("next-layout-progress");
-        toast.error("Failed to switch layout");
       } finally {
-        setIsProcessing(false);
+        markPageProcessing(pageId, false);
       }
     },
-    [pages, settings, isProcessing],
+    [pages, settings, pageProcessing, markPageProcessing],
   );
 
   const previousLayout = useCallback(
@@ -737,41 +732,11 @@ export const useImageManagement = (settings = null) => {
       const targetPage = pages.find((page) => page.id === pageId);
       if (!targetPage || targetPage.images.length === 0) return;
 
-      // Prevent multiple simultaneous operations
-      if (isProcessing) return;
+      if (pageProcessing.has(pageId)) return;
 
-      setIsProcessing(true);
-
-      const progressElement = React.createElement(ProgressToast, {
-        current: 0,
-        total: 100,
-        message: "Switching to previous layout...",
-        currentFileName: "",
-        showBlocking: true,
-      });
-
-      toast.custom(progressElement, {
-        id: "prev-layout-progress",
-        duration: 0,
-      });
+      markPageProcessing(pageId, true);
 
       try {
-        // Show intermediate progress
-        await new Promise(resolve => setTimeout(resolve, 200));
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: 50,
-            total: 100,
-            message: "Calculating new layout...",
-            currentFileName: "",
-            showBlocking: true,
-          }),
-          {
-            id: "prev-layout-progress",
-            duration: 0,
-          },
-        );
-
         const newLayoutImages = await previousPageLayout(
           targetPage.images,
           settings,
@@ -783,18 +748,13 @@ export const useImageManagement = (settings = null) => {
             page.id === pageId ? { ...page, images: newLayoutImages } : page,
           ),
         );
-
-        toast.dismiss("prev-layout-progress");
-        toast.success("Switched to previous layout!");
       } catch (error) {
         console.error("Error in previousLayout:", error);
-        toast.dismiss("prev-layout-progress");
-        toast.error("Failed to switch layout");
       } finally {
-        setIsProcessing(false);
+        markPageProcessing(pageId, false);
       }
     },
-    [pages, settings, isProcessing],
+    [pages, settings, pageProcessing, markPageProcessing],
   );
 
   const selectLayout = useCallback(
@@ -802,41 +762,11 @@ export const useImageManagement = (settings = null) => {
       const targetPage = pages.find((page) => page.id === pageId);
       if (!targetPage || targetPage.images.length === 0 || !selectedLayout) return;
 
-      // Prevent multiple simultaneous operations
-      if (isProcessing) return;
+      if (pageProcessing.has(pageId)) return;
 
-      setIsProcessing(true);
-
-      const progressElement = React.createElement(ProgressToast, {
-        current: 0,
-        total: 100,
-        message: "Applying selected layout...",
-        currentFileName: "",
-        showBlocking: true,
-      });
-
-      toast.custom(progressElement, {
-        id: "select-layout-progress",
-        duration: 0,
-      });
+      markPageProcessing(pageId, true);
 
       try {
-        // Show intermediate progress
-        await new Promise(resolve => setTimeout(resolve, 200));
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: 50,
-            total: 100,
-            message: "Positioning images...",
-            currentFileName: "",
-            showBlocking: true,
-          }),
-          {
-            id: "select-layout-progress",
-            duration: 0,
-          },
-        );
-
         // Get preview dimensions
         const previewDimensions = getPreviewDimensions(settings);
 
@@ -860,18 +790,13 @@ export const useImageManagement = (settings = null) => {
             page.id === pageId ? { ...page, images: newLayoutImages } : page,
           ),
         );
-
-        toast.dismiss("select-layout-progress");
-        toast.success(`Applied "${selectedLayout.name}" layout!`);
       } catch (error) {
         console.error("Error in selectLayout:", error);
-        toast.dismiss("select-layout-progress");
-        toast.error("Failed to apply layout");
       } finally {
-        setIsProcessing(false);
+        markPageProcessing(pageId, false);
       }
     },
-    [pages, settings, isProcessing],
+    [pages, settings, pageProcessing, markPageProcessing],
   );
 
   // Legacy function - now calls nextLayout for backward compatibility
@@ -1413,5 +1338,8 @@ export const useImageManagement = (settings = null) => {
     getCurrentAlbumData,
     loadAlbumData,
     enableAutoSave,
+
+    // Per-page processing helper
+    isPageProcessing: (pageId) => pageProcessing.has(pageId),
   };
 };
