@@ -1,9 +1,10 @@
 /**
  * Hardcoded layout configurations for full page layouts
  * Supports grid-based layouts for different numbers of images across different paper sizes
+ * NOTE: Layouts with overlapping positions or excessive empty spaces have been filtered out
  */
 
-export const HARDCODED_LAYOUTS = {
+const HARDCODED_LAYOUTS_RAW = {
   // A4 layouts (297mm x 210mm)
   A4: {
     // 1 image - single large image covering full page
@@ -1613,6 +1614,63 @@ export function applyHardcodedLayout(layout, images, pageWidth, pageHeight) {
 
   return convertToFullCoverFormat(layout, images, pageWidth, pageHeight);
 }
+
+/**
+ * Validate and filter layouts to remove invalid ones
+ */
+function validateLayout(layout) {
+  const { grid, positions } = layout;
+  const totalGridSpaces = grid.rows * grid.cols;
+  
+  // Check for overlapping positions
+  const occupiedCells = new Map();
+  let hasOverlaps = false;
+  
+  for (const pos of positions) {
+    for (let r = pos.row; r < pos.row + pos.rowSpan; r++) {
+      for (let c = pos.col; c < pos.col + pos.colSpan; c++) {
+        const cellKey = `${r}-${c}`;
+        if (occupiedCells.has(cellKey)) {
+          hasOverlaps = true;
+          break;
+        }
+        occupiedCells.set(cellKey, pos.imageIndex);
+      }
+      if (hasOverlaps) break;
+    }
+    if (hasOverlaps) break;
+  }
+  
+  // Check efficiency (must use at least 70% of grid space)
+  const usedSpaces = occupiedCells.size;
+  const efficiencyRatio = usedSpaces / totalGridSpaces;
+  const isEfficient = efficiencyRatio >= 0.7;
+  
+  return !hasOverlaps && isEfficient;
+}
+
+/**
+ * Filter out invalid layouts
+ */
+function filterValidLayouts(layouts) {
+  const filtered = {};
+  
+  Object.keys(layouts).forEach(paperSize => {
+    filtered[paperSize] = {};
+    
+    Object.keys(layouts[paperSize]).forEach(imageCount => {
+      const validLayouts = layouts[paperSize][imageCount].filter(validateLayout);
+      if (validLayouts.length > 0) {
+        filtered[paperSize][imageCount] = validLayouts;
+      }
+    });
+  });
+  
+  return filtered;
+}
+
+// Apply filtering to remove invalid layouts
+export const HARDCODED_LAYOUTS = filterValidLayouts(HARDCODED_LAYOUTS_RAW);
 
 /**
  * Get current layout ID from positioned images (reverse engineering)

@@ -550,6 +550,7 @@ export const useImageManagement = (settings = null) => {
         total: 100,
         message: "Arranging page layout...",
         currentFileName: "",
+        showBlocking: true,
       });
 
       toast.custom(progressElement, {
@@ -559,20 +560,20 @@ export const useImageManagement = (settings = null) => {
 
       try {
         // Show intermediate progress
-        const progressTimeout = setTimeout(() => {
-          toast.custom(
-            React.createElement(ProgressToast, {
-              current: 50,
-              total: 100,
-              message: "Calculating optimal positions...",
-              currentFileName: "",
-            }),
-            {
-              id: "arrange-progress",
-              duration: 0,
-            },
-          );
-        }, 100);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 50,
+            total: 100,
+            message: "Calculating optimal positions...",
+            currentFileName: "",
+            showBlocking: true,
+          }),
+          {
+            id: "arrange-progress",
+            duration: 0,
+          },
+        );
 
         const { width: previewWidth, height: previewHeight } =
           getPreviewDimensions(settings);
@@ -582,9 +583,6 @@ export const useImageManagement = (settings = null) => {
           previewHeight,
           settings,
         );
-
-        // Clear the timeout in case it hasn't fired yet
-        clearTimeout(progressTimeout);
 
         setPages((currentPages) =>
           currentPages.map((page) =>
@@ -620,6 +618,7 @@ export const useImageManagement = (settings = null) => {
         total: 100,
         message: "Shuffling images...",
         currentFileName: "",
+        showBlocking: true,
       });
 
       toast.custom(progressElement, {
@@ -629,28 +628,25 @@ export const useImageManagement = (settings = null) => {
 
       try {
         // Show intermediate progress
-        const progressTimeout = setTimeout(() => {
-          toast.custom(
-            React.createElement(ProgressToast, {
-              current: 50,
-              total: 100,
-              message: "Reorganizing layout...",
-              currentFileName: "",
-            }),
-            {
-              id: "shuffle-progress",
-              duration: 0,
-            },
-          );
-        }, 100);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 50,
+            total: 100,
+            message: "Reorganizing layout...",
+            currentFileName: "",
+            showBlocking: true,
+          }),
+          {
+            id: "shuffle-progress",
+            duration: 0,
+          },
+        );
 
         const shuffledImages = await shuffleImagesInLayout(
           targetPage.images,
           settings,
         );
-
-        // Clear the timeout in case it hasn't fired yet
-        clearTimeout(progressTimeout);
 
         setPages((currentPages) =>
           currentPages.map((page) =>
@@ -686,6 +682,7 @@ export const useImageManagement = (settings = null) => {
         total: 100,
         message: "Switching to next layout...",
         currentFileName: "",
+        showBlocking: true,
       });
 
       toast.custom(progressElement, {
@@ -695,29 +692,26 @@ export const useImageManagement = (settings = null) => {
 
       try {
         // Show intermediate progress
-        const progressTimeout = setTimeout(() => {
-          toast.custom(
-            React.createElement(ProgressToast, {
-              current: 50,
-              total: 100,
-              message: "Calculating new layout...",
-              currentFileName: "",
-            }),
-            {
-              id: "next-layout-progress",
-              duration: 0,
-            },
-          );
-        }, 100);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 50,
+            total: 100,
+            message: "Calculating new layout...",
+            currentFileName: "",
+            showBlocking: true,
+          }),
+          {
+            id: "next-layout-progress",
+            duration: 0,
+          },
+        );
 
         const newLayoutImages = await nextPageLayout(
           targetPage.images,
           settings,
           pageId,
         );
-
-        // Clear the timeout in case it hasn't fired yet
-        clearTimeout(progressTimeout);
 
         setPages((currentPages) =>
           currentPages.map((page) =>
@@ -753,6 +747,7 @@ export const useImageManagement = (settings = null) => {
         total: 100,
         message: "Switching to previous layout...",
         currentFileName: "",
+        showBlocking: true,
       });
 
       toast.custom(progressElement, {
@@ -762,29 +757,26 @@ export const useImageManagement = (settings = null) => {
 
       try {
         // Show intermediate progress
-        const progressTimeout = setTimeout(() => {
-          toast.custom(
-            React.createElement(ProgressToast, {
-              current: 50,
-              total: 100,
-              message: "Calculating new layout...",
-              currentFileName: "",
-            }),
-            {
-              id: "prev-layout-progress",
-              duration: 0,
-            },
-          );
-        }, 100);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 50,
+            total: 100,
+            message: "Calculating new layout...",
+            currentFileName: "",
+            showBlocking: true,
+          }),
+          {
+            id: "prev-layout-progress",
+            duration: 0,
+          },
+        );
 
         const newLayoutImages = await previousPageLayout(
           targetPage.images,
           settings,
           pageId,
         );
-
-        // Clear the timeout in case it hasn't fired yet
-        clearTimeout(progressTimeout);
 
         setPages((currentPages) =>
           currentPages.map((page) =>
@@ -820,6 +812,7 @@ export const useImageManagement = (settings = null) => {
         total: 100,
         message: "Applying selected layout...",
         currentFileName: "",
+        showBlocking: true,
       });
 
       toast.custom(progressElement, {
@@ -829,20 +822,20 @@ export const useImageManagement = (settings = null) => {
 
       try {
         // Show intermediate progress
-        const progressTimeout = setTimeout(() => {
-          toast.custom(
-            React.createElement(ProgressToast, {
-              current: 50,
-              total: 100,
-              message: "Positioning images...",
-              currentFileName: "",
-            }),
-            {
-              id: "select-layout-progress",
-              duration: 0,
-            },
-          );
-        }, 100);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: 50,
+            total: 100,
+            message: "Positioning images...",
+            currentFileName: "",
+            showBlocking: true,
+          }),
+          {
+            id: "select-layout-progress",
+            duration: 0,
+          },
+        );
 
         // Get preview dimensions
         const previewDimensions = getPreviewDimensions(settings);
@@ -861,9 +854,6 @@ export const useImageManagement = (settings = null) => {
         } catch (e) {
           console.warn("Could not persist hardcoded layout selection:", e);
         }
-
-        // Clear the timeout in case it hasn't fired yet
-        clearTimeout(progressTimeout);
 
         setPages((currentPages) =>
           currentPages.map((page) =>
@@ -1098,7 +1088,7 @@ export const useImageManagement = (settings = null) => {
 
   // Album storage functionality - with auto-overwrite support
   const saveCurrentAsAlbum = useCallback(
-    async (albumName, albumDescription = "", existingId = null) => {
+    async (albumName, albumDescription = "", existingId = null, isAutoSave = false) => {
       if (!albumName?.trim()) {
         toast.error("Please provide a name for the album");
         return null;
@@ -1109,51 +1099,48 @@ export const useImageManagement = (settings = null) => {
         return null;
       }
 
-      setIsProcessing(true);
+      // Only block UI for manual saves, not auto-saves
+      if (!isAutoSave) {
+        setIsProcessing(true);
+      }
 
-      // Show progress toast
-      const progressElement = React.createElement(ProgressToast, {
-        current: 0,
-        total: 100,
-        message: existingId ? "Updating album..." : "Saving album...",
-        currentFileName: "",
-      });
+      const toastId = isAutoSave ? "auto-save-progress" : "save-album-progress";
+      let currentStep = 0;
+      const totalSteps = 5;
 
-      toast.custom(progressElement, {
-        id: "save-album-progress",
-        duration: 0,
-      });
+      const updateProgress = (step, message) => {
+        currentStep = Math.max(currentStep, step); // Ensure progress never goes backward
+        toast.custom(
+          React.createElement(ProgressToast, {
+            current: currentStep,
+            total: totalSteps,
+            message,
+            currentFileName: "",
+            showBlocking: !isAutoSave,
+          }),
+          {
+            id: toastId,
+            duration: isAutoSave ? 3000 : 0, // Auto-save toasts auto-dismiss
+          },
+        );
+      };
 
       try {
-        // Step 1: Generate thumbnail from first page (20%)
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: 10,
-            total: 100,
-            message: "Generating thumbnail...",
-            currentFileName: "",
-          }),
-          {
-            id: "save-album-progress",
-            duration: 0,
-          },
-        );
+        // Step 1: Start
+        updateProgress(1, isAutoSave ? "Auto-saving..." : (existingId ? "Updating album..." : "Saving album..."));
+        await new Promise(resolve => setTimeout(resolve, isAutoSave ? 100 : 200));
 
+        // Step 2: Generate thumbnail
+        if (!isAutoSave) {
+          updateProgress(2, "Generating thumbnail...");
+        }
         const thumbnail = await storageManager.generateThumbnail(pages);
+        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 200));
 
-        // Step 2: Prepare album data (30%)
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: 30,
-            total: 100,
-            message: "Preparing album data...",
-            currentFileName: "",
-          }),
-          {
-            id: "save-album-progress",
-            duration: 0,
-          },
-        );
+        // Step 3: Prepare data
+        if (!isAutoSave) {
+          updateProgress(3, "Preparing album data...");
+        }
 
         let albumId = existingId;
         let originalCreatedTime = Date.now();
@@ -1176,20 +1163,6 @@ export const useImageManagement = (settings = null) => {
           albumId = storageManager.generateAlbumId();
         }
 
-        // Step 3: Building album structure (40%)
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: 40,
-            total: 100,
-            message: "Building album structure...",
-            currentFileName: "",
-          }),
-          {
-            id: "save-album-progress",
-            duration: 0,
-          },
-        );
-
         const albumToSave = {
           id: albumId,
           name: albumName.trim(),
@@ -1205,101 +1178,86 @@ export const useImageManagement = (settings = null) => {
           thumbnail,
         };
 
-        // Step 4: Saving to storage (50% -> 100%)
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: 50,
-            total: 100,
-            message: "Saving to storage...",
-            currentFileName: "",
-          }),
-          {
-            id: "save-album-progress",
-            duration: 0,
-          },
-        );
+        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 300));
 
-        // Show intermediate progress during save
-        const saveProgressInterval = setInterval(() => {
-          // This will show progress from 60% to 95% while saving
-          const randomProgress = 60 + Math.floor(Math.random() * 35);
-          toast.custom(
-            React.createElement(ProgressToast, {
-              current: randomProgress,
-              total: 100,
-              message: "Saving data to storage...",
-              currentFileName: "",
-            }),
-            {
-              id: "save-album-progress",
-              duration: 0,
-            },
-          );
-        }, 1000);
+        // Step 4: Save to storage
+        if (!isAutoSave) {
+          updateProgress(4, "Saving to storage...");
+        }
 
         const savedId = await storageManager.saveAlbum(albumToSave);
+        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 200));
 
-        // Clear the interval
-        clearInterval(saveProgressInterval);
+        // Step 5: Complete
+        if (!isAutoSave) {
+          updateProgress(5, "Save complete!");
+        }
 
         // Dismiss progress toast
-        toast.dismiss("save-album-progress");
+        toast.dismiss(toastId);
 
-        if (existingId) {
-          toast.success(`💾 Album "${albumName}" updated successfully!`, {
-            icon: "✅",
-          });
+        if (isAutoSave) {
+          // Subtle notification for auto-save
+          toast.success(`📁 Auto-saved`, { duration: 2000 });
         } else {
-          toast.success(`💾 Album "${albumName}" saved successfully!`, {
-            icon: "🎉",
-          });
+          if (existingId) {
+            toast.success(`💾 Album "${albumName}" updated successfully!`, {
+              icon: "✅",
+            });
+          } else {
+            toast.success(`💾 Album "${albumName}" saved successfully!`, {
+              icon: "🎉",
+            });
+          }
         }
 
         return savedId;
       } catch (error) {
         console.error("Error saving album:", error);
-        toast.dismiss("save-album-progress");
-        toast.error("Failed to save album. Please try again.");
+        toast.dismiss(toastId);
+        if (!isAutoSave) {
+          toast.error("Failed to save album. Please try again.");
+        }
         return null;
       } finally {
-        setIsProcessing(false);
+        if (!isAutoSave) {
+          setIsProcessing(false);
+        }
       }
     },
     [pages, availableImages, settings],
   );
 
-  const loadAlbumById = useCallback(async (albumId) => {
+  const loadAlbumById = useCallback(async (albumId, showOnlyRelevantInfo = false) => {
     setIsProcessing(true);
 
-    // Show progress toast for loading
-    toast.custom(
-      React.createElement(ProgressToast, {
-        current: 0,
-        total: 100,
-        message: "Loading album...",
-        currentFileName: "",
-      }),
-      {
-        id: "load-album-progress",
-        duration: 0,
-      },
-    );
+    let currentStep = 0;
+    const totalSteps = 4;
 
-    try {
-      // Step 1: Fetching album data (30%)
+    const updateProgress = (step, message) => {
+      currentStep = Math.max(currentStep, step); // Ensure progress never goes backward
       toast.custom(
         React.createElement(ProgressToast, {
-          current: 30,
-          total: 100,
-          message: "Fetching album data...",
+          current: currentStep,
+          total: totalSteps,
+          message,
           currentFileName: "",
+          showBlocking: true,
         }),
         {
           id: "load-album-progress",
           duration: 0,
         },
       );
+    };
 
+    try {
+      // Step 1: Start loading
+      updateProgress(1, "Loading album...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 2: Fetch data
+      updateProgress(2, "Fetching album data...");
       const album = await storageManager.getAlbum(albumId);
 
       if (!album) {
@@ -1308,51 +1266,31 @@ export const useImageManagement = (settings = null) => {
         return false;
       }
 
-      // Step 2: Processing album data (60%)
-      toast.custom(
-        React.createElement(ProgressToast, {
-          current: 60,
-          total: 100,
-          message: "Processing album data...",
-          currentFileName: "",
-        }),
-        {
-          id: "load-album-progress",
-          duration: 0,
-        },
-      );
+      if (showOnlyRelevantInfo) {
+        // For "Show Album" button - just return album info without loading
+        toast.dismiss("load-album-progress");
+        return {
+          id: album.id,
+          name: album.name,
+          description: album.description,
+          created: album.created,
+          modified: album.modified,
+          totalImages: album.totalImages,
+          totalPages: album.pages ? album.pages.length : 0,
+          thumbnail: album.thumbnail
+        };
+      }
 
-      // Step 3: Restoring images and pages (90%)
-      toast.custom(
-        React.createElement(ProgressToast, {
-          current: 90,
-          total: 100,
-          message: "Restoring images and pages...",
-          currentFileName: "",
-        }),
-        {
-          id: "load-album-progress",
-          duration: 0,
-        },
-      );
+      await new Promise(resolve => setTimeout(resolve, 400));
 
-      // Replace current state with loaded album data
+      // Step 3: Process data
+      updateProgress(3, "Restoring images and pages...");
       setPages(album.pages || []);
       setAvailableImages(album.availableImages || []);
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Complete (100%)
-      toast.custom(
-        React.createElement(ProgressToast, {
-          current: 100,
-          total: 100,
-          message: "Album loaded successfully!",
-          currentFileName: "",
-        }),
-        {
-          id: "load-album-progress",
-          duration: 0,
-        },
-      );
+      // Step 4: Complete
+      updateProgress(4, "Album loaded successfully!");
 
       // Dismiss progress toast and show success
       setTimeout(() => {
@@ -1415,7 +1353,8 @@ export const useImageManagement = (settings = null) => {
           try {
             const album = await storageManager.getAlbum(albumId);
             if (album) {
-              await saveCurrentAsAlbum(album.name, album.description, albumId);
+              // Non-blocking auto-save
+              await saveCurrentAsAlbum(album.name, album.description, albumId, true);
             }
           } catch (error) {
             console.error("Auto-save failed:", error);
