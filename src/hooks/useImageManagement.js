@@ -19,6 +19,7 @@ import {
   nextPageLayout,
   previousPageLayout,
   resetPageLayoutState,
+  reapplyCurrentLayout,
 } from "../utils/layoutCycling.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
 import { storageManager } from "../utils/storageUtils.js";
@@ -110,7 +111,7 @@ export const useImageManagement = (settings = null) => {
    * For full cover: maintains current layout structure
    */
   const arrangeImagesWithCorrectLayout = useCallback(
-    async (images, preserveLayoutStructure = false) => {
+    async (images, preserveLayoutStructure = false, pageId = null) => {
       if (!images || images.length === 0) return [];
 
       const { width: previewWidth, height: previewHeight } =
@@ -118,6 +119,16 @@ export const useImageManagement = (settings = null) => {
 
       if (settings.designStyle === "full_cover" && preserveLayoutStructure) {
         // For full cover with structure preservation (button movements)
+        // Try to reapply the current layout template
+        const targetPageId = pageId || images[0]?.pageId || 'default-page';
+        const reappliedImages = await reapplyCurrentLayout(images, settings, targetPageId);
+        
+        // If reapplication worked, use it; otherwise fall back to old logic
+        if (reappliedImages && reappliedImages.length === images.length) {
+          return reappliedImages;
+        }
+        
+        // Fallback to old detection logic
         const currentLayout = detectCurrentLayout(images);
         return placeImagesInOrder(images, currentLayout);
       } else {
@@ -443,7 +454,7 @@ export const useImageManagement = (settings = null) => {
           // Use correct layout method for remaining images
           const arrangedImages =
             newImages.length > 0
-              ? await arrangeImagesWithCorrectLayout(newImages, false)
+              ? await arrangeImagesWithCorrectLayout(newImages, false, pageId)
               : [];
 
           setPages((prev) =>
@@ -716,12 +727,12 @@ export const useImageManagement = (settings = null) => {
           sourceNewImages.splice(imageIndex, 1);
           const destNewImages = [...destPage.images, imageToMove];
 
-          // Arrange both pages with correct layout
+          // Arrange both pages with correct layout (preserve structure for image moves)
           const [sourceArrangedImages, destArrangedImages] = await Promise.all([
             sourceNewImages.length > 0
-              ? arrangeImagesWithCorrectLayout(sourceNewImages, false)
+              ? arrangeImagesWithCorrectLayout(sourceNewImages, true, sourcePageId)
               : Promise.resolve([]),
-            arrangeImagesWithCorrectLayout(destNewImages, false),
+            arrangeImagesWithCorrectLayout(destNewImages, true, destPageId),
           ]);
 
           setPages((prev) =>
@@ -772,6 +783,7 @@ export const useImageManagement = (settings = null) => {
         const arrangedImages = await arrangeImagesWithCorrectLayout(
           newImages,
           true,
+          pageId,
         );
 
         setPages((prev) =>

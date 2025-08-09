@@ -4,6 +4,7 @@
 
 import { arrangeImages } from "./layoutUtils.js";
 import { getPreviewDimensions } from "../constants.js";
+import { arrangeImagesFullCover, FULL_COVER_LAYOUT_TYPES } from "./fullCoverLayoutUtils.js";
 
 // Store the current layout index for each page
 const pageLayoutState = new Map();
@@ -144,7 +145,12 @@ async function cyclePageLayout(images, settings, pageId, direction) {
     return [];
   }
 
-  // Generate available layouts for this number of images
+  // Check if we're in full cover mode
+  if (settings?.designStyle === 'full_cover') {
+    return await cycleFullCoverLayout(images, settings, pageId, direction);
+  }
+
+  // Classic layout cycling (original implementation)
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
   const maxNumberOfRows = settings?.maxNumberOfRows || 2;
   const availableLayouts = generateAllValidLayouts(
@@ -251,4 +257,164 @@ export function getCurrentLayoutInfo(pageId) {
     currentLayout: state.layouts[state.currentIndex],
     totalLayouts: state.layouts.length,
   };
+}
+
+/**
+ * Re-apply the current layout template to a new set of images
+ * @param {Array} images - New images to arrange
+ * @param {Object} settings - Layout settings
+ * @param {string} pageId - Page identifier
+ * @returns {Promise<Array>} Arranged images with current layout preserved
+ */
+export async function reapplyCurrentLayout(images, settings, pageId) {
+  if (!images || images.length === 0) {
+    return [];
+  }
+
+  // Check if we're in full cover mode
+  if (settings?.designStyle === 'full_cover') {
+    const fullCoverPageId = `fullcover_${pageId}`;
+    const state = pageLayoutState.get(fullCoverPageId);
+    
+    if (state && state.layouts && state.layouts[state.currentIndex]) {
+      const selectedOption = state.layouts[state.currentIndex];
+      
+      // Apply the same layout that was previously selected
+      const layoutSettings = { ...settings };
+      
+      if (selectedOption.type === FULL_COVER_LAYOUT_TYPES.GRID) {
+        // Re-apply grid layout
+        layoutSettings._forcedLayout = selectedOption.layout;
+        layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.GRID;
+      } else {
+        // Re-apply flexible layout
+        layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.FLEXIBLE;
+        layoutSettings._forcedFlexibleLayout = selectedOption.layoutIndex;
+      }
+      
+      const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+      
+      try {
+        const result = await arrangeImagesFullCover(
+          images,
+          previewWidth,
+          previewHeight,
+          layoutSettings
+        );
+        return result;
+      } catch (error) {
+        console.error("Error reapplying current layout:", error);
+      }
+    }
+  }
+  
+  // Fallback to classic layout cycling for non-full-cover or if no state found
+  const state = getLayoutState(pageId, []);
+  if (state && state.layouts && state.layouts[state.currentIndex]) {
+    const selectedLayout = state.layouts[state.currentIndex];
+    return await applyLayoutToImages(images, selectedLayout, settings);
+  }
+  
+  // Final fallback - return images as-is
+  return images;
+}
+
+/**
+ * Cycle through full cover layout options (grid and flexible)
+ * @param {Array} images - Images to arrange
+ * @param {Object} settings - Layout settings
+ * @param {string} pageId - Page identifier
+ * @param {number} direction - 1 for next, -1 for previous
+ * @returns {Promise<Array>} Arranged images with new layout
+ */
+async function cycleFullCoverLayout(images, settings, pageId, direction) {
+  const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+  
+  // Create state key specific to full cover layouts
+  const fullCoverPageId = `fullcover_${pageId}`;
+  
+  // Get available layout types: grid and flexible
+  const layoutTypes = [
+    { type: FULL_COVER_LAYOUT_TYPES.GRID, name: 'Grid' },
+    { type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE, name: 'Flexible' }
+  ];
+  
+  // Get current grid layouts for this number of images (for grid type)
+  const maxImagesPerRow = settings?.maxImagesPerRow || 4;
+  const maxNumberOfRows = settings?.maxNumberOfRows || 2;
+  const gridLayouts = generateAllValidLayouts(images.length, maxImagesPerRow, maxNumberOfRows);
+  
+  // Build all available options
+  const allOptions = [];
+  
+  // Add grid options
+  gridLayouts.forEach((layout, index) => {
+    allOptions.push({
+      type: FULL_COVER_LAYOUT_TYPES.GRID,
+      layoutIndex: index,
+      layout: layout,
+      name: `Grid ${index + 1}`
+    });
+  });
+  
+  // Add flexible options (we'll cycle through different flexible layouts)
+  const flexibleCount = getFlexibleLayoutCount(images.length);
+  for (let i = 0; i < flexibleCount; i++) {
+    allOptions.push({
+      type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE,
+      layoutIndex: i,
+      name: `Flexible ${i + 1}`
+    });
+  }
+  
+  if (allOptions.length === 0) {
+    return images;
+  }
+  
+  // Get current state and move to next/previous
+  const state = getLayoutState(fullCoverPageId, allOptions);
+  state.currentIndex = (state.currentIndex + direction + allOptions.length) % allOptions.length;
+  
+  const selectedOption = allOptions[state.currentIndex];
+  
+  // Apply the selected layout
+  const layoutSettings = { ...settings };
+  
+  if (selectedOption.type === FULL_COVER_LAYOUT_TYPES.GRID) {
+    // Use grid layout with forced distribution
+    layoutSettings._forcedLayout = selectedOption.layout;
+    layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.GRID;
+  } else {
+    // Use flexible layout with specific option index
+    layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.FLEXIBLE;
+    layoutSettings._forcedFlexibleLayout = selectedOption.layoutIndex;
+  }
+  
+  try {
+    const result = await arrangeImagesFullCover(
+      images,
+      previewWidth,
+      previewHeight,
+      layoutSettings
+    );
+    return result;
+  } catch (error) {
+    console.error("Error applying full cover layout:", error);
+    return images;
+  }
+}
+
+/**
+ * Get the number of flexible layout variations for a given number of images
+ * @param {number} imageCount - Number of images
+ * @returns {number} Number of flexible layout options
+ */
+function getFlexibleLayoutCount(imageCount) {
+  if (imageCount === 1) return 1;
+  if (imageCount === 2) return 3; // 3 variations for 2 images (equal side, equal stacked, 70/30)
+  if (imageCount === 3) return 4; // 4 variations for 3 images (large left, large right, large top, large center)
+  if (imageCount === 4) return 4; // 4 variations for 4 images (large left, large right, large top, large center)
+  if (imageCount === 5) return 2; // 2 variations for 5 images (large + four others, 2-1-2 pattern)
+  if (imageCount === 6) return 5; // 5 variations for 6 images (large in different positions)
+  return 1; // Default grid for larger numbers
 }
