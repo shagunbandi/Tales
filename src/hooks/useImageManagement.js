@@ -159,12 +159,13 @@ export const useImageManagement = (settings = null) => {
         } else {
           // For both classical (always) and full cover (when not preserving structure)
           // This properly handles margins, gaps, and layout calculations
-          return await arrangeImages(
+          const result = await arrangeImages(
             images,
             previewWidth,
             previewHeight,
             settings,
           );
+          return result;
         }
       } catch (error) {
         console.error("Error in arrangeImagesWithCorrectLayout:", error);
@@ -607,10 +608,18 @@ export const useImageManagement = (settings = null) => {
 
         try {
           // Use correct layout method for remaining images
-          const arrangedImages =
-            newImages.length > 0
-              ? await arrangeImagesWithCorrectLayout(newImages, false, pageId)
-              : [];
+          let arrangedImages = [];
+          
+          if (newImages.length > 0) {
+            arrangedImages = await arrangeImagesWithCorrectLayout(newImages, false, pageId);
+            
+            // Safety check: if the layout function returns fewer images than we expect,
+            // fall back to using preserveManualLayout
+            if (!arrangedImages || arrangedImages.length !== newImages.length) {
+              console.warn("Layout function returned unexpected number of images, using manual layout");
+              arrangedImages = preserveManualLayout(newImages);
+            }
+          }
 
           setPages((prev) =>
             prev.map((page) =>
@@ -619,10 +628,11 @@ export const useImageManagement = (settings = null) => {
           );
         } catch (layoutError) {
           console.error("Error arranging images in moveImageBack:", layoutError);
-          // Fallback to just removing the image without layout
+          // Fallback to manual layout to preserve all images
+          const fallbackImages = preserveManualLayout(newImages);
           setPages((prev) =>
             prev.map((page) =>
-              page.id === pageId ? { ...page, images: newImages || [] } : page,
+              page.id === pageId ? { ...page, images: fallbackImages || [] } : page,
             ),
           );
         }
