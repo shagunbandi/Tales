@@ -34,8 +34,9 @@ const DesignTab = ({
   currentAlbumId,
   currentAlbumName,
   lastSaveTime,
-     settings,
-   isPageProcessing,
+  settings,
+  isPageProcessing,
+  onAddSelectedToPage,
  }) => {
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -51,6 +52,8 @@ const DesignTab = ({
               removeAvailableImage={onRemoveAvailableImage}
               totalImages={totalImages}
               onAddMoreImages={onAddMoreImages}
+              pages={pages}
+              onAddSelectedToPage={onAddSelectedToPage}
             />
           </Card>
         </div>

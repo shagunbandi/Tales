@@ -47,6 +47,7 @@ function App() {
     removePage,
     changePageColor,
     removeAvailableImage,
+    addSelectedToPage,
     autoArrangeImagesToPages,
     moveImageBack,
     moveAllImagesBack,
@@ -344,6 +345,7 @@ function App() {
               lastSaveTime={lastSaveTime}
               settings={settings}
               isPageProcessing={isPageProcessing}
+              onAddSelectedToPage={addSelectedToPage}
             />
           </div>
         )}

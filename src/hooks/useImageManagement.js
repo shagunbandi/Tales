@@ -46,12 +46,17 @@ export const useImageManagement = (settings = null) => {
     // Group images by row index
     const rowGroups = {};
     images.forEach((image) => {
-      const row = image.rowIndex || 0;
-      rowGroups[row] = (rowGroups[row] || 0) + 1;
+      if (image && typeof image === 'object') {
+        const row = image.rowIndex || 0;
+        rowGroups[row] = (rowGroups[row] || 0) + 1;
+      }
     });
 
     // Convert to layout array
-    const maxRow = Math.max(...Object.keys(rowGroups).map(Number));
+    const rowKeys = Object.keys(rowGroups);
+    if (rowKeys.length === 0) return [];
+    
+    const maxRow = Math.max(...rowKeys.map(Number));
     const layout = [];
     for (let i = 0; i <= maxRow; i++) {
       layout.push(rowGroups[i] || 0);
@@ -74,39 +79,48 @@ export const useImageManagement = (settings = null) => {
         !layoutStructure ||
         layoutStructure.length === 0
       ) {
-        return images;
+        return images || [];
       }
 
-      const { width: previewWidth, height: previewHeight } =
-        getPreviewDimensions(settings);
-      const numRows = layoutStructure.length;
-      const rowHeight = previewHeight / numRows;
+      try {
+        const { width: previewWidth, height: previewHeight } =
+          getPreviewDimensions(settings);
+        const numRows = layoutStructure.length;
+        const rowHeight = previewHeight / numRows;
 
-      const positionedImages = [];
-      let imageIndex = 0;
+        const positionedImages = [];
+        let imageIndex = 0;
 
-      for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
-        const imagesInRow = layoutStructure[rowIndex];
-        const cellWidth = previewWidth / imagesInRow;
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+          const imagesInRow = layoutStructure[rowIndex];
+          if (!imagesInRow || typeof imagesInRow !== 'number' || imagesInRow <= 0) {
+            continue;
+          }
+          
+          const cellWidth = previewWidth / imagesInRow;
 
-        for (let colIndex = 0; colIndex < imagesInRow; colIndex++) {
-          if (imageIndex < images.length) {
-            const image = images[imageIndex];
-            positionedImages.push({
-              ...image,
-              x: colIndex * cellWidth,
-              y: rowIndex * rowHeight,
-              previewWidth: cellWidth,
-              previewHeight: rowHeight,
-              rowIndex,
-              colIndex,
-            });
-            imageIndex++;
+          for (let colIndex = 0; colIndex < imagesInRow; colIndex++) {
+            if (imageIndex < images.length && images[imageIndex]) {
+              const image = images[imageIndex];
+              positionedImages.push({
+                ...image,
+                x: colIndex * cellWidth,
+                y: rowIndex * rowHeight,
+                previewWidth: cellWidth,
+                previewHeight: rowHeight,
+                rowIndex,
+                colIndex,
+              });
+              imageIndex++;
+            }
           }
         }
-      }
 
-      return positionedImages;
+        return positionedImages;
+      } catch (error) {
+        console.error("Error in placeImagesInOrder:", error);
+        return images || [];
+      }
     },
     [settings],
   );
@@ -120,36 +134,41 @@ export const useImageManagement = (settings = null) => {
     async (images, preserveLayoutStructure = false, pageId = null) => {
       if (!images || images.length === 0) return [];
 
-      const { width: previewWidth, height: previewHeight } =
-        getPreviewDimensions(settings);
+      try {
+        const { width: previewWidth, height: previewHeight } =
+          getPreviewDimensions(settings);
 
-      if (settings.designStyle === "full_cover" && preserveLayoutStructure) {
-        // For full cover with structure preservation (button movements)
-        // Try to reapply the current layout template
-        const targetPageId = pageId || images[0]?.pageId || "default-page";
-        const reappliedImages = await reapplyCurrentLayout(
-          images,
-          settings,
-          targetPageId,
-        );
+        if (settings.designStyle === "full_cover" && preserveLayoutStructure) {
+          // For full cover with structure preservation (button movements)
+          // Try to reapply the current layout template
+          const targetPageId = pageId || images[0]?.pageId || "default-page";
+          const reappliedImages = await reapplyCurrentLayout(
+            images,
+            settings,
+            targetPageId,
+          );
 
-        // If reapplication worked, use it; otherwise fall back to old logic
-        if (reappliedImages && reappliedImages.length === images.length) {
-          return reappliedImages;
+          // If reapplication worked, use it; otherwise fall back to old logic
+          if (reappliedImages && reappliedImages.length === images.length) {
+            return reappliedImages;
+          }
+
+          // Fallback to old detection logic
+          const currentLayout = detectCurrentLayout(images);
+          return placeImagesInOrder(images, currentLayout);
+        } else {
+          // For both classical (always) and full cover (when not preserving structure)
+          // This properly handles margins, gaps, and layout calculations
+          return await arrangeImages(
+            images,
+            previewWidth,
+            previewHeight,
+            settings,
+          );
         }
-
-        // Fallback to old detection logic
-        const currentLayout = detectCurrentLayout(images);
-        return placeImagesInOrder(images, currentLayout);
-      } else {
-        // For both classical (always) and full cover (when not preserving structure)
-        // This properly handles margins, gaps, and layout calculations
-        return await arrangeImages(
-          images,
-          previewWidth,
-          previewHeight,
-          settings,
-        );
+      } catch (error) {
+        console.error("Error in arrangeImagesWithCorrectLayout:", error);
+        return images || [];
       }
     },
     [settings, detectCurrentLayout, placeImagesInOrder],
@@ -161,33 +180,45 @@ export const useImageManagement = (settings = null) => {
    */
   const preserveManualLayout = useCallback(
     (images) => {
-      const { width: previewWidth, height: previewHeight } =
-        getPreviewDimensions(settings);
+      if (!images || images.length === 0) return [];
 
-      // Simple grid positioning that preserves order but doesn't use smart algorithms
-      return images.map((image, index) => {
-        const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-        const rowIndex = Math.floor(index / maxImagesPerRow);
-        const colIndex = index % maxImagesPerRow;
-        const imagesInThisRow = Math.min(
-          maxImagesPerRow,
-          images.length - rowIndex * maxImagesPerRow,
-        );
+      try {
+        const { width: previewWidth, height: previewHeight } =
+          getPreviewDimensions(settings);
 
-        const cellWidth = previewWidth / imagesInThisRow;
-        const cellHeight =
-          previewHeight / Math.ceil(images.length / maxImagesPerRow);
+        // Simple grid positioning that preserves order but doesn't use smart algorithms
+        return images.map((image, index) => {
+          if (!image || typeof image !== 'object') {
+            console.warn("Invalid image in preserveManualLayout:", image);
+            return image;
+          }
 
-        return {
-          ...image,
-          x: colIndex * cellWidth,
-          y: rowIndex * cellHeight,
-          previewWidth: cellWidth,
-          previewHeight: cellHeight,
-          rowIndex,
-          colIndex,
-        };
-      });
+          const maxImagesPerRow = settings?.maxImagesPerRow || 4;
+          const rowIndex = Math.floor(index / maxImagesPerRow);
+          const colIndex = index % maxImagesPerRow;
+          const imagesInThisRow = Math.min(
+            maxImagesPerRow,
+            images.length - rowIndex * maxImagesPerRow,
+          );
+
+          const cellWidth = previewWidth / imagesInThisRow;
+          const cellHeight =
+            previewHeight / Math.ceil(images.length / maxImagesPerRow);
+
+          return {
+            ...image,
+            x: colIndex * cellWidth,
+            y: rowIndex * cellHeight,
+            previewWidth: cellWidth,
+            previewHeight: cellHeight,
+            rowIndex,
+            colIndex,
+          };
+        });
+      } catch (error) {
+        console.error("Error in preserveManualLayout:", error);
+        return images || [];
+      }
     },
     [settings],
   );
@@ -251,17 +282,16 @@ export const useImageManagement = (settings = null) => {
       const sourceId = active.data.current?.sourceId;
       const sourceIndex = active.data.current?.sourceIndex;
       const destinationId = over.id;
+      const isBatch = active.data.current?.isBatch;
+      const batchImages = active.data.current?.batchImages;
+      const selectedImages = active.data.current?.selectedImages;
 
       // Only allow dragging from available images to pages
       if (
         sourceId === "available-images" &&
         destinationId.startsWith("page-")
       ) {
-        const imageIndex = sourceIndex;
         const pageId = destinationId;
-        const imageToMove = availableImages[imageIndex];
-
-        // First check if we can add the image to the target page
         const targetPage = pages.find((p) => p.id === pageId);
 
         // Calculate max images per page considering both settings
@@ -273,42 +303,81 @@ export const useImageManagement = (settings = null) => {
           settings.imagesPerPage || maxImagesFromGrid,
         );
 
-        if (
-          settings.designStyle === "full_cover" &&
-          targetPage &&
-          targetPage.images.length >= maxImagesPerPage
-        ) {
-          // Show error toast and don't move the image
-          toast.error(
-            `Cannot add image: Page already has the maximum of ${maxImagesPerPage} images. Please remove some images first or add a new page.`,
-          );
-          return;
-        }
+        if (isBatch && batchImages) {
+          // Handle batch drag-and-drop
+          const imagesToMove = batchImages;
+          
+          if (
+            settings.designStyle === "full_cover" &&
+            targetPage &&
+            targetPage.images.length + imagesToMove.length > maxImagesPerPage
+          ) {
+            toast.error(
+              `Cannot add ${imagesToMove.length} images: Page would exceed the maximum of ${maxImagesPerPage} images. Please remove some images first or add a new page.`,
+            );
+            return;
+          }
 
-        // If we get here, we can move the image
-        setAvailableImages((prev) =>
-          prev.filter((_, index) => index !== imageIndex),
-        );
-
-        setPages((prev) => {
-          // Normal behavior - add to existing page
-          return prev.map((page) => {
-            if (page.id === pageId) {
-              const newImages = [...page.images];
-              // Add to the end of the page images
-              newImages.push(imageToMove);
-
-              // Preserve manual layout without auto-arranging
-              const arrangedImages = preserveManualLayout(newImages);
-
-              return {
-                ...page,
-                images: arrangedImages,
-              };
-            }
-            return page;
+          // Remove selected images from available images (in reverse order to maintain indices)
+          const sortedIndices = selectedImages.sort((a, b) => b - a);
+          setAvailableImages((prev) => {
+            let newAvailable = [...prev];
+            sortedIndices.forEach(index => {
+              newAvailable.splice(index, 1);
+            });
+            return newAvailable;
           });
-        });
+
+          // Add batch to target page
+          setPages((prev) => {
+            return prev.map((page) => {
+              if (page.id === pageId) {
+                const newImages = [...page.images, ...imagesToMove];
+                const arrangedImages = preserveManualLayout(newImages);
+                return {
+                  ...page,
+                  images: arrangedImages,
+                };
+              }
+              return page;
+            });
+          });
+
+          toast.success(`Added ${imagesToMove.length} images to page`);
+        } else {
+          // Handle single image drag-and-drop (existing logic)
+          const imageIndex = sourceIndex;
+          const imageToMove = availableImages[imageIndex];
+
+          if (
+            settings.designStyle === "full_cover" &&
+            targetPage &&
+            targetPage.images.length >= maxImagesPerPage
+          ) {
+            toast.error(
+              `Cannot add image: Page already has the maximum of ${maxImagesPerPage} images. Please remove some images first or add a new page.`,
+            );
+            return;
+          }
+
+          setAvailableImages((prev) =>
+            prev.filter((_, index) => index !== imageIndex),
+          );
+
+          setPages((prev) => {
+            return prev.map((page) => {
+              if (page.id === pageId) {
+                const newImages = [...page.images, imageToMove];
+                const arrangedImages = preserveManualLayout(newImages);
+                return {
+                  ...page,
+                  images: arrangedImages,
+                };
+              }
+              return page;
+            });
+          });
+        }
       }
     },
     [availableImages, pages, settings, preserveManualLayout],
@@ -399,6 +468,63 @@ export const useImageManagement = (settings = null) => {
     setAvailableImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  const addSelectedToPage = useCallback((selectedImageData, pageId) => {
+    if (!selectedImageData || selectedImageData.length === 0) return;
+
+    const targetPage = pages.find((p) => p.id === pageId);
+    
+    // Calculate max images per page considering both settings
+    const maxImagesPerRow = settings.maxImagesPerRow || 4;
+    const maxNumberOfRows = settings.maxNumberOfRows || 4;
+    const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
+    const maxImagesPerPage = Math.min(
+      maxImagesFromGrid,
+      settings.imagesPerPage || maxImagesFromGrid,
+    );
+
+    if (
+      settings.designStyle === "full_cover" &&
+      targetPage &&
+      targetPage.images.length + selectedImageData.length > maxImagesPerPage
+    ) {
+      toast.error(
+        `Cannot add ${selectedImageData.length} images: Page would exceed the maximum of ${maxImagesPerPage} images. Please remove some images first or add a new page.`,
+      );
+      return;
+    }
+
+    // Get the indices of images to remove from available images
+    const indicesToRemove = selectedImageData.map(imageData => 
+      availableImages.findIndex(img => img.id === imageData.id)
+    ).filter(index => index !== -1).sort((a, b) => b - a); // Sort in reverse order
+
+    // Remove images from available images
+    setAvailableImages((prev) => {
+      let newAvailable = [...prev];
+      indicesToRemove.forEach(index => {
+        newAvailable.splice(index, 1);
+      });
+      return newAvailable;
+    });
+
+    // Add images to target page
+    setPages((prev) => {
+      return prev.map((page) => {
+        if (page.id === pageId) {
+          const newImages = [...page.images, ...selectedImageData];
+          const arrangedImages = preserveManualLayout(newImages);
+          return {
+            ...page,
+            images: arrangedImages,
+          };
+        }
+        return page;
+      });
+    });
+
+    toast.success(`Added ${selectedImageData.length} images to page`);
+  }, [availableImages, pages, settings, preserveManualLayout]);
+
   const autoArrangeImagesToPages = useCallback(async () => {
     if (availableImages.length === 0) return;
 
@@ -439,10 +565,15 @@ export const useImageManagement = (settings = null) => {
 
   const moveImageBack = useCallback(
     async (pageId, imageIndex) => {
-      const currentPages = pages;
-      const currentPage = currentPages.find((p) => p.id === pageId);
+      try {
+        const currentPages = pages;
+        const currentPage = currentPages.find((p) => p.id === pageId);
 
-      if (currentPage && currentPage.images[imageIndex]) {
+        if (!currentPage || !currentPage.images || !currentPage.images[imageIndex]) {
+          console.warn("Invalid page or image index in moveImageBack:", { pageId, imageIndex, currentPage });
+          return;
+        }
+
         const imageToRemove = currentPage.images[imageIndex];
 
         // Restore original image if it was cropped
@@ -461,7 +592,7 @@ export const useImageManagement = (settings = null) => {
           : imageToRemove;
 
         setAvailableImages((current) => {
-          const newAvailable = [...current];
+          const newAvailable = [...(current || [])];
           const insertIndex = findCorrectInsertPosition(
             newAvailable,
             originalImage.originalIndex,
@@ -471,7 +602,7 @@ export const useImageManagement = (settings = null) => {
         });
 
         // Remove image and arrange remaining images
-        const newImages = [...currentPage.images];
+        const newImages = [...(currentPage.images || [])];
         newImages.splice(imageIndex, 1);
 
         try {
@@ -483,18 +614,22 @@ export const useImageManagement = (settings = null) => {
 
           setPages((prev) =>
             prev.map((page) =>
-              page.id === pageId ? { ...page, images: arrangedImages } : page,
+              page.id === pageId ? { ...page, images: arrangedImages || [] } : page,
             ),
           );
-        } catch (error) {
-          console.error("Error in moveImageBack:", error);
-          // Fallback to just removing the image
+        } catch (layoutError) {
+          console.error("Error arranging images in moveImageBack:", layoutError);
+          // Fallback to just removing the image without layout
           setPages((prev) =>
             prev.map((page) =>
-              page.id === pageId ? { ...page, images: newImages } : page,
+              page.id === pageId ? { ...page, images: newImages || [] } : page,
             ),
           );
         }
+      } catch (error) {
+        console.error("Critical error in moveImageBack:", error, { pageId, imageIndex });
+        // Show user-friendly error message
+        toast.error("Failed to move image back. Please try again.");
       }
     },
     [pages, arrangeImagesWithCorrectLayout],
@@ -1316,6 +1451,7 @@ export const useImageManagement = (settings = null) => {
     removePage,
     changePageColor,
     removeAvailableImage,
+    addSelectedToPage,
     autoArrangeImagesToPages,
     moveImageBack,
     moveAllImagesBack,
