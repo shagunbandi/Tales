@@ -98,6 +98,83 @@ The application includes error handling for:
 - Image loading failures
 - PDF generation issues
 
+## Testing
+
+The application includes comprehensive test coverage with both unit tests and end-to-end tests.
+
+### Quick Start
+
+The easiest way to run tests is using the justfile commands:
+
+```bash
+# Run all tests (unit + e2e)
+just test-all
+
+# Run only unit tests (fastest)
+just test-quick
+
+# Run only e2e tests
+just e2e
+```
+
+### Test Types
+
+#### Unit Tests (Vitest)
+- **39 tests** covering core functionality
+- Layout preservation system
+- Flexible grid layout generation
+- Image arrangement algorithms
+- Error handling and edge cases
+
+#### End-to-End Tests (Cypress)
+- **3 tests** covering complete user workflows
+- Album creation and navigation
+- Image upload and arrangement
+- PDF generation
+
+### Available Test Commands
+
+Using justfile (recommended):
+```bash
+just test          # Run unit tests in watch mode
+just test-run      # Run unit tests once
+just test-ui       # Run unit tests with UI
+just e2e           # Run e2e tests (headless)
+just e2e-open      # Open Cypress interactive mode
+just test-all      # Run both unit and e2e tests
+just test-quick    # Run unit tests only (fastest)
+```
+
+Using npm directly:
+```bash
+npm test           # Unit tests in watch mode
+npm run test:run   # Unit tests once
+npm run test:ui    # Unit tests with UI
+npm run e2e:run    # E2e tests
+npm run e2e:dev    # E2e tests in dev mode
+```
+
+### Test Coverage
+
+The test suite covers:
+- ✅ **Layout Systems**: Grid and flexible layout generation
+- ✅ **Image Operations**: Swapping, moving, and arranging images
+- ✅ **State Management**: Layout preservation across operations  
+- ✅ **Template Validation**: Grid coverage verification
+- ✅ **Error Scenarios**: Fallback behavior and edge cases
+- ✅ **User Workflows**: Complete app functionality via e2e tests
+
+### Running Tests in CI/CD
+
+For automated testing in pipelines:
+```bash
+# Fast unit tests only
+just test-quick
+
+# Full test suite
+just test-all
+```
+
 ## Build for Production
 
 To create a production build:

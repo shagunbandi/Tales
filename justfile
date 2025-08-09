@@ -95,3 +95,39 @@ update-cap:
 clean-mobile:
     rm -rf android/app/src/main/assets/public
     rm -rf ios/App/App/public
+
+# ======================================
+# Testing Commands
+# ======================================
+
+# Run unit tests with vitest
+test:
+    npm test
+
+# Run unit tests in watch mode
+test-watch:
+    npm run test
+
+# Run unit tests once (no watch mode)
+test-run:
+    npm run test:run
+
+# Run unit tests with UI
+test-ui:
+    npm run test:ui
+
+# Run e2e tests with cypress (headless)
+e2e:
+    npm run e2e:run
+
+# Open cypress for interactive e2e testing
+e2e-open:
+    npm run e2e:dev
+
+# Run both unit and e2e tests
+test-all: test-run e2e
+    @echo "✅ All tests completed!"
+
+# Quick test suite (unit tests only)
+test-quick:
+    npm run test:run

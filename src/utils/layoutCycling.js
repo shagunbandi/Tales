@@ -304,15 +304,21 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
         return result;
       } catch (error) {
         console.error("Error reapplying current layout:", error);
+        // Return null to indicate failure
+        return null;
       }
     }
   }
   
   // Fallback to classic layout cycling for non-full-cover or if no state found
-  const state = getLayoutState(pageId, []);
-  if (state && state.layouts && state.layouts[state.currentIndex]) {
-    const selectedLayout = state.layouts[state.currentIndex];
-    return await applyLayoutToImages(images, selectedLayout, settings);
+  try {
+    const state = getLayoutState(pageId, []);
+    if (state && state.layouts && state.layouts[state.currentIndex]) {
+      const selectedLayout = state.layouts[state.currentIndex];
+      return await applyLayoutToImages(images, selectedLayout, settings);
+    }
+  } catch (error) {
+    console.error("Error in classic layout reapplication:", error);
   }
   
   // Final fallback - return images as-is

@@ -617,7 +617,7 @@ function getGridTemplates(numImages) {
   }
   
   if (numImages === 6) {
-    // Template 1: Large top-left (verified complete coverage)
+    // Template 1: Large top-left with bottom strip 
     templates.push({
       rows: 3,
       cols: 4,
@@ -625,13 +625,13 @@ function getGridTemplates(numImages) {
         { imageIndex: 0, startRow: 0, endRow: 2, startCol: 0, endCol: 2 }, // Large top-left (2x2)
         { imageIndex: 1, startRow: 0, endRow: 1, startCol: 2, endCol: 3 }, // Top-middle
         { imageIndex: 2, startRow: 0, endRow: 1, startCol: 3, endCol: 4 }, // Top-right
-        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }, // Middle-middle
-        { imageIndex: 4, startRow: 1, endRow: 2, startCol: 3, endCol: 4 }, // Middle-right
-        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }  // Bottom spans 2 cols
+        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 2, endCol: 4 }, // Middle-right spanning 2 cols
+        { imageIndex: 4, startRow: 2, endRow: 3, startCol: 0, endCol: 2 }, // Bottom-left spanning 2 cols
+        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }  // Bottom-right spanning 2 cols
       ]
     });
     
-    // Template 2: Large top-right (verified complete coverage)
+    // Template 2: Large top-right with bottom strip
     templates.push({
       rows: 3,
       cols: 4,
@@ -639,9 +639,9 @@ function getGridTemplates(numImages) {
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 1 }, // Top-left
         { imageIndex: 1, startRow: 0, endRow: 1, startCol: 1, endCol: 2 }, // Top-middle-left
         { imageIndex: 2, startRow: 0, endRow: 2, startCol: 2, endCol: 4 }, // Large top-right (2x2)
-        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 0, endCol: 1 }, // Middle-left
-        { imageIndex: 4, startRow: 1, endRow: 2, startCol: 1, endCol: 2 }, // Middle-middle-left
-        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 0, endCol: 2 }  // Bottom-left spans 2 cols
+        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 0, endCol: 2 }, // Middle-left spanning 2 cols
+        { imageIndex: 4, startRow: 2, endRow: 3, startCol: 0, endCol: 2 }, // Bottom-left spanning 2 cols
+        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }  // Bottom-right spanning 2 cols
       ]
     });
     
@@ -738,7 +738,10 @@ function applyGridTemplate(images, template, pageWidth, pageHeight) {
   
   // Verify complete grid coverage (no empty cells)
   if (!verifyGridCoverage(template, layout)) {
-    console.warn('Grid coverage verification failed - empty cells detected');
+    // Only warn in development, not in tests
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+      console.warn('Grid coverage verification failed - empty cells detected');
+    }
     return null;
   }
   
