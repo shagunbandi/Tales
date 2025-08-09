@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import '@testing-library/jest-dom'
 
 // Mock HTMLCanvasElement methods that are used in tests
@@ -26,6 +27,6 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   transform: vi.fn(),
   rect: vi.fn(),
   clip: vi.fn(),
-}))
+}) as unknown as CanvasRenderingContext2D) as unknown as HTMLCanvasElement['getContext']
 
-HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,mock')
+HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,mock') as unknown as HTMLCanvasElement['toDataURL']
