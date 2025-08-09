@@ -1,5 +1,6 @@
 import { getPreviewDimensions, PAGE_SIZES } from "../constants.js";
 import { cropForFullCover, cropImagesForGrid } from "./imageCropUtils.js";
+import { getLayoutOptions, convertToFullCoverFormat } from "./hardcodedLayouts.js";
 
 /**
  * Full Cover Layout utility functions
@@ -10,6 +11,7 @@ import { cropForFullCover, cropImagesForGrid } from "./imageCropUtils.js";
 export const FULL_COVER_LAYOUT_TYPES = {
   GRID: "grid", // Current row/column grid
   FLEXIBLE: "flexible", // New flexible layout with variable sizes
+  HARDCODED: "hardcoded", // Predefined hardcoded layout templates
 };
 
 /**
@@ -36,10 +38,17 @@ export async function arrangeImagesFullCover(
 
   // Check which layout type to use
   const layoutType =
-    settings?._fullCoverLayoutType || FULL_COVER_LAYOUT_TYPES.GRID;
+    settings?._fullCoverLayoutType || FULL_COVER_LAYOUT_TYPES.HARDCODED;
 
   if (layoutType === FULL_COVER_LAYOUT_TYPES.FLEXIBLE) {
     return await arrangeImagesFlexible(
+      images,
+      usableWidth,
+      usableHeight,
+      settings,
+    );
+  } else if (layoutType === FULL_COVER_LAYOUT_TYPES.HARDCODED) {
+    return await arrangeImagesHardcoded(
       images,
       usableWidth,
       usableHeight,
@@ -49,6 +58,39 @@ export async function arrangeImagesFullCover(
     // Default grid layout
     return await arrangeImagesGrid(images, usableWidth, usableHeight, settings);
   }
+}
+
+/**
+ * Hardcoded layout arrangement using predefined templates
+ */
+async function arrangeImagesHardcoded(images, usableWidth, usableHeight, settings) {
+  if (!images || images.length === 0) {
+    return [];
+  }
+
+  // Get paper size from settings
+  const pageSize = settings?.pageSize?.toUpperCase() || "A4";
+  
+  // Get available layouts for this paper size and number of images
+  const availableLayouts = getLayoutOptions(pageSize, images.length);
+  
+  if (availableLayouts.length === 0) {
+    // Fall back to flexible layout if no hardcoded layout exists
+    return await arrangeImagesFlexible(images, usableWidth, usableHeight, settings);
+  }
+
+  // Check if user has specified a particular layout
+  let selectedLayout = availableLayouts[0]; // Default to first layout
+  
+  if (settings?._hardcodedLayoutId) {
+    const userLayout = availableLayouts.find(layout => layout.id === settings._hardcodedLayoutId);
+    if (userLayout) {
+      selectedLayout = userLayout;
+    }
+  }
+
+  // Convert the hardcoded layout to the full cover format
+  return convertToFullCoverFormat(selectedLayout, images, usableWidth, usableHeight);
 }
 
 /**

@@ -20,7 +20,13 @@ import {
   previousPageLayout,
   resetPageLayoutState,
   reapplyCurrentLayout,
+  setCurrentHardcodedLayout,
 } from "../utils/layoutCycling.js";
+import {
+  applyHardcodedLayout,
+  getLayoutOptions,
+  hasHardcodedLayouts,
+} from "../utils/hardcodedLayouts.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
 import { storageManager } from "../utils/storageUtils.js";
 
@@ -799,6 +805,85 @@ export const useImageManagement = (settings = null) => {
     [pages, settings, isProcessing],
   );
 
+  const selectLayout = useCallback(
+    async (pageId, selectedLayout) => {
+      const targetPage = pages.find((page) => page.id === pageId);
+      if (!targetPage || targetPage.images.length === 0 || !selectedLayout) return;
+
+      // Prevent multiple simultaneous operations
+      if (isProcessing) return;
+
+      setIsProcessing(true);
+
+      const progressElement = React.createElement(ProgressToast, {
+        current: 0,
+        total: 100,
+        message: "Applying selected layout...",
+        currentFileName: "",
+      });
+
+      toast.custom(progressElement, {
+        id: "select-layout-progress",
+        duration: 0,
+      });
+
+      try {
+        // Show intermediate progress
+        const progressTimeout = setTimeout(() => {
+          toast.custom(
+            React.createElement(ProgressToast, {
+              current: 50,
+              total: 100,
+              message: "Positioning images...",
+              currentFileName: "",
+            }),
+            {
+              id: "select-layout-progress",
+              duration: 0,
+            },
+          );
+        }, 100);
+
+        // Get preview dimensions
+        const previewDimensions = getPreviewDimensions(settings);
+
+        // Apply the selected hardcoded layout
+        const newLayoutImages = applyHardcodedLayout(
+          selectedLayout,
+          targetPage.images,
+          previewDimensions.width,
+          previewDimensions.height
+        );
+
+        // Persist the chosen hardcoded layout for future reapplication on moves
+        try {
+          setCurrentHardcodedLayout(pageId, selectedLayout);
+        } catch (e) {
+          console.warn("Could not persist hardcoded layout selection:", e);
+        }
+
+        // Clear the timeout in case it hasn't fired yet
+        clearTimeout(progressTimeout);
+
+        setPages((currentPages) =>
+          currentPages.map((page) =>
+            page.id === pageId ? { ...page, images: newLayoutImages } : page,
+          ),
+        );
+
+        toast.dismiss("select-layout-progress");
+        toast.success(`Applied "${selectedLayout.name}" layout!`);
+      } catch (error) {
+        console.error("Error in selectLayout:", error);
+        toast.dismiss("select-layout-progress");
+        toast.error("Failed to apply layout");
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [pages, settings, isProcessing],
+  );
+
   // Legacy function - now calls nextLayout for backward compatibility
   const randomizeLayout = useCallback(
     async (pageId) => {
@@ -863,28 +948,65 @@ export const useImageManagement = (settings = null) => {
           sourceNewImages.splice(imageIndex, 1);
           const destNewImages = [...destPage.images, imageToMove];
 
-          // Arrange both pages with correct layout (preserve structure for image moves)
-          const [sourceArrangedImages, destArrangedImages] = await Promise.all([
-            sourceNewImages.length > 0
-              ? arrangeImagesWithCorrectLayout(
-                  sourceNewImages,
-                  true,
-                  sourcePageId,
-                )
-              : Promise.resolve([]),
-            arrangeImagesWithCorrectLayout(destNewImages, true, destPageId),
-          ]);
+          // Arrange both pages. For full cover, switch to hardcoded layouts for new counts to avoid gaps/overlaps
+          if (settings.designStyle === "full_cover") {
+            const paperSize = settings?.pageSize?.toUpperCase() || "A4";
+            const { width, height } = getPreviewDimensions(settings);
 
-          setPages((prev) =>
-            prev.map((page) => {
-              if (page.id === sourcePageId) {
-                return { ...page, images: sourceArrangedImages };
-              } else if (page.id === destPageId) {
-                return { ...page, images: destArrangedImages };
+            let sourceArrangedImages = [];
+            if (sourceNewImages.length > 0) {
+              const sourceLayouts = getLayoutOptions(paperSize, sourceNewImages.length);
+              const sourceSelected = sourceLayouts[0] || null;
+              sourceArrangedImages = sourceSelected
+                ? applyHardcodedLayout(sourceSelected, sourceNewImages, width, height)
+                : sourceNewImages;
+              if (sourceSelected) {
+                try { setCurrentHardcodedLayout(sourcePageId, sourceSelected); } catch {}
               }
-              return page;
-            }),
-          );
+            }
+
+            const destLayouts = getLayoutOptions(paperSize, destNewImages.length);
+            const destSelected = destLayouts[0] || null;
+            const destArrangedImages = destSelected
+              ? applyHardcodedLayout(destSelected, destNewImages, width, height)
+              : destNewImages;
+            if (destSelected) {
+              try { setCurrentHardcodedLayout(destPageId, destSelected); } catch {}
+            }
+
+            setPages((prev) =>
+              prev.map((page) => {
+                if (page.id === sourcePageId) {
+                  return { ...page, images: sourceArrangedImages };
+                } else if (page.id === destPageId) {
+                  return { ...page, images: destArrangedImages };
+                }
+                return page;
+              }),
+            );
+          } else {
+            const [sourceArrangedImages, destArrangedImages] = await Promise.all([
+              sourceNewImages.length > 0
+                ? arrangeImagesWithCorrectLayout(
+                    sourceNewImages,
+                    true,
+                    sourcePageId,
+                  )
+                : Promise.resolve([]),
+              arrangeImagesWithCorrectLayout(destNewImages, true, destPageId),
+            ]);
+
+            setPages((prev) =>
+              prev.map((page) => {
+                if (page.id === sourcePageId) {
+                  return { ...page, images: sourceArrangedImages };
+                } else if (page.id === destPageId) {
+                  return { ...page, images: destArrangedImages };
+                }
+                return page;
+              }),
+            );
+          }
         } catch (error) {
           console.error("Error in moveImageToPreviousPage:", error);
         }
@@ -894,9 +1016,8 @@ export const useImageManagement = (settings = null) => {
   );
 
   const moveImageToNextPage = useCallback(
-    (sourcePageId, imageIndex, destPageId) => {
-      // Same logic as moveImageToPreviousPage
-      moveImageToPreviousPage(sourcePageId, imageIndex, destPageId);
+    async (sourcePageId, imageIndex, destPageId) => {
+      await moveImageToPreviousPage(sourcePageId, imageIndex, destPageId);
     },
     [moveImageToPreviousPage],
   );
@@ -1339,6 +1460,7 @@ export const useImageManagement = (settings = null) => {
     randomizeLayout,
     nextLayout,
     previousLayout,
+    selectLayout,
     updateImagePosition,
     moveImageToPreviousPage,
     moveImageToNextPage,

@@ -70,6 +70,7 @@ export const DEFAULT_SETTINGS = {
   maxNumberOfRows: 4,
   maxNumberOfPages: 4,
   imagesPerPage: 10,
+  _fullCoverLayoutType: "hardcoded", // Use hardcoded layouts for full cover mode
 };
 
 export const PREVIEW_SCALE = 0.8;

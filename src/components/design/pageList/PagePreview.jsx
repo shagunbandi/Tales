@@ -14,7 +14,9 @@ import {
 } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
 import { getCurrentLayoutInfo } from "../../../utils/layoutCycling.js";
+import { hasHardcodedLayouts } from "../../../utils/hardcodedLayouts.js";
 import FullCoverImage from "./FullCoverImage.jsx";
+import LayoutSelectionModal from "./LayoutSelectionModal.jsx";
 
 const PagePreview = ({
   page,
@@ -29,6 +31,7 @@ const PagePreview = ({
   onRandomizeLayout,
   onNextLayout,
   onPreviousLayout,
+  onSelectLayout,
   onUpdateImagePosition,
   onMoveImageToPreviousPage,
   onMoveImageToNextPage,
@@ -50,6 +53,11 @@ const PagePreview = ({
 
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
+
+  // Check if hardcoded layouts are available for full cover design
+  const hasHardcodedLayoutsForPage = settings?.designStyle === "full_cover" && 
+    hasHardcodedLayouts(settings?.pageSize?.toUpperCase() || "A4", imageCount);
 
   useEffect(() => {
     const updateScale = () => {
@@ -65,6 +73,20 @@ const PagePreview = ({
     return () => window.removeEventListener("resize", updateScale);
   }, [previewDimensions.width]);
 
+  const handleOpenLayoutModal = () => {
+    setIsLayoutModalOpen(true);
+  };
+
+  const handleCloseLayoutModal = () => {
+    setIsLayoutModalOpen(false);
+  };
+
+  const handleSelectLayout = (pageId, selectedLayout) => {
+    if (onSelectLayout) {
+      onSelectLayout(pageId, selectedLayout);
+    }
+  };
+
   return (
     <div className="mb-6 min-w-0" data-testid={`page-preview-${pageIndex}`}>
       <div className="mb-4 space-y-2">
@@ -79,7 +101,7 @@ const PagePreview = ({
             </span>
             {layoutInfo.totalLayouts > 0 && (
               <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                Layout {layoutInfo.currentIndex}/{layoutInfo.totalLayouts}
+                {layoutInfo.currentLayoutName || `Layout ${layoutInfo.currentIndex}`} ({layoutInfo.currentIndex}/{layoutInfo.totalLayouts})
               </span>
             )}
           </div>
@@ -137,30 +159,47 @@ const PagePreview = ({
                 <HiRefresh className="h-3 w-3" />
                 {isProcessing ? "Shuffling..." : "Shuffle Images"}
               </Button>
-              <Button
-                size="xs"
-                color="purple"
-                onClick={() => onPreviousLayout(page.id)}
-                disabled={isProcessing}
-                className="flex items-center gap-1"
-                title="Switch to previous layout structure"
-                data-testid={`prev-layout-${pageIndex}`}
-              >
-                <HiChevronLeft className="h-3 w-3" />
-                {isProcessing ? "Switching..." : "Previous Layout"}
-              </Button>
-              <Button
-                size="xs"
-                color="purple"
-                onClick={() => onNextLayout(page.id)}
-                disabled={isProcessing}
-                className="flex items-center gap-1"
-                title="Switch to next layout structure"
-                data-testid={`next-layout-${pageIndex}`}
-              >
-                <HiChevronRight className="h-3 w-3" />
-                {isProcessing ? "Switching..." : "Next Layout"}
-              </Button>
+              {hasHardcodedLayoutsForPage ? (
+                <Button
+                  size="xs"
+                  color="purple"
+                  onClick={handleOpenLayoutModal}
+                  disabled={isProcessing}
+                  className="flex items-center gap-1"
+                  title="Choose from available layout templates"
+                  data-testid={`choose-layout-${pageIndex}`}
+                >
+                  <HiViewGrid className="h-3 w-3" />
+                  {isProcessing ? "Processing..." : "Choose Layout"}
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    size="xs"
+                    color="purple"
+                    onClick={() => onPreviousLayout(page.id)}
+                    disabled={isProcessing}
+                    className="flex items-center gap-1"
+                    title="Switch to previous layout structure"
+                    data-testid={`prev-layout-${pageIndex}`}
+                  >
+                    <HiChevronLeft className="h-3 w-3" />
+                    {isProcessing ? "Switching..." : "Previous Layout"}
+                  </Button>
+                  <Button
+                    size="xs"
+                    color="purple"
+                    onClick={() => onNextLayout(page.id)}
+                    disabled={isProcessing}
+                    className="flex items-center gap-1"
+                    title="Switch to next layout structure"
+                    data-testid={`next-layout-${pageIndex}`}
+                  >
+                    <HiChevronRight className="h-3 w-3" />
+                    {isProcessing ? "Switching..." : "Next Layout"}
+                  </Button>
+                </>
+              )}
             </>
           )}
         </div>
@@ -253,6 +292,19 @@ const PagePreview = ({
           </div>
         </div>
       </div>
+
+      {/* Layout Selection Modal */}
+      {isLayoutModalOpen && (
+        <LayoutSelectionModal
+          isOpen={isLayoutModalOpen}
+          onClose={handleCloseLayoutModal}
+          onSelectLayout={handleSelectLayout}
+          pageId={page.id}
+          images={page.images}
+          settings={settings}
+          currentLayoutId={null} // Could be enhanced to detect current layout
+        />
+      )}
     </div>
   );
 };

@@ -55,6 +55,7 @@ function App() {
     randomizeLayout,
     nextLayout,
     previousLayout,
+    selectLayout,
     updateImagePosition,
     moveImageToPreviousPage,
     moveImageToNextPage,
@@ -331,6 +332,7 @@ function App() {
               onRandomizeLayout={randomizeLayout}
               onNextLayout={nextLayout}
               onPreviousLayout={previousLayout}
+              onSelectLayout={selectLayout}
               onUpdateImagePosition={updateImagePosition}
               onMoveImageToPreviousPage={moveImageToPreviousPage}
               onMoveImageToNextPage={moveImageToNextPage}

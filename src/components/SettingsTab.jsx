@@ -35,11 +35,14 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
       }
     }
 
-    if (!isValidNumber(settings.maxImagesPerRow, 1, Infinity)) {
-      errors.maxImagesPerRow = "Max images per row must be at least 1";
-    }
-    if (!isValidNumber(settings.maxNumberOfRows, 1, Infinity)) {
-      errors.maxNumberOfRows = "Max number of rows must be at least 1";
+    // Only validate layout grid settings for classic design
+    if (settings.designStyle !== DESIGN_STYLES.FULL_COVER) {
+      if (!isValidNumber(settings.maxImagesPerRow, 1, Infinity)) {
+        errors.maxImagesPerRow = "Max images per row must be at least 1";
+      }
+      if (!isValidNumber(settings.maxNumberOfRows, 1, Infinity)) {
+        errors.maxNumberOfRows = "Max number of rows must be at least 1";
+      }
     }
     if (!isValidNumber(settings.imagesPerPage, 1, Infinity)) {
       errors.imagesPerPage = "Images per page must be at least 1";
@@ -80,12 +83,14 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
       label: "Max Images Per Row:",
       min: 1,
       help: "Maximum number of images in a row",
+      hidden: isFullCover,
     },
     {
       id: "maxNumberOfRows",
       label: "Max Number of Rows:",
       min: 1,
       help: "Maximum number of rows per page",
+      hidden: isFullCover,
     },
     {
       id: "imagesPerPage",

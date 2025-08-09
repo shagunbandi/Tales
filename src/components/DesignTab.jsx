@@ -25,6 +25,7 @@ const DesignTab = ({
   onRandomizeLayout,
   onNextLayout,
   onPreviousLayout,
+  onSelectLayout,
   onUpdateImagePosition,
   onMoveImageToPreviousPage,
   onMoveImageToNextPage,
@@ -80,6 +81,7 @@ const DesignTab = ({
               onRandomizeLayout={onRandomizeLayout}
               onNextLayout={onNextLayout}
               onPreviousLayout={onPreviousLayout}
+              onSelectLayout={onSelectLayout}
               onUpdateImagePosition={onUpdateImagePosition}
               onMoveImageToPreviousPage={onMoveImageToPreviousPage}
               onMoveImageToNextPage={onMoveImageToNextPage}

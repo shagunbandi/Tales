@@ -8,9 +8,29 @@ import {
   arrangeImagesFullCover,
   FULL_COVER_LAYOUT_TYPES,
 } from "./fullCoverLayoutUtils.js";
+import { getLayoutOptions, convertToFullCoverFormat } from "./hardcodedLayouts.js";
 
 // Store the current layout index for each page
 const pageLayoutState = new Map();
+
+/**
+ * Store the currently selected hardcoded layout for a full cover page
+ * This enables consistent reapplication when images are moved between pages
+ * @param {string} pageId
+ * @param {Object} layout - Hardcoded layout object from hardcodedLayouts
+ */
+export function setCurrentHardcodedLayout(pageId, layout) {
+  const fullCoverPageId = `fullcover_${pageId}`;
+  pageLayoutState.set(fullCoverPageId, {
+    currentIndex: 0,
+    layouts: [
+      {
+        type: "HARDCODED",
+        hardcodedLayout: layout,
+      },
+    ],
+  });
+}
 
 /**
  * Generate all valid layout combinations for a given number of images
@@ -304,7 +324,24 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
     if (state && state.layouts && state.layouts[state.currentIndex]) {
       const selectedOption = state.layouts[state.currentIndex];
 
-      // Apply the same layout that was previously selected
+      // Re-apply previously selected hardcoded layout
+      if (selectedOption.type === "HARDCODED" && selectedOption.hardcodedLayout) {
+        const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+        try {
+          return convertToFullCoverFormat(
+            selectedOption.hardcodedLayout,
+            images,
+            previewWidth,
+            previewHeight,
+          );
+        } catch (error) {
+          console.error("Error reapplying hardcoded layout:", error);
+          // Return null to indicate failure and allow fallback
+          return null;
+        }
+      }
+
+      // Legacy: grid/flexible path
       const layoutSettings = { ...settings };
 
       if (selectedOption.type === FULL_COVER_LAYOUT_TYPES.GRID) {
@@ -360,86 +397,11 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
  * @returns {Promise<Array>} Arranged images with new layout
  */
 async function cycleFullCoverLayout(images, settings, pageId, direction) {
-  const { width: previewWidth, height: previewHeight } =
-    getPreviewDimensions(settings);
-
-  // Create state key specific to full cover layouts
-  const fullCoverPageId = `fullcover_${pageId}`;
-
-  // Get available layout types: grid and flexible
-  const layoutTypes = [
-    { type: FULL_COVER_LAYOUT_TYPES.GRID, name: "Grid" },
-    { type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE, name: "Flexible" },
-  ];
-
-  // Get current grid layouts for this number of images (for grid type)
-  const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings?.maxNumberOfRows || 4;
-  const gridLayouts = generateAllValidLayouts(
-    images.length,
-    maxImagesPerRow,
-    maxNumberOfRows,
-  );
-
-  // Build all available options
-  const allOptions = [];
-
-  // Add grid options
-  gridLayouts.forEach((layout, index) => {
-    allOptions.push({
-      type: FULL_COVER_LAYOUT_TYPES.GRID,
-      layoutIndex: index,
-      layout: layout,
-      name: `Grid ${index + 1}`,
-    });
-  });
-
-  // Add flexible options (we'll cycle through different flexible layouts)
-  const flexibleCount = getFlexibleLayoutCount(images.length);
-  for (let i = 0; i < flexibleCount; i++) {
-    allOptions.push({
-      type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE,
-      layoutIndex: i,
-      name: `Flexible ${i + 1}`,
-    });
-  }
-
-  if (allOptions.length === 0) {
-    return images;
-  }
-
-  // Get current state and move to next/previous
-  const state = getLayoutState(fullCoverPageId, allOptions);
-  state.currentIndex =
-    (state.currentIndex + direction + allOptions.length) % allOptions.length;
-
-  const selectedOption = allOptions[state.currentIndex];
-
-  // Apply the selected layout
-  const layoutSettings = { ...settings };
-
-  if (selectedOption.type === FULL_COVER_LAYOUT_TYPES.GRID) {
-    // Use grid layout with forced distribution
-    layoutSettings._forcedLayout = selectedOption.layout;
-    layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.GRID;
-  } else {
-    // Use flexible layout with specific option index
-    layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.FLEXIBLE;
-    layoutSettings._forcedFlexibleLayout = selectedOption.layoutIndex;
-  }
-
-  try {
-    const result = await arrangeImagesFullCover(
-      images,
-      previewWidth,
-      previewHeight,
-      layoutSettings,
-    );
-    return result;
-  } catch (error) {
-    console.error("Error applying full cover layout:", error);
-    return images;
-  }
+  // Full cover mode now uses hardcoded layouts exclusively via modal selection
+  // Layout cycling (previous/next) is disabled for full cover mode
+  // This function should not be called, but return images as-is for safety
+  console.warn("Layout cycling is disabled for full cover mode. Use the layout selection modal instead.");
+  return images;
 }
 
 /**
@@ -464,48 +426,79 @@ function getFlexibleLayoutCount(imageCount) {
  * @param {Object} settings - Layout settings
  * @returns {Object} Current layout info with index and total count
  */
-function getCurrentFullCoverLayoutInfo(pageId, images, settings) {
-  const fullCoverPageId = `fullcover_${pageId}`;
+/**
+ * Check if a specific layout is currently applied to images
+ * @param {Object} layout - Layout to check
+ * @param {Array} images - Current positioned images
+ * @param {Object} settings - Layout settings
+ * @returns {boolean} True if layout matches current positions
+ */
+function isLayoutApplied(layout, images, settings) {
+  if (!layout || !images || images.length === 0) return false;
   
-  // Get available grid layouts
-  const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings?.maxNumberOfRows || 4;
-  const gridLayouts = generateAllValidLayouts(
-    images.length,
-    maxImagesPerRow,
-    maxNumberOfRows,
+  // Get what the layout should look like  
+  const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+  const expectedImages = convertToFullCoverFormat(
+    layout, 
+    images, 
+    previewWidth, 
+    previewHeight
   );
+  
+  // Compare positions (allow some tolerance for floating point precision)
+  const tolerance = 1;
+  
+  for (let i = 0; i < Math.min(images.length, expectedImages.length); i++) {
+    const current = images[i];
+    const expected = expectedImages[i];
+    
+    if (!current || !expected) continue;
+    
+    // Check if positions match within tolerance
+    if (Math.abs((current.x || 0) - (expected.x || 0)) > tolerance ||
+        Math.abs((current.y || 0) - (expected.y || 0)) > tolerance ||
+        Math.abs((current.previewWidth || 0) - (expected.previewWidth || 0)) > tolerance ||
+        Math.abs((current.previewHeight || 0) - (expected.previewHeight || 0)) > tolerance) {
+      return false;
+    }
+  }
+  
+  return true;
+}
 
-  // Build all available options
-  const allOptions = [];
-
-  // Add grid options
-  gridLayouts.forEach((layout, index) => {
-    allOptions.push({
-      type: FULL_COVER_LAYOUT_TYPES.GRID,
-      layoutIndex: index,
-      layout: layout,
-      name: `Grid ${index + 1}`,
-    });
-  });
-
-  // Add flexible options
-  const flexibleCount = getFlexibleLayoutCount(images.length);
-  for (let i = 0; i < flexibleCount; i++) {
-    allOptions.push({
-      type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE,
-      layoutIndex: i,
-      name: `Flexible ${i + 1}`,
-    });
+function getCurrentFullCoverLayoutInfo(pageId, images, settings) {
+  const paperSize = settings?.pageSize?.toUpperCase() || "A4";
+  const hardcodedLayouts = getLayoutOptions(paperSize, images.length);
+  
+  if (hardcodedLayouts.length === 0) {
+    return { currentIndex: 0, totalLayouts: 0, currentLayoutName: null };
   }
 
-  if (allOptions.length === 0) {
-    return { currentIndex: 0, totalLayouts: 0 };
+  // Try to detect which layout is currently applied by checking image positions
+  let currentLayoutName = null;
+  let currentLayoutIndex = 0;
+  
+  if (images && images.length > 0) {
+    // Try to match current image positions with hardcoded layouts
+    for (let i = 0; i < hardcodedLayouts.length; i++) {
+      const layout = hardcodedLayouts[i];
+      if (isLayoutApplied(layout, images, settings)) {
+        currentLayoutName = layout.name;
+        currentLayoutIndex = i + 1;
+        break;
+      }
+    }
+  }
+  
+  // If no layout detected, show first available layout name
+  if (!currentLayoutName && hardcodedLayouts.length > 0) {
+    currentLayoutName = hardcodedLayouts[0].name;
+    currentLayoutIndex = 1;
   }
 
-  const state = getLayoutState(fullCoverPageId, allOptions);
   return {
-    currentIndex: state.currentIndex + 1, // 1-indexed for display
-    totalLayouts: allOptions.length,
+    currentIndex: currentLayoutIndex,
+    totalLayouts: hardcodedLayouts.length,
+    currentLayoutName,
   };
 }
