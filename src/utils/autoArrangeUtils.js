@@ -41,7 +41,7 @@ export async function autoArrangeImages(
   if (settings.designStyle === "full_cover") {
     // Calculate maximum images per page based on both grid and per-page settings
     const maxImagesPerRow = settings.maxImagesPerRow || 4;
-    const maxNumberOfRows = settings.maxNumberOfRows || 2;
+    const maxNumberOfRows = settings.maxNumberOfRows || 4;
     const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
     const maxImagesPerPage = Math.min(
       maxImagesFromGrid,

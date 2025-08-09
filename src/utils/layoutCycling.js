@@ -4,7 +4,10 @@
 
 import { arrangeImages } from "./layoutUtils.js";
 import { getPreviewDimensions } from "../constants.js";
-import { arrangeImagesFullCover, FULL_COVER_LAYOUT_TYPES } from "./fullCoverLayoutUtils.js";
+import {
+  arrangeImagesFullCover,
+  FULL_COVER_LAYOUT_TYPES,
+} from "./fullCoverLayoutUtils.js";
 
 // Store the current layout index for each page
 const pageLayoutState = new Map();
@@ -133,6 +136,43 @@ export async function previousPageLayout(images, settings, pageId) {
 }
 
 /**
+ * Get current layout information for a page
+ * @param {string} pageId - Page identifier
+ * @param {Array} images - Images to get layouts for
+ * @param {Object} settings - Layout settings
+ * @returns {Object} Current layout info with index and total count
+ */
+export function getCurrentLayoutInfo(pageId, images, settings) {
+  if (!images || images.length === 0) {
+    return { currentIndex: 0, totalLayouts: 0 };
+  }
+
+  // Check if we're in full cover mode
+  if (settings?.designStyle === "full_cover") {
+    return getCurrentFullCoverLayoutInfo(pageId, images, settings);
+  }
+
+  // Classic layout
+  const maxImagesPerRow = settings?.maxImagesPerRow || 4;
+  const maxNumberOfRows = settings?.maxNumberOfRows || 4;
+  const availableLayouts = generateAllValidLayouts(
+    images.length,
+    maxImagesPerRow,
+    maxNumberOfRows,
+  );
+
+  if (availableLayouts.length === 0) {
+    return { currentIndex: 0, totalLayouts: 0 };
+  }
+
+  const state = getLayoutState(pageId, availableLayouts);
+  return {
+    currentIndex: state.currentIndex + 1, // 1-indexed for display
+    totalLayouts: availableLayouts.length,
+  };
+}
+
+/**
  * Core layout cycling function
  * @param {Array} images - Images to arrange
  * @param {Object} settings - Layout settings
@@ -146,13 +186,13 @@ async function cyclePageLayout(images, settings, pageId, direction) {
   }
 
   // Check if we're in full cover mode
-  if (settings?.designStyle === 'full_cover') {
+  if (settings?.designStyle === "full_cover") {
     return await cycleFullCoverLayout(images, settings, pageId, direction);
   }
 
   // Classic layout cycling (original implementation)
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings?.maxNumberOfRows || 2;
+  const maxNumberOfRows = settings?.maxNumberOfRows || 4;
   const availableLayouts = generateAllValidLayouts(
     images.length,
     maxImagesPerRow,
@@ -243,21 +283,6 @@ export function resetPageLayoutState(pageId) {
   pageLayoutState.delete(pageId);
 }
 
-/**
- * Get current layout info for a page
- * @param {string} pageId - Page identifier
- * @returns {Object|null} Current layout info
- */
-export function getCurrentLayoutInfo(pageId) {
-  const state = pageLayoutState.get(pageId);
-  if (!state) return null;
-
-  return {
-    currentIndex: state.currentIndex,
-    currentLayout: state.layouts[state.currentIndex],
-    totalLayouts: state.layouts.length,
-  };
-}
 
 /**
  * Re-apply the current layout template to a new set of images
@@ -272,16 +297,16 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
   }
 
   // Check if we're in full cover mode
-  if (settings?.designStyle === 'full_cover') {
+  if (settings?.designStyle === "full_cover") {
     const fullCoverPageId = `fullcover_${pageId}`;
     const state = pageLayoutState.get(fullCoverPageId);
-    
+
     if (state && state.layouts && state.layouts[state.currentIndex]) {
       const selectedOption = state.layouts[state.currentIndex];
-      
+
       // Apply the same layout that was previously selected
       const layoutSettings = { ...settings };
-      
+
       if (selectedOption.type === FULL_COVER_LAYOUT_TYPES.GRID) {
         // Re-apply grid layout
         layoutSettings._forcedLayout = selectedOption.layout;
@@ -291,15 +316,16 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
         layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.FLEXIBLE;
         layoutSettings._forcedFlexibleLayout = selectedOption.layoutIndex;
       }
-      
-      const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-      
+
+      const { width: previewWidth, height: previewHeight } =
+        getPreviewDimensions(settings);
+
       try {
         const result = await arrangeImagesFullCover(
           images,
           previewWidth,
           previewHeight,
-          layoutSettings
+          layoutSettings,
         );
         return result;
       } catch (error) {
@@ -309,7 +335,7 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
       }
     }
   }
-  
+
   // Fallback to classic layout cycling for non-full-cover or if no state found
   try {
     const state = getLayoutState(pageId, []);
@@ -320,7 +346,7 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
   } catch (error) {
     console.error("Error in classic layout reapplication:", error);
   }
-  
+
   // Final fallback - return images as-is
   return images;
 }
@@ -334,58 +360,64 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
  * @returns {Promise<Array>} Arranged images with new layout
  */
 async function cycleFullCoverLayout(images, settings, pageId, direction) {
-  const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
-  
+  const { width: previewWidth, height: previewHeight } =
+    getPreviewDimensions(settings);
+
   // Create state key specific to full cover layouts
   const fullCoverPageId = `fullcover_${pageId}`;
-  
+
   // Get available layout types: grid and flexible
   const layoutTypes = [
-    { type: FULL_COVER_LAYOUT_TYPES.GRID, name: 'Grid' },
-    { type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE, name: 'Flexible' }
+    { type: FULL_COVER_LAYOUT_TYPES.GRID, name: "Grid" },
+    { type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE, name: "Flexible" },
   ];
-  
+
   // Get current grid layouts for this number of images (for grid type)
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings?.maxNumberOfRows || 2;
-  const gridLayouts = generateAllValidLayouts(images.length, maxImagesPerRow, maxNumberOfRows);
-  
+  const maxNumberOfRows = settings?.maxNumberOfRows || 4;
+  const gridLayouts = generateAllValidLayouts(
+    images.length,
+    maxImagesPerRow,
+    maxNumberOfRows,
+  );
+
   // Build all available options
   const allOptions = [];
-  
+
   // Add grid options
   gridLayouts.forEach((layout, index) => {
     allOptions.push({
       type: FULL_COVER_LAYOUT_TYPES.GRID,
       layoutIndex: index,
       layout: layout,
-      name: `Grid ${index + 1}`
+      name: `Grid ${index + 1}`,
     });
   });
-  
+
   // Add flexible options (we'll cycle through different flexible layouts)
   const flexibleCount = getFlexibleLayoutCount(images.length);
   for (let i = 0; i < flexibleCount; i++) {
     allOptions.push({
       type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE,
       layoutIndex: i,
-      name: `Flexible ${i + 1}`
+      name: `Flexible ${i + 1}`,
     });
   }
-  
+
   if (allOptions.length === 0) {
     return images;
   }
-  
+
   // Get current state and move to next/previous
   const state = getLayoutState(fullCoverPageId, allOptions);
-  state.currentIndex = (state.currentIndex + direction + allOptions.length) % allOptions.length;
-  
+  state.currentIndex =
+    (state.currentIndex + direction + allOptions.length) % allOptions.length;
+
   const selectedOption = allOptions[state.currentIndex];
-  
+
   // Apply the selected layout
   const layoutSettings = { ...settings };
-  
+
   if (selectedOption.type === FULL_COVER_LAYOUT_TYPES.GRID) {
     // Use grid layout with forced distribution
     layoutSettings._forcedLayout = selectedOption.layout;
@@ -395,13 +427,13 @@ async function cycleFullCoverLayout(images, settings, pageId, direction) {
     layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.FLEXIBLE;
     layoutSettings._forcedFlexibleLayout = selectedOption.layoutIndex;
   }
-  
+
   try {
     const result = await arrangeImagesFullCover(
       images,
       previewWidth,
       previewHeight,
-      layoutSettings
+      layoutSettings,
     );
     return result;
   } catch (error) {
@@ -423,4 +455,57 @@ function getFlexibleLayoutCount(imageCount) {
   if (imageCount === 5) return 2; // 2 variations for 5 images (large + four others, 2-1-2 pattern)
   if (imageCount === 6) return 5; // 5 variations for 6 images (large in different positions)
   return 1; // Default grid for larger numbers
+}
+
+/**
+ * Get current layout information for full cover layouts
+ * @param {string} pageId - Page identifier
+ * @param {Array} images - Images to get layouts for
+ * @param {Object} settings - Layout settings
+ * @returns {Object} Current layout info with index and total count
+ */
+function getCurrentFullCoverLayoutInfo(pageId, images, settings) {
+  const fullCoverPageId = `fullcover_${pageId}`;
+  
+  // Get available grid layouts
+  const maxImagesPerRow = settings?.maxImagesPerRow || 4;
+  const maxNumberOfRows = settings?.maxNumberOfRows || 4;
+  const gridLayouts = generateAllValidLayouts(
+    images.length,
+    maxImagesPerRow,
+    maxNumberOfRows,
+  );
+
+  // Build all available options
+  const allOptions = [];
+
+  // Add grid options
+  gridLayouts.forEach((layout, index) => {
+    allOptions.push({
+      type: FULL_COVER_LAYOUT_TYPES.GRID,
+      layoutIndex: index,
+      layout: layout,
+      name: `Grid ${index + 1}`,
+    });
+  });
+
+  // Add flexible options
+  const flexibleCount = getFlexibleLayoutCount(images.length);
+  for (let i = 0; i < flexibleCount; i++) {
+    allOptions.push({
+      type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE,
+      layoutIndex: i,
+      name: `Flexible ${i + 1}`,
+    });
+  }
+
+  if (allOptions.length === 0) {
+    return { currentIndex: 0, totalLayouts: 0 };
+  }
+
+  const state = getLayoutState(fullCoverPageId, allOptions);
+  return {
+    currentIndex: state.currentIndex + 1, // 1-indexed for display
+    totalLayouts: allOptions.length,
+  };
 }

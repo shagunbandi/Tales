@@ -4,4 +4,4 @@ Cypress.Commands.add("getByTestId", (testId, ...args) => {
 });
 
 // Ensure fixtures are available
-// No additional setup needed 
+// No additional setup needed

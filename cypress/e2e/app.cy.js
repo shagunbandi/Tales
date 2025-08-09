@@ -46,7 +46,10 @@ describe("Tales App E2E", () => {
     cy.contains("Successfully processed", { timeout: 20000 });
 
     // Check available images counter increments to 1 of 1
-    cy.getByTestId("available-images-count", { timeout: 20000 }).should("contain", "1 of 1");
+    cy.getByTestId("available-images-count", { timeout: 20000 }).should(
+      "contain",
+      "1 of 1",
+    );
 
     // Auto-arrange onto pages
     cy.getByTestId("auto-arrange-button").click();
@@ -66,7 +69,10 @@ describe("Tales App E2E", () => {
 
     cy.contains("Successfully processed", { timeout: 20000 });
 
-    cy.getByTestId("available-images-count", { timeout: 20000 }).should("contain", "1 of 1");
+    cy.getByTestId("available-images-count", { timeout: 20000 }).should(
+      "contain",
+      "1 of 1",
+    );
 
     cy.getByTestId("auto-arrange-button").click();
 
@@ -78,4 +84,4 @@ describe("Tales App E2E", () => {
 
     cy.getByTestId("generate-pdf-button").should("exist");
   });
-}); 
+});

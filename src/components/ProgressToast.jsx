@@ -9,13 +9,16 @@ const ProgressToast = ({
   message,
   currentFileName,
 }) => {
-  const effectiveProgress = typeof progress === "number" ? progress : current || 0;
+  const effectiveProgress =
+    typeof progress === "number" ? progress : current || 0;
   const percent = total > 0 ? Math.round((effectiveProgress / total) * 100) : 0;
   return (
     <div className="w-64" data-testid="progress-toast">
       <p className="mb-2 text-xs text-white/90">{message}</p>
       {currentFileName ? (
-        <p className="mb-1 truncate text-[10px] text-white/70">{currentFileName}</p>
+        <p className="mb-1 truncate text-[10px] text-white/70">
+          {currentFileName}
+        </p>
       ) : null}
       <div className="h-2 w-full rounded bg-white/20">
         <div

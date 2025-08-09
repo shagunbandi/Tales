@@ -8,8 +8,8 @@ import { cropForFullCover, cropImagesForGrid } from "./imageCropUtils.js";
 
 // Layout type constants
 export const FULL_COVER_LAYOUT_TYPES = {
-  GRID: 'grid', // Current row/column grid
-  FLEXIBLE: 'flexible' // New flexible layout with variable sizes
+  GRID: "grid", // Current row/column grid
+  FLEXIBLE: "flexible", // New flexible layout with variable sizes
 };
 
 /**
@@ -35,10 +35,16 @@ export async function arrangeImagesFullCover(
   const usableHeight = totalHeight;
 
   // Check which layout type to use
-  const layoutType = settings?._fullCoverLayoutType || FULL_COVER_LAYOUT_TYPES.GRID;
+  const layoutType =
+    settings?._fullCoverLayoutType || FULL_COVER_LAYOUT_TYPES.GRID;
 
   if (layoutType === FULL_COVER_LAYOUT_TYPES.FLEXIBLE) {
-    return await arrangeImagesFlexible(images, usableWidth, usableHeight, settings);
+    return await arrangeImagesFlexible(
+      images,
+      usableWidth,
+      usableHeight,
+      settings,
+    );
   } else {
     // Default grid layout
     return await arrangeImagesGrid(images, usableWidth, usableHeight, settings);
@@ -119,7 +125,7 @@ function calculateFlexibleRowDistribution(
 
   // Get constraints from settings, with fallbacks matching constants.js
   const maxImagesPerRow = settings?.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings?.maxNumberOfRows || 2;
+  const maxNumberOfRows = settings?.maxNumberOfRows || 4;
 
   // Calculate maximum images that can fit on this page
   const maxImagesThisPage = maxImagesPerRow * maxNumberOfRows;
@@ -393,22 +399,33 @@ function scoreLayout(images, rowDistribution, pageWidth, pageHeight) {
  * Flexible layout arrangement - images can take variable sizes to fill page optimally
  * Uses a dynamic allocation algorithm that minimizes cropping
  */
-async function arrangeImagesFlexible(images, usableWidth, usableHeight, settings) {
+async function arrangeImagesFlexible(
+  images,
+  usableWidth,
+  usableHeight,
+  settings,
+) {
   if (images.length === 1) {
     // Single image takes full page
-    return [{
-      ...images[0],
-      x: 0,
-      y: 0,
-      previewWidth: usableWidth,
-      previewHeight: usableHeight,
-      fullCoverMode: true,
-    }];
+    return [
+      {
+        ...images[0],
+        x: 0,
+        y: 0,
+        previewWidth: usableWidth,
+        previewHeight: usableHeight,
+        fullCoverMode: true,
+      },
+    ];
   }
 
   // Generate multiple flexible layout options
-  const layoutOptions = generateFlexibleLayouts(images, usableWidth, usableHeight);
-  
+  const layoutOptions = generateFlexibleLayouts(
+    images,
+    usableWidth,
+    usableHeight,
+  );
+
   // Check if we have a forced layout option
   if (settings?._forcedFlexibleLayout) {
     const forcedIndex = settings._forcedFlexibleLayout;
@@ -416,7 +433,7 @@ async function arrangeImagesFlexible(images, usableWidth, usableHeight, settings
       return layoutOptions[forcedIndex];
     }
   }
-  
+
   // Score each layout and pick the best one
   const bestLayout = selectBestFlexibleLayout(layoutOptions, images);
   return bestLayout;
@@ -428,10 +445,10 @@ async function arrangeImagesFlexible(images, usableWidth, usableHeight, settings
 function generateFlexibleLayouts(images, pageWidth, pageHeight) {
   const layouts = [];
   const numImages = images.length;
-  
+
   // Generate all possible grid-based spanning layouts
   layouts.push(...generateSpanningLayouts(images, pageWidth, pageHeight));
-  
+
   return layouts;
 }
 
@@ -441,10 +458,10 @@ function generateFlexibleLayouts(images, pageWidth, pageHeight) {
 function generateSpanningLayouts(images, pageWidth, pageHeight) {
   const layouts = [];
   const numImages = images.length;
-  
+
   // Define different grid templates and how images span across them
   const gridTemplates = getGridTemplates(numImages);
-  
+
   for (const template of gridTemplates) {
     const layout = applyGridTemplate(images, template, pageWidth, pageHeight);
     if (layout) {
@@ -459,7 +476,7 @@ function generateSpanningLayouts(images, pageWidth, pageHeight) {
  */
 function getGridTemplates(numImages) {
   const templates = [];
-  
+
   if (numImages === 2) {
     // Template 1: Side by side equal
     templates.push({
@@ -467,31 +484,31 @@ function getGridTemplates(numImages) {
       cols: 2,
       assignments: [
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 1 },
-        { imageIndex: 1, startRow: 0, endRow: 1, startCol: 1, endCol: 2 }
-      ]
+        { imageIndex: 1, startRow: 0, endRow: 1, startCol: 1, endCol: 2 },
+      ],
     });
-    
+
     // Template 2: Top and bottom
     templates.push({
       rows: 2,
       cols: 1,
       assignments: [
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 1 },
-        { imageIndex: 1, startRow: 1, endRow: 2, startCol: 0, endCol: 1 }
-      ]
+        { imageIndex: 1, startRow: 1, endRow: 2, startCol: 0, endCol: 1 },
+      ],
     });
-    
+
     // Template 3: 70/30 split horizontal
     templates.push({
       rows: 1,
       cols: 10, // Fine grid for precise ratios
       assignments: [
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 7 },
-        { imageIndex: 1, startRow: 0, endRow: 1, startCol: 7, endCol: 10 }
-      ]
+        { imageIndex: 1, startRow: 0, endRow: 1, startCol: 7, endCol: 10 },
+      ],
     });
   }
-  
+
   if (numImages === 3) {
     // Template 1: Large left
     templates.push({
@@ -500,10 +517,10 @@ function getGridTemplates(numImages) {
       assignments: [
         { imageIndex: 0, startRow: 0, endRow: 2, startCol: 0, endCol: 2 }, // Large left (2x2)
         { imageIndex: 1, startRow: 0, endRow: 1, startCol: 2, endCol: 3 }, // Top right
-        { imageIndex: 2, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }  // Bottom right
-      ]
+        { imageIndex: 2, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }, // Bottom right
+      ],
     });
-    
+
     // Template 2: Large right
     templates.push({
       rows: 2,
@@ -511,10 +528,10 @@ function getGridTemplates(numImages) {
       assignments: [
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 1 }, // Top left
         { imageIndex: 1, startRow: 1, endRow: 2, startCol: 0, endCol: 1 }, // Bottom left
-        { imageIndex: 2, startRow: 0, endRow: 2, startCol: 1, endCol: 3 }  // Large right (2x2)
-      ]
+        { imageIndex: 2, startRow: 0, endRow: 2, startCol: 1, endCol: 3 }, // Large right (2x2)
+      ],
     });
-    
+
     // Template 3: Large top
     templates.push({
       rows: 3,
@@ -522,10 +539,10 @@ function getGridTemplates(numImages) {
       assignments: [
         { imageIndex: 0, startRow: 0, endRow: 2, startCol: 0, endCol: 2 }, // Large top (2x2)
         { imageIndex: 1, startRow: 2, endRow: 3, startCol: 0, endCol: 1 }, // Bottom left
-        { imageIndex: 2, startRow: 2, endRow: 3, startCol: 1, endCol: 2 }  // Bottom right
-      ]
+        { imageIndex: 2, startRow: 2, endRow: 3, startCol: 1, endCol: 2 }, // Bottom right
+      ],
     });
-    
+
     // Template 4: Large center
     templates.push({
       rows: 3,
@@ -533,11 +550,11 @@ function getGridTemplates(numImages) {
       assignments: [
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 3 }, // Top strip
         { imageIndex: 1, startRow: 1, endRow: 3, startCol: 0, endCol: 2 }, // Large center (2x2)
-        { imageIndex: 2, startRow: 1, endRow: 3, startCol: 2, endCol: 3 }  // Right strip
-      ]
+        { imageIndex: 2, startRow: 1, endRow: 3, startCol: 2, endCol: 3 }, // Right strip
+      ],
     });
   }
-  
+
   if (numImages === 4) {
     // Template 1: Large left, three stacked right
     templates.push({
@@ -547,10 +564,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 0, startRow: 0, endRow: 3, startCol: 0, endCol: 1 }, // Large left (3x1)
         { imageIndex: 1, startRow: 0, endRow: 1, startCol: 1, endCol: 2 }, // Top right
         { imageIndex: 2, startRow: 1, endRow: 2, startCol: 1, endCol: 2 }, // Middle right
-        { imageIndex: 3, startRow: 2, endRow: 3, startCol: 1, endCol: 2 }  // Bottom right
-      ]
+        { imageIndex: 3, startRow: 2, endRow: 3, startCol: 1, endCol: 2 }, // Bottom right
+      ],
     });
-    
+
     // Template 2: Large right, three stacked left
     templates.push({
       rows: 3,
@@ -559,10 +576,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 1 }, // Top left
         { imageIndex: 1, startRow: 1, endRow: 2, startCol: 0, endCol: 1 }, // Middle left
         { imageIndex: 2, startRow: 2, endRow: 3, startCol: 0, endCol: 1 }, // Bottom left
-        { imageIndex: 3, startRow: 0, endRow: 3, startCol: 1, endCol: 2 }  // Large right (3x1)
-      ]
+        { imageIndex: 3, startRow: 0, endRow: 3, startCol: 1, endCol: 2 }, // Large right (3x1)
+      ],
     });
-    
+
     // Template 3: Large top, three bottom
     templates.push({
       rows: 2,
@@ -571,10 +588,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 3 }, // Large top (1x3)
         { imageIndex: 1, startRow: 1, endRow: 2, startCol: 0, endCol: 1 }, // Bottom left
         { imageIndex: 2, startRow: 1, endRow: 2, startCol: 1, endCol: 2 }, // Bottom center
-        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }  // Bottom right
-      ]
+        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }, // Bottom right
+      ],
     });
-    
+
     // Template 4: Large bottom, three top
     templates.push({
       rows: 2,
@@ -583,11 +600,11 @@ function getGridTemplates(numImages) {
         { imageIndex: 0, startRow: 0, endRow: 1, startCol: 0, endCol: 1 }, // Top left
         { imageIndex: 1, startRow: 0, endRow: 1, startCol: 1, endCol: 2 }, // Top center
         { imageIndex: 2, startRow: 0, endRow: 1, startCol: 2, endCol: 3 }, // Top right
-        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 0, endCol: 3 }  // Large bottom (1x3)
-      ]
+        { imageIndex: 3, startRow: 1, endRow: 2, startCol: 0, endCol: 3 }, // Large bottom (1x3)
+      ],
     });
   }
-  
+
   if (numImages === 5) {
     // Template 1: Large image spanning 4 cells, 4 smaller images filling rest (similar to your example)
     templates.push({
@@ -598,10 +615,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 1, startRow: 0, endRow: 1, startCol: 2, endCol: 3 }, // Top-right
         { imageIndex: 2, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }, // Middle-right
         { imageIndex: 3, startRow: 2, endRow: 3, startCol: 0, endCol: 1 }, // Bottom-left
-        { imageIndex: 4, startRow: 2, endRow: 3, startCol: 1, endCol: 3 }  // Bottom-right (spans 1x2)
-      ]
+        { imageIndex: 4, startRow: 2, endRow: 3, startCol: 1, endCol: 3 }, // Bottom-right (spans 1x2)
+      ],
     });
-    
+
     // Template 2: Alternative - 2 on top, 1 large in middle, 2 on bottom
     templates.push({
       rows: 3,
@@ -611,13 +628,13 @@ function getGridTemplates(numImages) {
         { imageIndex: 1, startRow: 0, endRow: 1, startCol: 2, endCol: 4 },
         { imageIndex: 2, startRow: 1, endRow: 2, startCol: 0, endCol: 4 }, // Large middle spans full width
         { imageIndex: 3, startRow: 2, endRow: 3, startCol: 0, endCol: 2 },
-        { imageIndex: 4, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }
-      ]
+        { imageIndex: 4, startRow: 2, endRow: 3, startCol: 2, endCol: 4 },
+      ],
     });
   }
-  
+
   if (numImages === 6) {
-    // Template 1: Large top-left with bottom strip 
+    // Template 1: Large top-left with bottom strip
     templates.push({
       rows: 3,
       cols: 4,
@@ -627,10 +644,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 2, startRow: 0, endRow: 1, startCol: 3, endCol: 4 }, // Top-right
         { imageIndex: 3, startRow: 1, endRow: 2, startCol: 2, endCol: 4 }, // Middle-right spanning 2 cols
         { imageIndex: 4, startRow: 2, endRow: 3, startCol: 0, endCol: 2 }, // Bottom-left spanning 2 cols
-        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }  // Bottom-right spanning 2 cols
-      ]
+        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }, // Bottom-right spanning 2 cols
+      ],
     });
-    
+
     // Template 2: Large top-right with bottom strip
     templates.push({
       rows: 3,
@@ -641,10 +658,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 2, startRow: 0, endRow: 2, startCol: 2, endCol: 4 }, // Large top-right (2x2)
         { imageIndex: 3, startRow: 1, endRow: 2, startCol: 0, endCol: 2 }, // Middle-left spanning 2 cols
         { imageIndex: 4, startRow: 2, endRow: 3, startCol: 0, endCol: 2 }, // Bottom-left spanning 2 cols
-        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }  // Bottom-right spanning 2 cols
-      ]
+        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 2, endCol: 4 }, // Bottom-right spanning 2 cols
+      ],
     });
-    
+
     // Template 3: Large left column
     templates.push({
       rows: 3,
@@ -655,10 +672,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 2, startRow: 0, endRow: 1, startCol: 2, endCol: 3 }, // Top-right
         { imageIndex: 3, startRow: 1, endRow: 2, startCol: 1, endCol: 2 }, // Middle-middle
         { imageIndex: 4, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }, // Middle-right
-        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 1, endCol: 3 }  // Bottom spans 2 cols
-      ]
+        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 1, endCol: 3 }, // Bottom spans 2 cols
+      ],
     });
-    
+
     // Template 4: Large right column
     templates.push({
       rows: 3,
@@ -669,10 +686,10 @@ function getGridTemplates(numImages) {
         { imageIndex: 2, startRow: 0, endRow: 3, startCol: 2, endCol: 3 }, // Large right (3x1)
         { imageIndex: 3, startRow: 1, endRow: 2, startCol: 0, endCol: 1 }, // Middle-left
         { imageIndex: 4, startRow: 1, endRow: 2, startCol: 1, endCol: 2 }, // Middle-middle
-        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 0, endCol: 2 }  // Bottom spans 2 cols
-      ]
+        { imageIndex: 5, startRow: 2, endRow: 3, startCol: 0, endCol: 2 }, // Bottom spans 2 cols
+      ],
     });
-    
+
     // Template 5: Two large horizontal (verified complete coverage)
     templates.push({
       rows: 2,
@@ -683,16 +700,16 @@ function getGridTemplates(numImages) {
         { imageIndex: 2, startRow: 1, endRow: 2, startCol: 0, endCol: 1 }, // Bottom-left
         { imageIndex: 3, startRow: 1, endRow: 2, startCol: 1, endCol: 2 }, // Bottom-middle-left
         { imageIndex: 4, startRow: 1, endRow: 2, startCol: 2, endCol: 3 }, // Bottom-middle-right
-        { imageIndex: 5, startRow: 1, endRow: 2, startCol: 3, endCol: 4 }  // Bottom-right
-      ]
+        { imageIndex: 5, startRow: 1, endRow: 2, startCol: 3, endCol: 4 }, // Bottom-right
+      ],
     });
   }
-  
+
   // For more images, create dynamic templates
   if (numImages > 6) {
     templates.push(...generateDynamicGridTemplates(numImages));
   }
-  
+
   return templates;
 }
 
@@ -703,18 +720,18 @@ function applyGridTemplate(images, template, pageWidth, pageHeight) {
   const { rows, cols, assignments } = template;
   const cellWidth = pageWidth / cols;
   const cellHeight = pageHeight / rows;
-  
+
   const layout = [];
-  
+
   for (const assignment of assignments) {
     if (assignment.imageIndex >= images.length) continue;
-    
+
     const image = images[assignment.imageIndex];
     const x = assignment.startCol * cellWidth;
     const y = assignment.startRow * cellHeight;
     const width = (assignment.endCol - assignment.startCol) * cellWidth;
     const height = (assignment.endRow - assignment.startRow) * cellHeight;
-    
+
     layout.push({
       ...image,
       x,
@@ -726,25 +743,25 @@ function applyGridTemplate(images, template, pageWidth, pageHeight) {
         rowStart: assignment.startRow,
         rowEnd: assignment.endRow,
         colStart: assignment.startCol,
-        colEnd: assignment.endCol
-      }
+        colEnd: assignment.endCol,
+      },
     });
   }
-  
+
   // Verify the layout covers all images
   if (layout.length !== images.length) {
     return null;
   }
-  
+
   // Verify complete grid coverage (no empty cells)
   if (!verifyGridCoverage(template, layout)) {
     // Only warn in development, not in tests
-    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
-      console.warn('Grid coverage verification failed - empty cells detected');
+    if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
+      console.warn("Grid coverage verification failed - empty cells detected");
     }
     return null;
   }
-  
+
   return layout;
 }
 
@@ -753,11 +770,11 @@ function applyGridTemplate(images, template, pageWidth, pageHeight) {
  */
 function generateDynamicGridTemplates(numImages) {
   const templates = [];
-  
+
   // Simple grid template as fallback
   const cols = Math.ceil(Math.sqrt(numImages));
   const rows = Math.ceil(numImages / cols);
-  
+
   const assignments = [];
   for (let i = 0; i < numImages; i++) {
     const row = Math.floor(i / cols);
@@ -767,19 +784,18 @@ function generateDynamicGridTemplates(numImages) {
       startRow: row,
       endRow: row + 1,
       startCol: col,
-      endCol: col + 1
+      endCol: col + 1,
     });
   }
-  
+
   templates.push({
     rows,
     cols,
-    assignments
+    assignments,
   });
-  
+
   return templates;
 }
-
 
 /**
  * Select best layout based on image aspect ratios and minimal cropping
@@ -788,10 +804,10 @@ function selectBestFlexibleLayout(layoutOptions, images) {
   if (layoutOptions.length === 1) {
     return layoutOptions[0];
   }
-  
+
   let bestLayout = layoutOptions[0];
   let bestScore = -1;
-  
+
   for (const layout of layoutOptions) {
     const score = scoreFlexibleLayout(layout, images);
     if (score > bestScore) {
@@ -799,7 +815,7 @@ function selectBestFlexibleLayout(layoutOptions, images) {
       bestLayout = layout;
     }
   }
-  
+
   return bestLayout;
 }
 
@@ -808,28 +824,28 @@ function selectBestFlexibleLayout(layoutOptions, images) {
  */
 function scoreFlexibleLayout(layout, images) {
   let totalScore = 0;
-  
+
   for (let i = 0; i < layout.length; i++) {
     const image = images[i];
     const placement = layout[i];
-    
+
     if (image.naturalWidth && image.naturalHeight) {
       const imageAspectRatio = image.naturalWidth / image.naturalHeight;
       const cellAspectRatio = placement.previewWidth / placement.previewHeight;
-      
+
       // Calculate aspect ratio compatibility (closer to 1 is better)
       const aspectFit = Math.min(
         imageAspectRatio / cellAspectRatio,
-        cellAspectRatio / imageAspectRatio
+        cellAspectRatio / imageAspectRatio,
       );
-      
+
       totalScore += aspectFit;
     } else {
       // Unknown dimensions get neutral score
       totalScore += 0.7;
     }
   }
-  
+
   return totalScore / layout.length;
 }
 
@@ -838,8 +854,10 @@ function scoreFlexibleLayout(layout, images) {
  */
 function verifyGridCoverage(template, layout) {
   const { rows, cols } = template;
-  const grid = Array(rows).fill(null).map(() => Array(cols).fill(false));
-  
+  const grid = Array(rows)
+    .fill(null)
+    .map(() => Array(cols).fill(false));
+
   // Mark all covered cells
   for (const assignment of template.assignments) {
     for (let r = assignment.startRow; r < assignment.endRow; r++) {
@@ -856,7 +874,7 @@ function verifyGridCoverage(template, layout) {
       }
     }
   }
-  
+
   // Check for any uncovered cells
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -866,6 +884,6 @@ function verifyGridCoverage(template, layout) {
       }
     }
   }
-  
+
   return true;
 }

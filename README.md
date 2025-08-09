@@ -120,6 +120,7 @@ just e2e
 ### Test Types
 
 #### Unit Tests (Vitest)
+
 - **39 tests** covering core functionality
 - Layout preservation system
 - Flexible grid layout generation
@@ -127,6 +128,7 @@ just e2e
 - Error handling and edge cases
 
 #### End-to-End Tests (Cypress)
+
 - **3 tests** covering complete user workflows
 - Album creation and navigation
 - Image upload and arrangement
@@ -135,6 +137,7 @@ just e2e
 ### Available Test Commands
 
 Using justfile (recommended):
+
 ```bash
 just test          # Run unit tests in watch mode
 just test-run      # Run unit tests once
@@ -146,6 +149,7 @@ just test-quick    # Run unit tests only (fastest)
 ```
 
 Using npm directly:
+
 ```bash
 npm test           # Unit tests in watch mode
 npm run test:run   # Unit tests once
@@ -157,9 +161,10 @@ npm run e2e:dev    # E2e tests in dev mode
 ### Test Coverage
 
 The test suite covers:
+
 - ✅ **Layout Systems**: Grid and flexible layout generation
 - ✅ **Image Operations**: Swapping, moving, and arranging images
-- ✅ **State Management**: Layout preservation across operations  
+- ✅ **State Management**: Layout preservation across operations
 - ✅ **Template Validation**: Grid coverage verification
 - ✅ **Error Scenarios**: Fallback behavior and edge cases
 - ✅ **User Workflows**: Complete app functionality via e2e tests
@@ -167,6 +172,7 @@ The test suite covers:
 ### Running Tests in CI/CD
 
 For automated testing in pipelines:
+
 ```bash
 # Fast unit tests only
 just test-quick

@@ -13,6 +13,7 @@ import {
   HiChevronDown,
 } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
+import { getCurrentLayoutInfo } from "../../../utils/layoutCycling.js";
 import FullCoverImage from "./FullCoverImage.jsx";
 
 const PagePreview = ({
@@ -45,6 +46,7 @@ const PagePreview = ({
 
   const previewDimensions = getPreviewDimensions(settings);
   const imageCount = page.images.length;
+  const layoutInfo = getCurrentLayoutInfo(page.id, page.images, settings);
 
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -75,6 +77,11 @@ const PagePreview = ({
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {imageCount} {imageCount === 1 ? "image" : "images"}
             </span>
+            {layoutInfo.totalLayouts > 0 && (
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                Layout {layoutInfo.currentIndex}/{layoutInfo.totalLayouts}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {page.images.length > 0 && (

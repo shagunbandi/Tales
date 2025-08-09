@@ -67,7 +67,7 @@ export const DEFAULT_SETTINGS = {
   imageGap: 10,
   imageQuality: 0.9,
   maxImagesPerRow: 4,
-  maxNumberOfRows: 2,
+  maxNumberOfRows: 4,
   maxNumberOfPages: 4,
   imagesPerPage: 10,
 };

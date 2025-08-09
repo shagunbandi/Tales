@@ -23,17 +23,28 @@ const AvailableImages = ({
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
             Available Images
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="available-images-count">
+          <p
+            className="text-sm text-gray-500 dark:text-gray-400"
+            data-testid="available-images-count"
+          >
             {availableImages.length} of {totalImages} images
           </p>
         </div>
-        <Button size="sm" color="blue" onClick={onAddMoreImages} data-testid="add-more-images-button">
+        <Button
+          size="sm"
+          color="blue"
+          onClick={onAddMoreImages}
+          data-testid="add-more-images-button"
+        >
           <HiPlus className="mr-1 h-4 w-4" />
           Add More
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50" data-testid="available-images">
+      <div
+        className="min-h-0 flex-1 border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50"
+        data-testid="available-images"
+      >
         <div ref={setDroppableRef} className="h-full overflow-y-auto">
           <div className="grid grid-cols-2 gap-3">
             {availableImages.map((image, index) => (
@@ -77,7 +88,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
 
   const style = transform
     ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
       }
     : undefined;
 

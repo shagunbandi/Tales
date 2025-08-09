@@ -39,7 +39,10 @@ const DesignTab = ({
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         {/* Available Images - Sticky Sidebar */}
-        <div className="w-full lg:sticky lg:top-6 lg:w-1/3 lg:min-w-0 lg:self-start" data-testid="available-images-panel">
+        <div
+          className="w-full lg:sticky lg:top-6 lg:w-1/3 lg:min-w-0 lg:self-start"
+          data-testid="available-images-panel"
+        >
           <Card className="h-fit lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden">
             <AvailableImages
               availableImages={availableImages}

@@ -80,7 +80,7 @@ export async function cycleLayoutStructure(
   }
 
   const maxImagesPerRow = settings.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings.maxNumberOfRows || 2;
+  const maxNumberOfRows = settings.maxNumberOfRows || 4;
   const maxImagesPerPage = maxImagesPerRow * maxNumberOfRows;
 
   // Only cycle images that can fit within the page constraints

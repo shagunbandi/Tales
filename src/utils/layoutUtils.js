@@ -158,7 +158,7 @@ export function arrangeAndCenterImages(
   }
 
   const maxImagesPerRow = settings.maxImagesPerRow || 4;
-  const maxNumberOfRows = settings.maxNumberOfRows || 2;
+  const maxNumberOfRows = settings.maxNumberOfRows || 4;
   const imagesPerPage =
     settings.imagesPerPage || maxImagesPerRow * maxNumberOfRows;
 

@@ -220,7 +220,10 @@ function App() {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-4xl dark:bg-gray-900" data-testid="app-root">
+    <div
+      className="mx-auto min-h-screen max-w-4xl dark:bg-gray-900"
+      data-testid="app-root"
+    >
       <input
         ref={fileInputRef}
         type="file"

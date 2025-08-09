@@ -120,14 +120,18 @@ export const useImageManagement = (settings = null) => {
       if (settings.designStyle === "full_cover" && preserveLayoutStructure) {
         // For full cover with structure preservation (button movements)
         // Try to reapply the current layout template
-        const targetPageId = pageId || images[0]?.pageId || 'default-page';
-        const reappliedImages = await reapplyCurrentLayout(images, settings, targetPageId);
-        
+        const targetPageId = pageId || images[0]?.pageId || "default-page";
+        const reappliedImages = await reapplyCurrentLayout(
+          images,
+          settings,
+          targetPageId,
+        );
+
         // If reapplication worked, use it; otherwise fall back to old logic
         if (reappliedImages && reappliedImages.length === images.length) {
           return reappliedImages;
         }
-        
+
         // Fallback to old detection logic
         const currentLayout = detectCurrentLayout(images);
         return placeImagesInOrder(images, currentLayout);
@@ -256,7 +260,7 @@ export const useImageManagement = (settings = null) => {
 
         // Calculate max images per page considering both settings
         const maxImagesPerRow = settings.maxImagesPerRow || 4;
-        const maxNumberOfRows = settings.maxNumberOfRows || 2;
+        const maxNumberOfRows = settings.maxNumberOfRows || 4;
         const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
         const maxImagesPerPage = Math.min(
           maxImagesFromGrid,
@@ -527,76 +531,138 @@ export const useImageManagement = (settings = null) => {
 
   const autoArrangePage = useCallback(
     async (pageId) => {
-      const workingToast = toast.loading("Arranging page layout...", {
+      const targetPage = pages.find((page) => page.id === pageId);
+      if (!targetPage || targetPage.images.length === 0) return;
+
+      // Prevent multiple simultaneous operations
+      if (isProcessing) return;
+
+      setIsProcessing(true);
+
+      const progressElement = React.createElement(ProgressToast, {
+        current: 0,
+        total: 100,
+        message: "Arranging page layout...",
+        currentFileName: "",
+      });
+
+      toast.custom(progressElement, {
+        id: "arrange-progress",
         duration: 0,
       });
 
-      setPages((prev) =>
-        prev.map((page) => {
-          if (page.id === pageId && page.images.length > 0) {
-            const { width: previewWidth, height: previewHeight } =
-              getPreviewDimensions(settings);
-            arrangeImages(page.images, previewWidth, previewHeight, settings)
-              .then((arrangedImages) => {
-                setPages((currentPages) =>
-                  currentPages.map((currentPage) =>
-                    currentPage.id === pageId
-                      ? { ...currentPage, images: arrangedImages }
-                      : currentPage,
-                  ),
-                );
-                toast.dismiss(workingToast);
-                toast.success("Page layout updated!");
-              })
-              .catch((error) => {
-                toast.dismiss(workingToast);
-                toast.error("Failed to arrange page layout");
-              });
+      try {
+        // Show intermediate progress
+        const progressTimeout = setTimeout(() => {
+          toast.custom(
+            React.createElement(ProgressToast, {
+              current: 50,
+              total: 100,
+              message: "Calculating optimal positions...",
+              currentFileName: "",
+            }),
+            {
+              id: "arrange-progress",
+              duration: 0,
+            },
+          );
+        }, 100);
 
-            // Return current state while async operation completes
-            return page;
-          }
-          return page;
-        }),
-      );
+        const { width: previewWidth, height: previewHeight } =
+          getPreviewDimensions(settings);
+        const arrangedImages = await arrangeImages(
+          targetPage.images,
+          previewWidth,
+          previewHeight,
+          settings,
+        );
+
+        // Clear the timeout in case it hasn't fired yet
+        clearTimeout(progressTimeout);
+
+        setPages((currentPages) =>
+          currentPages.map((page) =>
+            page.id === pageId ? { ...page, images: arrangedImages } : page,
+          ),
+        );
+
+        toast.dismiss("arrange-progress");
+        toast.success("Page layout updated!");
+      } catch (error) {
+        console.error("Error in autoArrangePage:", error);
+        toast.dismiss("arrange-progress");
+        toast.error("Failed to arrange page layout");
+      } finally {
+        setIsProcessing(false);
+      }
     },
-    [settings],
+    [pages, settings, isProcessing],
   );
 
   const randomizePage = useCallback(
     async (pageId) => {
-      const workingToast = toast.loading("Randomizing layout...", {
+      const targetPage = pages.find((page) => page.id === pageId);
+      if (!targetPage || targetPage.images.length === 0) return;
+
+      // Prevent multiple simultaneous operations
+      if (isProcessing) return;
+
+      setIsProcessing(true);
+
+      const progressElement = React.createElement(ProgressToast, {
+        current: 0,
+        total: 100,
+        message: "Shuffling images...",
+        currentFileName: "",
+      });
+
+      toast.custom(progressElement, {
+        id: "shuffle-progress",
         duration: 0,
       });
 
-      setPages((prev) =>
-        prev.map((page) => {
-          if (page.id === pageId && page.images.length > 0) {
-            shuffleImagesInLayout(page.images, settings)
-              .then((shuffledImages) => {
-                setPages((currentPages) =>
-                  currentPages.map((currentPage) =>
-                    currentPage.id === pageId
-                      ? { ...currentPage, images: shuffledImages }
-                      : currentPage,
-                  ),
-                );
-                toast.dismiss(workingToast);
-                toast.success("Layout randomized!");
-              })
-              .catch((error) => {
-                toast.dismiss(workingToast);
-                toast.error("Failed to randomize layout");
-              });
+      try {
+        // Show intermediate progress
+        const progressTimeout = setTimeout(() => {
+          toast.custom(
+            React.createElement(ProgressToast, {
+              current: 50,
+              total: 100,
+              message: "Reorganizing layout...",
+              currentFileName: "",
+            }),
+            {
+              id: "shuffle-progress",
+              duration: 0,
+            },
+          );
+        }, 100);
 
-            // Return current state while async operation completes
-            return page;
-          }
-          return page;
-        }),
-      );
+        const shuffledImages = await shuffleImagesInLayout(
+          targetPage.images,
+          settings,
+        );
+
+        // Clear the timeout in case it hasn't fired yet
+        clearTimeout(progressTimeout);
+
+        setPages((currentPages) =>
+          currentPages.map((page) =>
+            page.id === pageId ? { ...page, images: shuffledImages } : page,
+          ),
+        );
+
+        toast.dismiss("shuffle-progress");
+        toast.success("Images shuffled!");
+      } catch (error) {
+        console.error("Error in randomizePage:", error);
+        toast.dismiss("shuffle-progress");
+        toast.error("Failed to shuffle images");
+      } finally {
+        setIsProcessing(false);
+      }
     },
-    [settings],
+    [pages, settings, isProcessing],
   );
 
   const nextLayout = useCallback(
@@ -604,31 +670,66 @@ export const useImageManagement = (settings = null) => {
       const targetPage = pages.find((page) => page.id === pageId);
       if (!targetPage || targetPage.images.length === 0) return;
 
-      const workingToast = toast.loading("Switching to next layout...", {
+      // Prevent multiple simultaneous operations
+      if (isProcessing) return;
+
+      setIsProcessing(true);
+
+      const progressElement = React.createElement(ProgressToast, {
+        current: 0,
+        total: 100,
+        message: "Switching to next layout...",
+        currentFileName: "",
+      });
+
+      toast.custom(progressElement, {
+        id: "next-layout-progress",
         duration: 0,
       });
 
       try {
+        // Show intermediate progress
+        const progressTimeout = setTimeout(() => {
+          toast.custom(
+            React.createElement(ProgressToast, {
+              current: 50,
+              total: 100,
+              message: "Calculating new layout...",
+              currentFileName: "",
+            }),
+            {
+              id: "next-layout-progress",
+              duration: 0,
+            },
+          );
+        }, 100);
+
         const newLayoutImages = await nextPageLayout(
           targetPage.images,
           settings,
           pageId,
         );
 
+        // Clear the timeout in case it hasn't fired yet
+        clearTimeout(progressTimeout);
+
         setPages((currentPages) =>
           currentPages.map((page) =>
             page.id === pageId ? { ...page, images: newLayoutImages } : page,
           ),
         );
-        toast.dismiss(workingToast);
+
+        toast.dismiss("next-layout-progress");
         toast.success("Switched to next layout!");
       } catch (error) {
         console.error("Error in nextLayout:", error);
-        toast.dismiss(workingToast);
+        toast.dismiss("next-layout-progress");
         toast.error("Failed to switch layout");
+      } finally {
+        setIsProcessing(false);
       }
     },
-    [pages, settings],
+    [pages, settings, isProcessing],
   );
 
   const previousLayout = useCallback(
@@ -636,31 +737,66 @@ export const useImageManagement = (settings = null) => {
       const targetPage = pages.find((page) => page.id === pageId);
       if (!targetPage || targetPage.images.length === 0) return;
 
-      const workingToast = toast.loading("Switching to previous layout...", {
+      // Prevent multiple simultaneous operations
+      if (isProcessing) return;
+
+      setIsProcessing(true);
+
+      const progressElement = React.createElement(ProgressToast, {
+        current: 0,
+        total: 100,
+        message: "Switching to previous layout...",
+        currentFileName: "",
+      });
+
+      toast.custom(progressElement, {
+        id: "prev-layout-progress",
         duration: 0,
       });
 
       try {
+        // Show intermediate progress
+        const progressTimeout = setTimeout(() => {
+          toast.custom(
+            React.createElement(ProgressToast, {
+              current: 50,
+              total: 100,
+              message: "Calculating new layout...",
+              currentFileName: "",
+            }),
+            {
+              id: "prev-layout-progress",
+              duration: 0,
+            },
+          );
+        }, 100);
+
         const newLayoutImages = await previousPageLayout(
           targetPage.images,
           settings,
           pageId,
         );
 
+        // Clear the timeout in case it hasn't fired yet
+        clearTimeout(progressTimeout);
+
         setPages((currentPages) =>
           currentPages.map((page) =>
             page.id === pageId ? { ...page, images: newLayoutImages } : page,
           ),
         );
-        toast.dismiss(workingToast);
+
+        toast.dismiss("prev-layout-progress");
         toast.success("Switched to previous layout!");
       } catch (error) {
         console.error("Error in previousLayout:", error);
-        toast.dismiss(workingToast);
+        toast.dismiss("prev-layout-progress");
         toast.error("Failed to switch layout");
+      } finally {
+        setIsProcessing(false);
       }
     },
-    [pages, settings],
+    [pages, settings, isProcessing],
   );
 
   // Legacy function - now calls nextLayout for backward compatibility
@@ -703,7 +839,7 @@ export const useImageManagement = (settings = null) => {
 
         // Calculate max images per page for destination
         const maxImagesPerRow = settings.maxImagesPerRow || 4;
-        const maxNumberOfRows = settings.maxNumberOfRows || 2;
+        const maxNumberOfRows = settings.maxNumberOfRows || 4;
         const maxImagesFromGrid = maxImagesPerRow * maxNumberOfRows;
         const maxImagesPerPage = Math.min(
           maxImagesFromGrid,
@@ -730,7 +866,11 @@ export const useImageManagement = (settings = null) => {
           // Arrange both pages with correct layout (preserve structure for image moves)
           const [sourceArrangedImages, destArrangedImages] = await Promise.all([
             sourceNewImages.length > 0
-              ? arrangeImagesWithCorrectLayout(sourceNewImages, true, sourcePageId)
+              ? arrangeImagesWithCorrectLayout(
+                  sourceNewImages,
+                  true,
+                  sourcePageId,
+                )
               : Promise.resolve([]),
             arrangeImagesWithCorrectLayout(destNewImages, true, destPageId),
           ]);
