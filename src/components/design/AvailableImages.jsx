@@ -23,7 +23,7 @@ const AvailableImages = ({
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
             Available Images
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="available-images-count">
             {availableImages.length} of {totalImages} images
           </p>
         </div>
@@ -77,7 +77,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
 
   const style = transform
     ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`
       }
     : undefined;
 
@@ -90,6 +90,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
       className={`relative cursor-move overflow-hidden rounded-lg bg-gray-50 transition-all hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 ${
         isDragging ? "z-50 opacity-50 ring-2 ring-blue-400" : ""
       }`}
+      data-testid={`available-image-${index}`}
     >
       <div className="aspect-square">
         <img
@@ -104,6 +105,7 @@ const DraggableImage = ({ image, index, onRemove }) => {
           }}
           className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white transition-colors hover:bg-red-600"
           title="Remove image"
+          data-testid={`remove-available-image-${index}`}
         >
           <HiX className="h-3 w-3" />
         </button>

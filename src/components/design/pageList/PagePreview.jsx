@@ -84,6 +84,7 @@ const PagePreview = ({
                   color="yellow"
                   onClick={() => onMoveAllImagesBack(page.id)}
                   className="flex items-center gap-1"
+                  data-testid={`move-all-back-${pageIndex}`}
                 >
                   <HiArrowLeft className="h-3 w-3" />
                   Move All Back
@@ -95,6 +96,7 @@ const PagePreview = ({
               color="red"
               onClick={() => onRemovePage(page.id)}
               className="flex items-center gap-1"
+              data-testid={`remove-page-${pageIndex}`}
             >
               <HiTrash className="h-3 w-3" />
             </Button>
@@ -109,6 +111,7 @@ const PagePreview = ({
             color="gray"
             onClick={() => onChangeColor(page.id)}
             className="flex items-center gap-1"
+            data-testid={`change-color-${pageIndex}`}
           >
             <HiColorSwatch className="h-3 w-3" />
             Color
@@ -122,6 +125,7 @@ const PagePreview = ({
                 disabled={isProcessing}
                 className="flex items-center gap-1"
                 title="Shuffle image positions within same layout"
+                data-testid={`shuffle-images-${pageIndex}`}
               >
                 <HiRefresh className="h-3 w-3" />
                 {isProcessing ? "Shuffling..." : "Shuffle Images"}
@@ -133,6 +137,7 @@ const PagePreview = ({
                 disabled={isProcessing}
                 className="flex items-center gap-1"
                 title="Switch to previous layout structure"
+                data-testid={`prev-layout-${pageIndex}`}
               >
                 <HiChevronLeft className="h-3 w-3" />
                 {isProcessing ? "Switching..." : "Previous Layout"}
@@ -144,6 +149,7 @@ const PagePreview = ({
                 disabled={isProcessing}
                 className="flex items-center gap-1"
                 title="Switch to next layout structure"
+                data-testid={`next-layout-${pageIndex}`}
               >
                 <HiChevronRight className="h-3 w-3" />
                 {isProcessing ? "Switching..." : "Next Layout"}
@@ -188,6 +194,7 @@ const PagePreview = ({
                   maxWidth: "100%",
                   maxHeight: "400px",
                 }}
+                data-testid={`page-droppable-${pageIndex}`}
               >
                 {page.images.map((image, index) => {
                   const isFullCover =
@@ -324,6 +331,7 @@ const PageImage = ({
       style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      data-testid={`page-image-${pageIndex}-${index}`}
     >
       <img
         src={image.src}
@@ -337,6 +345,7 @@ const PageImage = ({
             onClick={handleMoveBack}
             className="absolute top-1 right-1 z-10 rounded-full bg-red-500 p-1 text-xs text-white shadow-lg hover:bg-red-600"
             title="Move back to available images"
+            data-testid={`move-back-${pageIndex}-${index}`}
           >
             <HiArrowLeft className="h-3 w-3" />
           </button>
@@ -349,6 +358,7 @@ const PageImage = ({
                 onClick={handleMoveToPreviousPage}
                 className="rounded-full bg-blue-500 p-1 text-xs text-white shadow-lg hover:bg-blue-600"
                 title="Move to previous page"
+                data-testid={`move-prev-page-${pageIndex}-${index}`}
               >
                 <HiChevronUp className="h-3 w-3" />
               </button>
@@ -360,6 +370,7 @@ const PageImage = ({
                 onClick={handleMoveToNextPage}
                 className="rounded-full bg-blue-500 p-1 text-xs text-white shadow-lg hover:bg-blue-600"
                 title="Move to next page"
+                data-testid={`move-next-page-${pageIndex}-${index}`}
               >
                 <HiChevronDown className="h-3 w-3" />
               </button>
@@ -374,6 +385,7 @@ const PageImage = ({
                 onClick={handleMoveLeft}
                 className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
                 title="Move left"
+                data-testid={`move-left-${pageIndex}-${index}`}
               >
                 <HiChevronLeft className="h-3 w-3" />
               </button>
@@ -385,6 +397,7 @@ const PageImage = ({
                 onClick={handleMoveRight}
                 className="rounded-full bg-green-500 p-1 text-xs text-white shadow-lg hover:bg-green-600"
                 title="Move right"
+                data-testid={`move-right-${pageIndex}-${index}`}
               >
                 <HiChevronRight className="h-3 w-3" />
               </button>

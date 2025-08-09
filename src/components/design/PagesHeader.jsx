@@ -156,6 +156,7 @@ const PagesHeader = ({
                 disabled={totalImages === 0 || isProcessing || isSaving}
                 size="sm"
                 className="bg-green-600 hover:bg-green-700"
+                data-testid="update-album-button"
               >
                 {isSaving ? (
                   <Spinner size="sm" className="mr-2" />
@@ -169,6 +170,7 @@ const PagesHeader = ({
                 disabled={totalImages === 0 || isProcessing || isSaving}
                 variant="outline"
                 size="sm"
+                data-testid="save-as-new-button"
               >
                 Save As New...
               </Button>
@@ -179,6 +181,7 @@ const PagesHeader = ({
               disabled={totalImages === 0 || isProcessing || isSaving}
               size="sm"
               className="bg-blue-600 hover:bg-blue-700"
+              data-testid="save-album-button"
             >
               <HiSave className="mr-2 h-4 w-4" />
               Save Album
@@ -189,6 +192,7 @@ const PagesHeader = ({
             onClick={onAutoArrange}
             disabled={isProcessing || availableImages.length === 0}
             size="sm"
+            data-testid="auto-arrange-button"
           >
             {isProcessing ? "Auto-arranging..." : "Auto-arrange"}
           </Button>
@@ -202,6 +206,7 @@ const PagesHeader = ({
           show={showSaveModal}
           onClose={() => setShowSaveModal(false)}
           size="md"
+          data-testid="save-album-modal"
         >
           <div className="p-6">
             <div className="mb-4 flex items-center">
@@ -222,6 +227,7 @@ const PagesHeader = ({
                   onChange={(e) => setAlbumName(e.target.value)}
                   className="mt-1"
                   autoFocus
+                  data-testid="save-album-name-input"
                 />
               </div>
               <div>
@@ -245,6 +251,7 @@ const PagesHeader = ({
                 onClick={handleSaveAlbum}
                 disabled={!albumName.trim() || isProcessing || isSaving}
                 className="bg-blue-600 hover:bg-blue-700"
+                data-testid="save-album-confirm"
               >
                 {isProcessing || isSaving ? (
                   <Spinner size="sm" className="mr-2" />

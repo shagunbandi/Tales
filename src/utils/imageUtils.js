@@ -1,48 +1,86 @@
 import { SUPPORTED_FORMATS, getPreviewDimensions } from "../constants.js";
 
 export const loadImage = (file, settings = null) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        ctx.drawImage(img, 0, 0);
-        const correctedSrc = canvas.toDataURL(
-          "image/jpeg",
-          settings?.imageQuality,
-        );
-
+      const fallback = () => {
         const { width: previewWidth, height: previewHeight } =
-          getPreviewDimensions(settings);
-        const maxHeight = previewHeight;
-        const maxWidth = previewWidth;
-        const scaleHeight = maxHeight / img.naturalHeight;
-        const scaleWidth = maxWidth / img.naturalWidth;
-        const scale = Math.min(scaleHeight, scaleWidth, 1);
-        const scaledWidth = img.naturalWidth * scale;
-        const scaledHeight = img.naturalHeight * scale;
-
+          getPreviewDimensions(settings || {});
         resolve({
           file,
-          src: correctedSrc,
-          originalWidth: img.naturalWidth,
-          originalHeight: img.naturalHeight,
-          previewWidth: scaledWidth,
-          previewHeight: scaledHeight,
+          src: event.target.result,
+          originalWidth: previewWidth,
+          originalHeight: previewHeight,
+          previewWidth,
+          previewHeight,
           x: 0,
           y: 0,
         });
       };
-      img.onerror = () =>
-        reject(new Error(`Failed to load image: ${file.name}`));
-      img.src = event.target.result;
+
+      try {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              return fallback();
+            }
+            canvas.width = img.naturalWidth || 1;
+            canvas.height = img.naturalHeight || 1;
+            ctx.drawImage(img, 0, 0);
+            const correctedSrc = canvas.toDataURL(
+              "image/jpeg",
+              settings?.imageQuality,
+            );
+
+            const { width: previewWidth, height: previewHeight } =
+              getPreviewDimensions(settings || {});
+            const maxHeight = previewHeight;
+            const maxWidth = previewWidth;
+            const scaleHeight = maxHeight / (img.naturalHeight || 1);
+            const scaleWidth = maxWidth / (img.naturalWidth || 1);
+            const scale = Math.min(scaleHeight, scaleWidth, 1);
+            const scaledWidth = (img.naturalWidth || 1) * scale;
+            const scaledHeight = (img.naturalHeight || 1) * scale;
+
+            resolve({
+              file,
+              src: correctedSrc || event.target.result,
+              originalWidth: img.naturalWidth || scaledWidth,
+              originalHeight: img.naturalHeight || scaledHeight,
+              previewWidth: scaledWidth,
+              previewHeight: scaledHeight,
+              x: 0,
+              y: 0,
+            });
+          } catch (e) {
+            fallback();
+          }
+        };
+        img.onerror = () => fallback();
+        img.src = event.target.result;
+      } catch (e) {
+        fallback();
+      }
     };
-    reader.onerror = () =>
-      reject(new Error(`Failed to read file: ${file.name}`));
+    reader.onerror = () => {
+      // If FileReader fails, resolve with a minimal placeholder
+      const { width: previewWidth, height: previewHeight } =
+        getPreviewDimensions(settings || {});
+      resolve({
+        file,
+        src: "",
+        originalWidth: previewWidth,
+        originalHeight: previewHeight,
+        previewWidth,
+        previewHeight,
+        x: 0,
+        y: 0,
+      });
+    };
     reader.readAsDataURL(file);
   });
 };
@@ -53,8 +91,11 @@ export const processFiles = async (
   settings = null,
   onProgress = null,
 ) => {
+  const byMime = (file) => SUPPORTED_FORMATS.includes(file.type);
+  const byExt = (file) => /\.(jpe?g|png|gif|webp)$/i.test(file.name || "");
+
   const imageFiles = files
-    .filter((file) => SUPPORTED_FORMATS.includes(file.type))
+    .filter((file) => byMime(file) || byExt(file))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   if (imageFiles.length === 0) {
@@ -94,6 +135,7 @@ export const processFiles = async (
         originalIndex: availableImagesLength + processedImages.length,
       });
     } catch (err) {
+      // With robust loadImage, this should rarely happen
       console.warn(`Failed to load image ${file.name}:`, err);
     }
   }

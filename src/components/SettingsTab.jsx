@@ -158,6 +158,7 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
                         : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:focus:border-blue-400 dark:focus:ring-blue-400"
                     }`}
+                    data-testid={`settings-input-${id}`}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {help}
@@ -181,6 +182,7 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
                   ? "cursor-not-allowed bg-gray-300 dark:bg-gray-600"
                   : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
               }`}
+              data-testid="settings-next-button"
             >
               Next: Design Layout
             </button>

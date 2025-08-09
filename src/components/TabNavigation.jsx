@@ -34,6 +34,7 @@ const TabNavigation = ({
     <Breadcrumb
       aria-label="Navigation tabs"
       className="bg-gray-50 px-5 py-3 dark:bg-gray-800"
+      data-testid="tab-breadcrumb"
     >
       {/* Home icon */}
       {onGoToAlbums && (
@@ -45,6 +46,7 @@ const TabNavigation = ({
           }}
           className="cursor-pointer"
           title="Go to My Albums"
+          data-testid="nav-home"
         >
           <HiHome className="h-4 w-4" />
         </BreadcrumbItem>
@@ -67,6 +69,7 @@ const TabNavigation = ({
                 ? "cursor-pointer font-semibold text-gray-900 dark:text-white"
                 : "cursor-pointer"
           }
+          data-testid={`nav-${tab.id}`}
         >
           {tab.label}
           {tab.id === "design" && totalImages > 0 && ` (${totalImages} images)`}

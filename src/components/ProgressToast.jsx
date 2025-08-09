@@ -1,41 +1,30 @@
 import React from "react";
 
-const ProgressToast = ({ current, total, message, currentFileName }) => {
-  const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
-
+// Accept both legacy props (current/total/message/currentFileName)
+// and simplified props (progress/total/message)
+const ProgressToast = ({
+  current,
+  progress,
+  total = 0,
+  message,
+  currentFileName,
+}) => {
+  const effectiveProgress = typeof progress === "number" ? progress : current || 0;
+  const percent = total > 0 ? Math.round((effectiveProgress / total) * 100) : 0;
   return (
-    <div className="max-w-[400px] min-w-[300px] rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {message}
-          </span>
-          <span className="rounded bg-gray-100 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-            {current}/{total}
-          </span>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-600">
-          <div
-            className="flex h-3 items-center justify-center rounded-full bg-blue-600 transition-all duration-300 ease-out"
-            style={{ width: `${percentage}%` }}
-          >
-            {percentage > 15 && (
-              <span className="text-xs font-semibold text-white">
-                {percentage}%
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Current File Name */}
-        {currentFileName && (
-          <div className="truncate rounded bg-gray-50 px-2 py-1 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-            📷 {currentFileName}
-          </div>
-        )}
+    <div className="w-64" data-testid="progress-toast">
+      <p className="mb-2 text-xs text-white/90">{message}</p>
+      {currentFileName ? (
+        <p className="mb-1 truncate text-[10px] text-white/70">{currentFileName}</p>
+      ) : null}
+      <div className="h-2 w-full rounded bg-white/20">
+        <div
+          className="h-2 rounded bg-white"
+          style={{ width: `${percent}%` }}
+          data-testid="progress-bar"
+        />
       </div>
+      <p className="mt-1 text-right text-[10px] text-white/70">{percent}%</p>
     </div>
   );
 };

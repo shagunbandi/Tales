@@ -17,6 +17,7 @@ import SettingsTab from "./components/SettingsTab";
 import AlbumsTab from "./components/AlbumsTab";
 import AppHeader from "./components/AppHeader";
 import { DarkThemeToggle } from "flowbite-react";
+import UploadTab from "./components/UploadTab";
 
 function App() {
   const [activeTab, setActiveTab] = useState("albums");
@@ -24,6 +25,7 @@ function App() {
   const [currentAlbumId, setCurrentAlbumId] = useState(null);
   const [currentAlbumName, setCurrentAlbumName] = useState("");
   const [showNavigation, setShowNavigation] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -137,17 +139,17 @@ function App() {
   const hasSettingsErrors = Object.keys(settingsErrors).length > 0;
 
   const addMoreImages = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true;
-    input.accept = "image/*";
-    input.onchange = async (event) => {
-      const files = Array.from(event.target.files);
-      if (files.length > 0) {
-        await handleFiles(files);
-      }
-    };
-    input.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileInputChange = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      await handleFiles(files);
+    }
   };
 
   // Enhanced album loading that sets current album info for auto-save
@@ -218,7 +220,16 @@ function App() {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-4xl dark:bg-gray-900">
+    <div className="mx-auto min-h-screen max-w-4xl dark:bg-gray-900" data-testid="app-root">
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={handleFileInputChange}
+        className="hidden"
+        data-testid="global-file-input"
+      />
       <div className="absolute top-4 right-4 z-50">
         <DarkThemeToggle />
       </div>
@@ -260,6 +271,17 @@ function App() {
               setShowNavigation={setShowNavigation}
               setCurrentAlbumName={setCurrentAlbumName}
               setCurrentAlbumId={setCurrentAlbumId}
+            />
+          </div>
+        )}
+
+        {activeTab === "upload" && (
+          <div data-testid="upload-tab">
+            <UploadTab
+              handleFiles={handleFiles}
+              isProcessing={isProcessing}
+              totalImages={totalImages}
+              setActiveTab={setActiveTab}
             />
           </div>
         )}
@@ -320,42 +342,43 @@ function App() {
         )}
       </DndContext>
 
-      <Toaster
-        position="bottom-right"
-        containerStyle={{ "data-testid": "toast-container" }}
-        toastOptions={{
-          duration: 4000,
-          dismissible: true,
-          style: {
-            background: "#363636",
-            color: "#fff",
-            padding: "12px",
-            borderRadius: "8px",
-            fontSize: "14px",
-            maxWidth: "350px",
-          },
-          success: {
+      <div data-testid="toast-container">
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            duration: 4000,
+            dismissible: true,
             style: {
-              background: "#22c55e",
+              background: "#363636",
               color: "#fff",
+              padding: "12px",
+              borderRadius: "8px",
+              fontSize: "14px",
+              maxWidth: "350px",
             },
-            iconTheme: {
-              primary: "#fff",
-              secondary: "#22c55e",
+            success: {
+              style: {
+                background: "#22c55e",
+                color: "#fff",
+              },
+              iconTheme: {
+                primary: "#fff",
+                secondary: "#22c55e",
+              },
             },
-          },
-          error: {
-            style: {
-              background: "#ef4444",
-              color: "#fff",
+            error: {
+              style: {
+                background: "#ef4444",
+                color: "#fff",
+              },
+              iconTheme: {
+                primary: "#fff",
+                secondary: "#ef4444",
+              },
             },
-            iconTheme: {
-              primary: "#fff",
-              secondary: "#ef4444",
-            },
-          },
-        }}
-      />
+          }}
+        />
+      </div>
     </div>
   );
 }

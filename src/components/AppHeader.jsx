@@ -8,7 +8,7 @@ const AppHeader = ({
   currentAlbumName,
 }) => {
   return (
-    <div className="relative my-8 p-5 text-center">
+    <div className="relative my-8 p-5 text-center" data-testid="app-header">
       <div className="relative inline-block">
         <p className="animate-pulse bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-600 bg-clip-text text-5xl font-bold text-transparent">
           Tales

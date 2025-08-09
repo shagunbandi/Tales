@@ -237,7 +237,7 @@ const AlbumsTab = ({
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" data-testid="albums-header">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             <HiFolder className="mr-2 inline-block" />
@@ -250,7 +250,7 @@ const AlbumsTab = ({
       </div>
 
       {/* Albums Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="albums-grid">
         {/* Create New Album Card */}
         <Card className="group border-2 border-dashed border-gray-300 transition-shadow hover:shadow-lg dark:border-gray-600">
           <div className="flex h-40 w-full items-center justify-center rounded-t-lg bg-gray-50 dark:bg-gray-800">

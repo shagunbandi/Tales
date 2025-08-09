@@ -24,10 +24,12 @@ const PagesList = ({
 }) => {
   return (
     <div className="min-w-0 space-y-6" data-testid="pages-list">
-      <AddPageSection
-        onAddPage={() => onAddPageBetween("start")}
-        title="Add page at the beginning"
-      />
+      <div data-testid="add-page-start">
+        <AddPageSection
+          onAddPage={() => onAddPageBetween("start")}
+          title="Add page at the beginning"
+        />
+      </div>
 
       {pages.length === 0 ? (
         <div className="py-12 text-center" data-testid="no-pages-message">
@@ -60,17 +62,21 @@ const PagesList = ({
               isProcessing={isProcessing}
             />
             {pageIndex < pages.length - 1 && (
-              <AddPageSection
-                onAddPage={() => onAddPageBetween(page.id)}
-                title="Add page after this one"
-              />
+              <div data-testid={`add-page-after-${pageIndex}`}>
+                <AddPageSection
+                  onAddPage={() => onAddPageBetween(page.id)}
+                  title="Add page after this one"
+                />
+              </div>
             )}
           </React.Fragment>
         ))
       )}
 
       {pages.length > 0 && (
-        <AddPageSection onAddPage={onAddPage} title="Add page at the end" />
+        <div data-testid="add-page-end">
+          <AddPageSection onAddPage={onAddPage} title="Add page at the end" />
+        </div>
       )}
     </div>
   );

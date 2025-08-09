@@ -11,6 +11,7 @@ const AddPageSection = ({ onAddPage, position, title }) => {
         onClick={onAddPage}
         title={title}
         className="flex h-8 w-8 items-center justify-center rounded-full p-0"
+        data-testid="add-page-button"
       >
         <HiPlus className="h-4 w-4" />
       </Button>

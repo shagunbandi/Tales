@@ -59,6 +59,7 @@ const UploadTab = ({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        data-testid="upload-card"
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <HiOutlineCloudArrowUp className="mb-4 h-12 w-12 text-gray-400 dark:text-gray-500" />
@@ -68,7 +69,7 @@ const UploadTab = ({
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Supports JPG, PNG, GIF, WebP formats
           </p>
-          <Button color="gray" size="sm" className="mt-4">
+          <Button color="gray" size="sm" className="mt-4" data-testid="choose-files-button">
             Choose Files
           </Button>
         </div>
@@ -79,11 +80,12 @@ const UploadTab = ({
           accept="image/*"
           onChange={handleFileChange}
           className="hidden"
+          data-testid="upload-input"
         />
       </Card>
 
       {totalImages > 0 && (
-        <Alert color="success" icon={HiCheckCircle}>
+        <Alert color="success" icon={HiCheckCircle} data-testid="upload-success-alert">
           <span className="font-medium">
             ✓ {totalImages} images uploaded successfully!
           </span>
@@ -95,7 +97,7 @@ const UploadTab = ({
       )}
 
       {isProcessing && (
-        <Alert color="info" icon={HiInformationCircle}>
+        <Alert color="info" icon={HiInformationCircle} data-testid="processing-alert">
           <span className="font-medium">Processing images...</span>
         </Alert>
       )}

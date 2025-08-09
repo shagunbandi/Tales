@@ -33,6 +33,7 @@ const GeneratePDFButton = ({
               isGeneratingPDF
             }
             className="w-full sm:w-auto"
+            data-testid="generate-pdf-button"
           >
             {isProcessing || isGeneratingPDF ? (
               <>

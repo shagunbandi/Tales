@@ -38,6 +38,7 @@ const DesignStyleTab = ({ settings, onSettingsChange, onNext }) => {
                   : "border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500"
               }`}
               onClick={() => handleDesignStyleChange(value)}
+              data-testid={`design-style-${value}`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -84,6 +85,7 @@ const DesignStyleTab = ({ settings, onSettingsChange, onNext }) => {
           <Button
             onClick={onNext}
             className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            data-testid="design-style-next-button"
           >
             Next: Settings
           </Button>
