@@ -2,7 +2,7 @@ import React from "react";
 import PagePreview from "./pageList/PagePreview.jsx";
 import AddPageSection from "./pageList/AddPageSection.jsx";
 
-const PagesList = ({
+const PagesList = React.memo(({
   pages,
   onAddPageBetween,
   onRemovePage,
@@ -84,6 +84,6 @@ const PagesList = ({
       )}
     </div>
   );
-};
+});
 
 export default PagesList;

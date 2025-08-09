@@ -5,7 +5,7 @@ import PagesHeader from "./design/PagesHeader.jsx";
 import PagesList from "./design/PagesList.jsx";
 import GeneratePDFButton from "./design/GeneratePDFButton.jsx";
 
-const DesignTab = ({
+const DesignTab = React.memo(({
   pages,
   availableImages,
   totalImages,
@@ -106,6 +106,6 @@ const DesignTab = ({
       </div>
     </div>
   );
-};
+});
 
 export default DesignTab;

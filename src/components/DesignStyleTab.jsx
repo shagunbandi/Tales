@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback } from "react";
 import { Card, Button } from "flowbite-react";
 import {
   DESIGN_STYLES,
@@ -6,13 +6,13 @@ import {
   DESIGN_STYLE_DESCRIPTIONS,
 } from "../constants.js";
 
-const DesignStyleTab = ({ settings, onSettingsChange, onNext }) => {
-  const handleDesignStyleChange = (designStyle) => {
+const DesignStyleTab = React.memo(({ settings, onSettingsChange, onNext }) => {
+  const handleDesignStyleChange = useCallback((designStyle) => {
     onSettingsChange({
       ...settings,
       designStyle,
     });
-  };
+  }, [settings, onSettingsChange]);
 
   const isFullCover = settings.designStyle === DESIGN_STYLES.FULL_COVER;
 
@@ -93,6 +93,6 @@ const DesignStyleTab = ({ settings, onSettingsChange, onNext }) => {
       </Card>
     </div>
   );
-};
+});
 
 export default DesignStyleTab;

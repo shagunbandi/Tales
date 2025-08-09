@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { Button } from "flowbite-react";
-import { HiPlus, HiX, HiCollection, HiCheckCircle } from "react-icons/hi";
+import { HiPlus, HiX, HiCheckCircle } from "react-icons/hi";
 
-const AvailableImages = ({
+const AvailableImages = React.memo(({
   availableImages,
   removeAvailableImage,
   totalImages,
@@ -58,6 +58,12 @@ const AvailableImages = ({
       type: "available-images",
     },
   });
+
+  // Memoize pages to prevent re-renders when page content changes but structure doesn't
+  const memoizedPages = useMemo(() => 
+    pages.map(page => ({ id: page.id })), 
+    [pages.map(p => p.id).join(',')]
+  );
 
   return (
     <div className="flex h-full min-w-0 flex-col">
@@ -130,7 +136,7 @@ const AvailableImages = ({
                   Add selected to page:
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {pages.map((page, index) => (
+                  {memoizedPages.map((page, index) => (
                     <Button
                       key={page.id}
                       size="xs"
@@ -185,9 +191,9 @@ const AvailableImages = ({
       </div>
     </div>
   );
-};
+});
 
-const DraggableImage = ({ 
+const DraggableImage = React.memo(({ 
   image, 
   index, 
   onRemove, 
@@ -199,20 +205,22 @@ const DraggableImage = ({
 }) => {
   const isDragDisabled = selectionMode;
   
-  // Determine what to drag - single image or batch
-  const dragData = isSelected && selectedImages.size > 1 ? {
-    sourceId: "available-images",
-    sourceIndex: index,
-    image,
-    isBatch: true,
-    selectedImages: Array.from(selectedImages),
-    batchImages: Array.from(selectedImages).map(idx => availableImages[idx])
-  } : {
-    sourceId: "available-images",
-    sourceIndex: index,
-    image,
-    isBatch: false
-  };
+  // Memoize drag data to prevent recreation on every render
+  const dragData = useMemo(() => {
+    return isSelected && selectedImages.size > 1 ? {
+      sourceId: "available-images",
+      sourceIndex: index,
+      image,
+      isBatch: true,
+      selectedImages: Array.from(selectedImages),
+      batchImages: Array.from(selectedImages).map(idx => availableImages[idx])
+    } : {
+      sourceId: "available-images",
+      sourceIndex: index,
+      image,
+      isBatch: false
+    };
+  }, [isSelected, selectedImages, index, image, availableImages]);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -296,6 +304,6 @@ const DraggableImage = ({
       </div>
     </div>
   );
-};
+});
 
 export default AvailableImages;

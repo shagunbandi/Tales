@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Button } from "flowbite-react";
 import {
@@ -18,7 +18,7 @@ import { hasHardcodedLayouts } from "../../../utils/hardcodedLayouts.js";
 import FullCoverImage from "./FullCoverImage.jsx";
 import LayoutSelectionModal from "./LayoutSelectionModal.jsx";
 
-const PagePreview = ({
+const PagePreview = React.memo(({
   page,
   pageIndex,
   pages,
@@ -48,9 +48,10 @@ const PagePreview = ({
     },
   });
 
-  const previewDimensions = getPreviewDimensions(settings);
+  // Memoize expensive calculations
+  const previewDimensions = useMemo(() => getPreviewDimensions(settings), [settings]);
   const imageCount = page.images.length;
-  const layoutInfo = getCurrentLayoutInfo(page.id, page.images, settings);
+  const layoutInfo = useMemo(() => getCurrentLayoutInfo(page.id, page.images, settings), [page.id, page.images.length, settings]);
 
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -74,19 +75,27 @@ const PagePreview = ({
     return () => window.removeEventListener("resize", updateScale);
   }, [previewDimensions.width]);
 
-  const handleOpenLayoutModal = () => {
+  const handleOpenLayoutModal = useCallback(() => {
     setIsLayoutModalOpen(true);
-  };
+  }, []);
 
-  const handleCloseLayoutModal = () => {
+  const handleCloseLayoutModal = useCallback(() => {
     setIsLayoutModalOpen(false);
-  };
+  }, []);
 
-  const handleSelectLayout = (pageId, selectedLayout) => {
+  const handleSelectLayout = useCallback((pageId, selectedLayout) => {
     if (onSelectLayout) {
       onSelectLayout(pageId, selectedLayout);
     }
-  };
+  }, [onSelectLayout]);
+
+  // Memoize button handlers to prevent recreating them on every render
+  const handleRemovePage = useCallback(() => onRemovePage(page.id), [onRemovePage, page.id]);
+  const handleMoveAllBack = useCallback(() => onMoveAllImagesBack(page.id), [onMoveAllImagesBack, page.id]);
+  const handleChangeColor = useCallback(() => onChangeColor(page.id), [onChangeColor, page.id]);
+  const handleRandomizePage = useCallback(() => onRandomizePage(page.id), [onRandomizePage, page.id]);
+  const handlePreviousLayout = useCallback(() => onPreviousLayout(page.id), [onPreviousLayout, page.id]);
+  const handleNextLayout = useCallback(() => onNextLayout(page.id), [onNextLayout, page.id]);
 
   return (
     <div className="mb-6 min-w-0" data-testid={`page-preview-${pageIndex}`}>
@@ -112,7 +121,7 @@ const PagePreview = ({
                 <Button
                   size="xs"
                   color="yellow"
-                  onClick={() => onMoveAllImagesBack(page.id)}
+                  onClick={handleMoveAllBack}
                   className="flex items-center gap-1"
                   data-testid={`move-all-back-${pageIndex}`}
                 >
@@ -124,7 +133,7 @@ const PagePreview = ({
             <Button
               size="xs"
               color="red"
-              onClick={() => onRemovePage(page.id)}
+              onClick={handleRemovePage}
               className="flex items-center gap-1"
               data-testid={`remove-page-${pageIndex}`}
             >
@@ -139,7 +148,7 @@ const PagePreview = ({
           <Button
             size="xs"
             color="gray"
-            onClick={() => onChangeColor(page.id)}
+            onClick={handleChangeColor}
             className="flex items-center gap-1"
             data-testid={`change-color-${pageIndex}`}
           >
@@ -151,7 +160,7 @@ const PagePreview = ({
               <Button
                 size="xs"
                 color="blue"
-                onClick={() => onRandomizePage(page.id)}
+                onClick={handleRandomizePage}
                 disabled={isPageBusy}
                 className="flex items-center gap-1"
                 title="Shuffle image positions within same layout"
@@ -178,7 +187,7 @@ const PagePreview = ({
                   <Button
                     size="xs"
                     color="purple"
-                    onClick={() => onPreviousLayout(page.id)}
+                    onClick={handlePreviousLayout}
                     disabled={isPageBusy}
                     className="flex items-center gap-1"
                     title="Switch to previous layout structure"
@@ -190,7 +199,7 @@ const PagePreview = ({
                   <Button
                     size="xs"
                     color="purple"
-                    onClick={() => onNextLayout(page.id)}
+                    onClick={handleNextLayout}
                     disabled={isPageBusy}
                     className="flex items-center gap-1"
                     title="Switch to next layout structure"
@@ -308,9 +317,9 @@ const PagePreview = ({
       )}
     </div>
   );
-};
+});
 
-const PageImage = ({
+const PageImage = React.memo(({
   image,
   pageId,
   pageIndex,
@@ -324,44 +333,45 @@ const PageImage = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleMoveBack = (e) => {
+  // Memoize handlers to prevent recreation on every render
+  const handleMoveBack = useCallback((e) => {
     e.stopPropagation();
     e.preventDefault();
     onMoveImageBack(pageId, index);
-  };
+  }, [onMoveImageBack, pageId, index]);
 
-  const handleMoveToPreviousPage = (e) => {
+  const handleMoveToPreviousPage = useCallback((e) => {
     e.stopPropagation();
     e.preventDefault();
     if (pageIndex > 0) {
       onMoveImageToPreviousPage(pageId, index, pages[pageIndex - 1].id);
     }
-  };
+  }, [onMoveImageToPreviousPage, pageId, index, pageIndex, pages]);
 
-  const handleMoveToNextPage = (e) => {
+  const handleMoveToNextPage = useCallback((e) => {
     e.stopPropagation();
     e.preventDefault();
     if (pageIndex < pages.length - 1) {
       onMoveImageToNextPage(pageId, index, pages[pageIndex + 1].id);
     }
-  };
+  }, [onMoveImageToNextPage, pageId, index, pageIndex, pages]);
 
-  const handleMoveLeft = (e) => {
+  const handleMoveLeft = useCallback((e) => {
     e.stopPropagation();
     e.preventDefault();
     if (index > 0) {
       onSwapImagesInPage(pageId, index, index - 1);
     }
-  };
+  }, [onSwapImagesInPage, pageId, index]);
 
-  const handleMoveRight = (e) => {
+  const handleMoveRight = useCallback((e) => {
     e.stopPropagation();
     e.preventDefault();
     const currentPage = pages.find((p) => p.id === pageId);
     if (currentPage && index < currentPage.images.length - 1) {
       onSwapImagesInPage(pageId, index, index + 1);
     }
-  };
+  }, [onSwapImagesInPage, pageId, index, pages]);
 
   if (!image?.src) return null;
 
@@ -467,6 +477,6 @@ const PageImage = ({
       )}
     </div>
   );
-};
+});
 
 export default PagePreview;

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import ProgressToast from "../components/ProgressToast.jsx";
 import { processFiles } from "../utils/imageUtils.js";
@@ -34,6 +34,9 @@ export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
   const [availableImages, setAvailableImages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Memoize settings to prevent unnecessary re-renders
+  const memoizedSettings = useMemo(() => settings, [JSON.stringify(settings)]);
 
   /**
    * Detect the current layout structure from positioned images
@@ -84,7 +87,7 @@ export const useImageManagement = (settings = null) => {
 
       try {
         const { width: previewWidth, height: previewHeight } =
-          getPreviewDimensions(settings);
+          getPreviewDimensions(memoizedSettings);
         const numRows = layoutStructure.length;
         const rowHeight = previewHeight / numRows;
 
@@ -122,7 +125,7 @@ export const useImageManagement = (settings = null) => {
         return images || [];
       }
     },
-    [settings],
+    [memoizedSettings],
   );
 
   /**
@@ -136,7 +139,7 @@ export const useImageManagement = (settings = null) => {
 
       try {
         const { width: previewWidth, height: previewHeight } =
-          getPreviewDimensions(settings);
+          getPreviewDimensions(memoizedSettings);
 
         if (settings.designStyle === "full_cover" && preserveLayoutStructure) {
           // For full cover with structure preservation (button movements)
@@ -172,7 +175,7 @@ export const useImageManagement = (settings = null) => {
         return images || [];
       }
     },
-    [settings, detectCurrentLayout, placeImagesInOrder],
+    [memoizedSettings, detectCurrentLayout, placeImagesInOrder],
   );
 
   /**
@@ -185,7 +188,7 @@ export const useImageManagement = (settings = null) => {
 
       try {
         const { width: previewWidth, height: previewHeight } =
-          getPreviewDimensions(settings);
+          getPreviewDimensions(memoizedSettings);
 
         // Simple grid positioning that preserves order but doesn't use smart algorithms
         return images.map((image, index) => {
@@ -221,7 +224,7 @@ export const useImageManagement = (settings = null) => {
         return images || [];
       }
     },
-    [settings],
+    [memoizedSettings],
   );
 
   const handleFiles = useCallback(
@@ -270,7 +273,7 @@ export const useImageManagement = (settings = null) => {
         setIsProcessing(false);
       }
     },
-    [availableImages.length, settings],
+    [availableImages.length, memoizedSettings],
   );
 
   const handleDragEnd = useCallback(
@@ -381,7 +384,7 @@ export const useImageManagement = (settings = null) => {
         }
       }
     },
-    [availableImages, pages, settings, preserveManualLayout],
+    [availableImages, pages, memoizedSettings, preserveManualLayout],
   );
 
   const addPage = useCallback(() => {
@@ -415,46 +418,47 @@ export const useImageManagement = (settings = null) => {
 
   const removePage = useCallback(
     (pageId) => {
-      const currentPages = pages;
-      const pageToRemove = currentPages.find((p) => p.id === pageId);
+      setPages((currentPages) => {
+        const pageToRemove = currentPages.find((p) => p.id === pageId);
 
-      if (pageToRemove && pageToRemove.images.length > 0) {
-        const sortedImages = [...pageToRemove.images].sort(
-          (a, b) => a.originalIndex - b.originalIndex,
-        );
+        if (pageToRemove && pageToRemove.images.length > 0) {
+          const sortedImages = [...pageToRemove.images].sort(
+            (a, b) => a.originalIndex - b.originalIndex,
+          );
 
-        // Merge sortedImages back into availableImages in a single pass by originalIndex
-        setAvailableImages((current) => {
-          const result = [];
-          let i = 0; // pointer in current
-          let j = 0; // pointer in sortedImages
+          // Merge sortedImages back into availableImages in a single pass by originalIndex
+          setAvailableImages((current) => {
+            const result = [];
+            let i = 0; // pointer in current
+            let j = 0; // pointer in sortedImages
 
-          while (i < current.length && j < sortedImages.length) {
-            if ((current[i]?.originalIndex ?? Infinity) <= (sortedImages[j]?.originalIndex ?? Infinity)) {
+            while (i < current.length && j < sortedImages.length) {
+              if ((current[i]?.originalIndex ?? Infinity) <= (sortedImages[j]?.originalIndex ?? Infinity)) {
+                result.push(current[i]);
+                i++;
+              } else {
+                result.push(sortedImages[j]);
+                j++;
+              }
+            }
+
+            while (i < current.length) {
               result.push(current[i]);
               i++;
-            } else {
+            }
+            while (j < sortedImages.length) {
               result.push(sortedImages[j]);
               j++;
             }
-          }
 
-          while (i < current.length) {
-            result.push(current[i]);
-            i++;
-          }
-          while (j < sortedImages.length) {
-            result.push(sortedImages[j]);
-            j++;
-          }
+            return result;
+          });
+        }
 
-          return result;
-        });
-      }
-
-      setPages((prev) => prev.filter((p) => p.id !== pageId));
+        return currentPages.filter((p) => p.id !== pageId);
+      });
     },
-    [pages.length, pages],
+    [], // Remove dependencies that cause re-renders
   );
 
   const changePageColor = useCallback((pageId) => {
@@ -562,7 +566,7 @@ export const useImageManagement = (settings = null) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [availableImages, pages, settings]);
+  }, [availableImages, pages, memoizedSettings]);
 
   const moveImageBack = useCallback(
     async (pageId, imageIndex) => {
@@ -642,7 +646,7 @@ export const useImageManagement = (settings = null) => {
         toast.error("Failed to move image back. Please try again.");
       }
     },
-    [pages, arrangeImagesWithCorrectLayout],
+    [arrangeImagesWithCorrectLayout],
   );
 
   const moveAllImagesBack = useCallback(
@@ -691,7 +695,7 @@ export const useImageManagement = (settings = null) => {
         );
       }
     },
-    [pages],
+    [],
   );
 
   const autoArrangePage = useCallback(
@@ -735,7 +739,7 @@ export const useImageManagement = (settings = null) => {
         );
 
         const { width: previewWidth, height: previewHeight } =
-          getPreviewDimensions(settings);
+          getPreviewDimensions(memoizedSettings);
         const arrangedImages = await arrangeImages(
           targetPage.images,
           previewWidth,
@@ -759,7 +763,7 @@ export const useImageManagement = (settings = null) => {
         setIsProcessing(false);
       }
     },
-    [pages, settings, isProcessing],
+    [memoizedSettings, isProcessing],
   );
 
   const randomizePage = useCallback(
@@ -823,7 +827,7 @@ export const useImageManagement = (settings = null) => {
         setIsProcessing(false);
       }
     },
-    [pages, settings, isProcessing],
+    [memoizedSettings, isProcessing],
   );
 
   // Track per-page processing state for layout changes to avoid global re-renders
@@ -869,7 +873,7 @@ export const useImageManagement = (settings = null) => {
         markPageProcessing(pageId, false);
       }
     },
-    [pages, settings, pageProcessing, markPageProcessing],
+    [memoizedSettings, pageProcessing, markPageProcessing],
   );
 
   const previousLayout = useCallback(
@@ -899,7 +903,7 @@ export const useImageManagement = (settings = null) => {
         markPageProcessing(pageId, false);
       }
     },
-    [pages, settings, pageProcessing, markPageProcessing],
+    [memoizedSettings, pageProcessing, markPageProcessing],
   );
 
   const selectLayout = useCallback(
@@ -941,7 +945,7 @@ export const useImageManagement = (settings = null) => {
         markPageProcessing(pageId, false);
       }
     },
-    [pages, settings, pageProcessing, markPageProcessing],
+    [memoizedSettings, pageProcessing, markPageProcessing],
   );
 
   // Legacy function - now calls nextLayout for backward compatibility
@@ -1116,7 +1120,7 @@ export const useImageManagement = (settings = null) => {
         console.error("Error in swapImagesInPage:", error);
       }
     },
-    [pages, arrangeImagesWithCorrectLayout],
+    [arrangeImagesWithCorrectLayout],
   );
 
   const handleGeneratePDF = useCallback(
@@ -1153,7 +1157,7 @@ export const useImageManagement = (settings = null) => {
         setIsProcessing(false);
       }
     },
-    [pages, settings],
+    [memoizedSettings],
   );
 
   // Album storage functionality - with auto-overwrite support
@@ -1295,7 +1299,7 @@ export const useImageManagement = (settings = null) => {
         }
       }
     },
-    [pages, availableImages, settings],
+    [pages, availableImages, memoizedSettings],
   );
 
   const loadAlbumById = useCallback(async (albumId, showOnlyRelevantInfo = false) => {
