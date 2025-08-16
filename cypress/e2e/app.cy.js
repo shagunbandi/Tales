@@ -1,16 +1,4 @@
-// I will create Cypress tests for core flows using data-testids.
-
-const createAlbumAndGoToDesign = (name = "E2E Album") => {
-  cy.getByTestId("create-new-album-button").click();
-  cy.getByTestId("create-album-modal").should("be.visible");
-  cy.getByTestId("album-name-input").type(name);
-  cy.getByTestId("create-album-confirm").click();
-  cy.getByTestId("design-style-tab").should("exist");
-  cy.getByTestId("design-style-next-button").click();
-  cy.getByTestId("settings-tab").should("exist");
-  cy.getByTestId("settings-next-button").click();
-  cy.getByTestId("design-tab").should("exist");
-};
+// Cypress tests for the single-page Tales app
 
 const attachDummyImageViaGlobalInput = () => {
   cy.fixture("images/dummy1.png", "base64").then((base64) => {
@@ -28,24 +16,27 @@ describe("Tales App E2E", () => {
   beforeEach(() => {
     cy.visit("/");
     cy.getByTestId("app-root").should("exist");
-    // Ensure we're on albums tab
-    cy.getByTestId("albums-tab").should("exist");
+    // App should directly show the design tab
+    cy.getByTestId("design-tab").should("exist");
   });
 
-  it("creates a new album and navigates through design style and settings", () => {
-    createAlbumAndGoToDesign("My First Album");
+  it("displays the single design page", () => {
+    // Should see the design page with its main components
+    cy.getByTestId("available-images-panel").should("exist");
+    cy.getByTestId("pages-panel").should("exist");
+    cy.getByTestId("design-style-button").should("exist");
+    cy.getByTestId("settings-button").should("exist");
   });
 
-  it("uploads images via the hidden global input and arranges on pages", () => {
-    createAlbumAndGoToDesign("Upload Test Album");
-
-    // Upload one image
+  it("allows uploading images and arranging them", () => {
+    // Upload an image
+    cy.getByTestId("add-more-images-button").click();
     attachDummyImageViaGlobalInput();
 
-    // Wait for processing success toast globally
+    // Wait for processing success toast
     cy.contains("Successfully processed", { timeout: 20000 });
 
-    // Check available images counter increments to 1 of 1
+    // Check available images counter shows 1 of 1
     cy.getByTestId("available-images-count", { timeout: 20000 }).should(
       "contain",
       "1 of 1",
@@ -63,25 +54,59 @@ describe("Tales App E2E", () => {
     });
   });
 
-  it("saves album and shows Generate PDF button", () => {
-    createAlbumAndGoToDesign("PDF Album");
+  it("opens and configures design style modal", () => {
+    // Open design style modal
+    cy.getByTestId("design-style-button").click();
+    cy.getByTestId("design-style-modal").should("be.visible");
+
+    // Select full cover design style
+    cy.getByTestId("design-style-full_cover").click();
+
+    // Close modal
+    cy.contains("Done").click();
+    cy.getByTestId("design-style-modal").should("not.exist");
+  });
+
+  it("opens and configures settings modal", () => {
+    // Open settings modal
+    cy.getByTestId("settings-button").click();
+    cy.getByTestId("settings-modal").should("be.visible");
+
+    // Modify a setting
+    cy.getByTestId("settings-input-imagesPerPage").clear().type("6");
+
+    // Close modal
+    cy.contains("Done").click();
+    cy.getByTestId("settings-modal").should("not.exist");
+  });
+
+  it("can generate PDF after uploading and arranging images", () => {
+    // Upload image and arrange
+    cy.getByTestId("add-more-images-button").click();
     attachDummyImageViaGlobalInput();
 
     cy.contains("Successfully processed", { timeout: 20000 });
-
-    cy.getByTestId("available-images-count", { timeout: 20000 }).should(
-      "contain",
-      "1 of 1",
-    );
-
     cy.getByTestId("auto-arrange-button").click();
 
-    // Save album
-    cy.getByTestId("save-album-button").click();
-    cy.getByTestId("save-album-modal").should("be.visible");
-    cy.getByTestId("save-album-name-input").clear().type("Saved Album");
-    cy.getByTestId("save-album-confirm").click();
+    // Generate PDF button should be available
+    cy.getByTestId("generate-pdf-button").should("exist").and("not.be.disabled");
+  });
 
-    cy.getByTestId("generate-pdf-button").should("exist");
+  it("supports multiple image uploads", () => {
+    // Upload first image
+    cy.getByTestId("add-more-images-button").click();
+    attachDummyImageViaGlobalInput();
+    cy.contains("Successfully processed", { timeout: 20000 });
+
+    // Upload second image
+    cy.getByTestId("add-more-images-button").click();
+    attachDummyImageViaGlobalInput();
+    cy.contains("Successfully processed", { timeout: 20000 });
+
+    // Should show 2 of 2 images
+    cy.getByTestId("available-images-count", { timeout: 20000 }).should(
+      "contain",
+      "2 of 2",
+    );
   });
 });
