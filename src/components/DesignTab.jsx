@@ -362,7 +362,7 @@ const DesignTab = ({
           className="w-full lg:sticky lg:top-6 lg:w-1/3 lg:min-w-0 lg:self-start"
           data-testid="available-images-panel"
         >
-          <Card className="h-fit lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden">
+          <Card className="h-fit lg:h-[calc(100vh-8rem)]">
             <AvailableImages
               availableImages={availableImages}
               removeAvailableImage={onRemoveAvailableImage}
