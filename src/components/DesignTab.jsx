@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, Button, Modal } from "flowbite-react";
-import { HiCog, HiTemplate } from "react-icons/hi";
+import { HiCog, HiTemplate, HiDownload, HiUpload } from "react-icons/hi";
 import AvailableImages from "./design/AvailableImages.jsx";
 import PagesHeader from "./design/PagesHeader.jsx";
 import PagesList from "./design/PagesList.jsx";
@@ -320,12 +320,42 @@ const DesignTab = ({
   onSettingsChange,
   isPageProcessing,
   onAddSelectedToPage,
+  onExportProject,
+  onLoadProject,
 }) => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDesignStyleModal, setShowDesignStyleModal] = useState(false);
+  const projectFileInputRef = React.useRef(null);
+
+  const handleLoadProjectClick = () => {
+    if (projectFileInputRef.current) {
+      projectFileInputRef.current.value = "";
+      projectFileInputRef.current.click();
+    }
+  };
+
+  const handleProjectFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (file && file.name.toLowerCase().endsWith('.zip')) {
+      await onLoadProject(file);
+    } else if (file) {
+      // Show error for invalid file type
+      console.error('Invalid file type selected:', file.name);
+      // The hook will show the error toast, so we don't need alert here
+    }
+  };
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
+      {/* Hidden file input for project loading */}
+      <input
+        ref={projectFileInputRef}
+        type="file"
+        accept=".zip"
+        onChange={handleProjectFileChange}
+        className="hidden"
+      />
+      
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         {/* Available Images - Sticky Sidebar */}
         <div
@@ -355,7 +385,7 @@ const DesignTab = ({
             />
 
             {/* Settings and Design Style Buttons */}
-            <div className="flex gap-2 pb-4">
+            <div className="flex flex-wrap gap-2 pb-4">
               <Button
                 onClick={() => setShowDesignStyleModal(true)}
                 size="sm"
@@ -373,6 +403,26 @@ const DesignTab = ({
               >
                 <HiCog className="mr-2 h-4 w-4" />
                 Settings
+              </Button>
+              <Button
+                onClick={handleLoadProjectClick}
+                size="sm"
+                color="blue"
+                disabled={isProcessing}
+                data-testid="load-project-button"
+              >
+                <HiUpload className="mr-2 h-4 w-4" />
+                Load Project
+              </Button>
+              <Button
+                onClick={onExportProject}
+                size="sm"
+                color="green"
+                disabled={isProcessing || (pages.length === 0 && availableImages.length === 0)}
+                data-testid="export-project-button"
+              >
+                <HiDownload className="mr-2 h-4 w-4" />
+                Export Project
               </Button>
             </div>
 

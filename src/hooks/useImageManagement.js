@@ -28,6 +28,7 @@ import {
   hasHardcodedLayouts,
 } from "../utils/hardcodedLayouts.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
+import { exportProject, loadProject } from "../utils/projectUtils.js";
 
 export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
@@ -1161,6 +1162,116 @@ export const useImageManagement = (settings = null) => {
     toast.success("Work area cleared");
   }, []);
 
+  const handleExportProject = useCallback(
+    async () => {
+      setIsProcessing(true);
+      
+      let progressToast = null;
+
+      try {
+        await exportProject(
+          pages,
+          availableImages,
+          settings,
+          (progress) => {
+            const progressElement = React.createElement(ProgressToast, {
+              current: progress.current,
+              total: progress.total,
+              message: progress.message,
+              currentFileName: progress.currentFileName,
+            });
+
+            if (!progressToast) {
+              progressToast = toast.custom(progressElement, {
+                id: "export-processing",
+                duration: 0,
+              });
+            } else {
+              toast.custom(progressElement, {
+                id: "export-processing",
+                duration: 0,
+              });
+            }
+          }
+        );
+
+        toast.dismiss("export-processing");
+        toast.success("Project exported successfully!");
+      } catch (err) {
+        toast.dismiss("export-processing");
+        toast.error(`Export failed: ${err.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [pages, availableImages, settings],
+  );
+
+  const handleLoadProject = useCallback(
+    async (file) => {
+      if (!file) {
+        toast.error("No file selected");
+        return;
+      }
+
+      if (!file.name.toLowerCase().endsWith('.zip')) {
+        toast.error("Please select a valid Tales project file (.zip)");
+        return;
+      }
+
+      setIsProcessing(true);
+      
+      let progressToast = null;
+
+      try {
+        const projectData = await loadProject(
+          file,
+          (progress) => {
+            const progressElement = React.createElement(ProgressToast, {
+              current: progress.current,
+              total: progress.total,
+              message: progress.message,
+              currentFileName: progress.currentFileName,
+            });
+
+            if (!progressToast) {
+              progressToast = toast.custom(progressElement, {
+                id: "load-processing",
+                duration: 0,
+              });
+            } else {
+              toast.custom(progressElement, {
+                id: "load-processing",
+                duration: 0,
+              });
+            }
+          }
+        );
+
+        toast.dismiss("load-processing");
+
+        // Clear current work and load new project
+        resetPageLayoutState();
+        setPages(projectData.pages);
+        setAvailableImages(projectData.availableImages);
+        
+        // Update settings if provided
+        if (projectData.settings) {
+          // Note: This would need to be handled at the App level to update settings
+          console.log("Project settings:", projectData.settings);
+        }
+
+        toast.success("Project loaded successfully!");
+      } catch (err) {
+        toast.dismiss("load-processing");
+        toast.error(`Load failed: ${err.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [],
+  );
+
   const totalImages =
     pages.reduce((sum, page) => sum + page.images.length, 0) +
     availableImages.length;
@@ -1193,6 +1304,8 @@ export const useImageManagement = (settings = null) => {
     swapImagesInPage,
     handleGeneratePDF,
     clearCurrentWork,
+    handleExportProject,
+    handleLoadProject,
 
     // Per-page processing helper
     isPageProcessing: (pageId) => pageProcessing.has(pageId),

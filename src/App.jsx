@@ -52,6 +52,8 @@ function App() {
     swapImagesInPage,
     handleGeneratePDF,
     clearCurrentWork,
+    handleExportProject,
+    handleLoadProject,
     isPageProcessing,
   } = useImageManagement(settings);
 
@@ -119,6 +121,8 @@ function App() {
             onSettingsChange={setSettings}
             isPageProcessing={isPageProcessing}
             onAddSelectedToPage={addSelectedToPage}
+            onExportProject={handleExportProject}
+            onLoadProject={handleLoadProject}
           />
         </div>
       </DndContext>
