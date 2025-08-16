@@ -5,14 +5,13 @@ const GeneratePDFButton = ({
   onGeneratePDF,
   pages,
   isProcessing,
-  currentAlbumName,
 }) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const handleGeneratePDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      await onGeneratePDF(currentAlbumName);
+      await onGeneratePDF();
     } catch (error) {
       // Error is already handled in the onGeneratePDF function
     } finally {
@@ -41,7 +40,7 @@ const GeneratePDFButton = ({
                 Generating PDF...
               </>
             ) : (
-              `Generate PDF${currentAlbumName ? ` - ${currentAlbumName}` : ""}`
+              "Generate PDF"
             )}
           </Button>
         </div>

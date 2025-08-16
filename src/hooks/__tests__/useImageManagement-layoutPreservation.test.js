@@ -50,13 +50,6 @@ vi.mock("react-hot-toast", () => ({
   },
 }));
 
-vi.mock("../../utils/storageUtils.js", () => ({
-  storageManager: {
-    saveToStorage: vi.fn(),
-    loadFromStorage: vi.fn(() => ({ pages: [], availableImages: [] })),
-  },
-}));
-
 vi.mock("../../utils/pdfUtils.js", () => ({
   generatePDF: vi.fn(),
 }));

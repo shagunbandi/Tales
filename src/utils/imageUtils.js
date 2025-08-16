@@ -132,6 +132,7 @@ export const processFiles = async (
       processedImages.push({
         ...imageData,
         id: `img-${Date.now()}-${Math.random()}`,
+        name: file.name,
         originalIndex: availableImagesLength + processedImages.length,
       });
     } catch (err) {

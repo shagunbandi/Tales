@@ -28,7 +28,7 @@ import {
   hasHardcodedLayouts,
 } from "../utils/hardcodedLayouts.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
-import { storageManager } from "../utils/storageUtils.js";
+import { exportProject, loadProject } from "../utils/projectUtils.js";
 
 export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
@@ -1156,293 +1156,120 @@ export const useImageManagement = (settings = null) => {
     [pages, settings],
   );
 
-  // Album storage functionality - with auto-overwrite support
-  const saveCurrentAsAlbum = useCallback(
-    async (albumName, albumDescription = "", existingId = null, isAutoSave = false) => {
-      if (!albumName?.trim()) {
-        toast.error("Please provide a name for the album");
-        return null;
-      }
-
-      if (pages.length === 0 && availableImages.length === 0) {
-        toast.error("No images to save. Please add some images first.");
-        return null;
-      }
-
-      // Only block UI for manual saves, not auto-saves
-      if (!isAutoSave) {
-        setIsProcessing(true);
-      }
-
-      const toastId = isAutoSave ? "auto-save-progress" : "save-album-progress";
-      let currentStep = 0;
-      const totalSteps = 5;
-
-      const updateProgress = (step, message) => {
-        currentStep = Math.max(currentStep, step); // Ensure progress never goes backward
-        toast.custom(
-          React.createElement(ProgressToast, {
-            current: currentStep,
-            total: totalSteps,
-            message,
-            currentFileName: "",
-            showBlocking: !isAutoSave,
-          }),
-          {
-            id: toastId,
-            duration: isAutoSave ? 3000 : 0, // Auto-save toasts auto-dismiss
-          },
-        );
-      };
-
-      try {
-        // Step 1: Start
-        updateProgress(1, isAutoSave ? "Auto-saving..." : (existingId ? "Updating album..." : "Saving album..."));
-        await new Promise(resolve => setTimeout(resolve, isAutoSave ? 100 : 200));
-
-        // Step 2: Generate thumbnail
-        if (!isAutoSave) {
-          updateProgress(2, "Generating thumbnail...");
-        }
-        const thumbnail = await storageManager.generateThumbnail(pages);
-        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 200));
-
-        // Step 3: Prepare data
-        if (!isAutoSave) {
-          updateProgress(3, "Preparing album data...");
-        }
-
-        let albumId = existingId;
-        let originalCreatedTime = Date.now();
-
-        // If we have an existing ID, preserve the original created time
-        if (existingId) {
-          try {
-            const existingAlbum = await storageManager.getAlbum(existingId);
-            if (existingAlbum) {
-              originalCreatedTime = existingAlbum.created;
-            }
-          } catch (error) {
-            console.warn(
-              "Could not fetch existing album for created time:",
-              error,
-            );
-          }
-        } else {
-          // Generate new ID for new albums
-          albumId = storageManager.generateAlbumId();
-        }
-
-        const albumToSave = {
-          id: albumId,
-          name: albumName.trim(),
-          description: albumDescription.trim(),
-          created: originalCreatedTime,
-          modified: Date.now(),
-          settings: settings || {},
-          pages: pages,
-          availableImages: availableImages,
-          totalImages:
-            pages.reduce((sum, page) => sum + page.images.length, 0) +
-            availableImages.length,
-          thumbnail,
-        };
-
-        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Step 4: Save to storage
-        if (!isAutoSave) {
-          updateProgress(4, "Saving to storage...");
-        }
-
-        const savedId = await storageManager.saveAlbum(albumToSave);
-        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 200));
-
-        // Step 5: Complete
-        if (!isAutoSave) {
-          updateProgress(5, "Save complete!");
-        }
-
-        // Dismiss progress toast
-        toast.dismiss(toastId);
-
-        if (isAutoSave) {
-          // Subtle notification for auto-save
-          toast.success(`📁 Auto-saved`, { duration: 2000 });
-        } else {
-          if (existingId) {
-            toast.success(`💾 Album "${albumName}" updated successfully!`, {
-              icon: "✅",
-            });
-          } else {
-            toast.success(`💾 Album "${albumName}" saved successfully!`, {
-              icon: "🎉",
-            });
-          }
-        }
-
-        return savedId;
-      } catch (error) {
-        console.error("Error saving album:", error);
-        toast.dismiss(toastId);
-        if (!isAutoSave) {
-          toast.error("Failed to save album. Please try again.");
-        }
-        return null;
-      } finally {
-        if (!isAutoSave) {
-          setIsProcessing(false);
-        }
-      }
-    },
-    [pages, availableImages, settings],
-  );
-
-  const loadAlbumById = useCallback(async (albumId, showOnlyRelevantInfo = false) => {
-    setIsProcessing(true);
-
-    let currentStep = 0;
-    const totalSteps = 4;
-
-    const updateProgress = (step, message) => {
-      currentStep = Math.max(currentStep, step); // Ensure progress never goes backward
-      toast.custom(
-        React.createElement(ProgressToast, {
-          current: currentStep,
-          total: totalSteps,
-          message,
-          currentFileName: "",
-          showBlocking: true,
-        }),
-        {
-          id: "load-album-progress",
-          duration: 0,
-        },
-      );
-    };
-
-    try {
-      // Step 1: Start loading
-      updateProgress(1, "Loading album...");
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Step 2: Fetch data
-      updateProgress(2, "Fetching album data...");
-      const album = await storageManager.getAlbum(albumId);
-
-      if (!album) {
-        toast.dismiss("load-album-progress");
-        toast.error("Album not found");
-        return false;
-      }
-
-      if (showOnlyRelevantInfo) {
-        // For "Show Album" button - just return album info without loading
-        toast.dismiss("load-album-progress");
-        return {
-          id: album.id,
-          name: album.name,
-          description: album.description,
-          created: album.created,
-          modified: album.modified,
-          totalImages: album.totalImages,
-          totalPages: album.pages ? album.pages.length : 0,
-          thumbnail: album.thumbnail
-        };
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 400));
-
-      // Step 3: Process data
-      updateProgress(3, "Restoring images and pages...");
-      setPages(album.pages || []);
-      setAvailableImages(album.availableImages || []);
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Step 4: Complete
-      updateProgress(4, "Album loaded successfully!");
-
-      // Dismiss progress toast and show success
-      setTimeout(() => {
-        toast.dismiss("load-album-progress");
-        toast.success(`Album "${album.name}" loaded successfully!`);
-      }, 500);
-
-      return album;
-    } catch (error) {
-      console.error("Error loading album:", error);
-      toast.dismiss("load-album-progress");
-      toast.error("Failed to load album");
-      return false;
-    } finally {
-      setIsProcessing(false);
-    }
-  }, []);
-
   const clearCurrentWork = useCallback(() => {
     setPages([]);
     setAvailableImages([]);
     toast.success("Work area cleared");
   }, []);
 
-  const getCurrentAlbumData = useCallback(() => {
-    return {
-      pages,
-      availableImages,
-      totalImages:
-        pages.reduce((sum, page) => sum + page.images.length, 0) +
-        availableImages.length,
-      settings: settings || {},
-    };
-  }, [pages, availableImages, settings]);
+  const handleExportProject = useCallback(
+    async () => {
+      setIsProcessing(true);
+      
+      let progressToast = null;
 
-  const loadAlbumData = useCallback((albumData) => {
-    if (!albumData) {
-      toast.error("Invalid album data");
-      return false;
-    }
+      try {
+        await exportProject(
+          pages,
+          availableImages,
+          settings,
+          (progress) => {
+            const progressElement = React.createElement(ProgressToast, {
+              current: progress.current,
+              total: progress.total,
+              message: progress.message,
+              currentFileName: progress.currentFileName,
+            });
 
-    try {
-      setPages(albumData.pages || []);
-      setAvailableImages(albumData.availableImages || []);
-      return true;
-    } catch (error) {
-      console.error("Error loading album data:", error);
-      toast.error("Failed to load album data");
-      return false;
-    }
-  }, []);
-
-  // Auto-save functionality (optional)
-  const enableAutoSave = useCallback(
-    (albumId, intervalMs = 300000) => {
-      let autoSaveInterval;
-
-      const performAutoSave = async () => {
-        if (pages.length > 0 || availableImages.length > 0) {
-          try {
-            const album = await storageManager.getAlbum(albumId);
-            if (album) {
-              // Non-blocking auto-save
-              await saveCurrentAsAlbum(album.name, album.description, albumId, true);
+            if (!progressToast) {
+              progressToast = toast.custom(progressElement, {
+                id: "export-processing",
+                duration: 0,
+              });
+            } else {
+              toast.custom(progressElement, {
+                id: "export-processing",
+                duration: 0,
+              });
             }
-          } catch (error) {
-            console.error("Auto-save failed:", error);
-            // Don't show error toast for auto-save failures
           }
-        }
-      };
+        );
 
-      autoSaveInterval = setInterval(performAutoSave, intervalMs);
-
-      // Return cleanup function
-      return () => {
-        if (autoSaveInterval) {
-          clearInterval(autoSaveInterval);
-        }
-      };
+        toast.dismiss("export-processing");
+        toast.success("Project exported successfully!");
+      } catch (err) {
+        toast.dismiss("export-processing");
+        toast.error(`Export failed: ${err.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
     },
-    [pages, availableImages, saveCurrentAsAlbum],
+    [pages, availableImages, settings],
+  );
+
+  const handleLoadProject = useCallback(
+    async (file) => {
+      if (!file) {
+        toast.error("No file selected");
+        return;
+      }
+
+      if (!file.name.toLowerCase().endsWith('.zip')) {
+        toast.error("Please select a valid Tales project file (.zip)");
+        return;
+      }
+
+      setIsProcessing(true);
+      
+      let progressToast = null;
+
+      try {
+        const projectData = await loadProject(
+          file,
+          (progress) => {
+            const progressElement = React.createElement(ProgressToast, {
+              current: progress.current,
+              total: progress.total,
+              message: progress.message,
+              currentFileName: progress.currentFileName,
+            });
+
+            if (!progressToast) {
+              progressToast = toast.custom(progressElement, {
+                id: "load-processing",
+                duration: 0,
+              });
+            } else {
+              toast.custom(progressElement, {
+                id: "load-processing",
+                duration: 0,
+              });
+            }
+          }
+        );
+
+        toast.dismiss("load-processing");
+
+        // Clear current work and load new project
+        resetPageLayoutState();
+        setPages(projectData.pages);
+        setAvailableImages(projectData.availableImages);
+        
+        // Update settings if provided
+        if (projectData.settings) {
+          // Note: This would need to be handled at the App level to update settings
+          console.log("Project settings:", projectData.settings);
+        }
+
+        toast.success("Project loaded successfully!");
+      } catch (err) {
+        toast.dismiss("load-processing");
+        toast.error(`Load failed: ${err.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [],
   );
 
   const totalImages =
@@ -1476,14 +1303,9 @@ export const useImageManagement = (settings = null) => {
     moveImageToNextPage,
     swapImagesInPage,
     handleGeneratePDF,
-
-    // Album storage methods
-    saveCurrentAsAlbum,
-    loadAlbumById,
     clearCurrentWork,
-    getCurrentAlbumData,
-    loadAlbumData,
-    enableAutoSave,
+    handleExportProject,
+    handleLoadProject,
 
     // Per-page processing helper
     isPageProcessing: (pageId) => pageProcessing.has(pageId),
