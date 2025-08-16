@@ -76,7 +76,7 @@ const FullCoverImage = ({
   const handleModalSave = async (editData) => {
     try {
       // Create a cropped version of the image based on the edit data
-      const originalSrc = image.originalSrc || image.src;
+      const originalSrc = image.originalPrintSrc || image.printSrc || image.originalSrc || image.src;
 
       // Use EXACT same dimensions as preview and PDF
       const previewWidth = image.previewWidth ?? 100;
@@ -97,8 +97,12 @@ const FullCoverImage = ({
       // Update the image with the cropped version and the edit data
       onUpdateImagePosition(pageId, index, {
         ...editData,
-        src: croppedImageSrc, // Use the cropped image as the new src
-        originalSrc: originalSrc, // Preserve the original for future edits
+        webpSrc: croppedImageSrc, // Use the cropped image as the new webp preview
+        printSrc: croppedImageSrc, // Also use for print quality
+        originalWebpSrc: image.webpSrc || image.src, // Preserve the original webp
+        originalPrintSrc: image.printSrc || originalSrc, // Preserve the original print version
+        src: croppedImageSrc, // Legacy compatibility
+        originalSrc: originalSrc, // Legacy compatibility
       });
     } catch (error) {
       console.error("Failed to crop image:", error);
@@ -107,7 +111,7 @@ const FullCoverImage = ({
     }
   };
 
-  if (!image?.src) return null;
+  if (!image?.webpSrc && !image?.src) return null;
 
   const containerStyle = {
     left: image.x ?? 0,
@@ -141,7 +145,7 @@ const FullCoverImage = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         <img
-          src={image.src}
+          src={image.webpSrc || image.src}
           alt={image.file?.name || "Image"}
           className="pointer-events-none select-none"
           style={imageStyle}

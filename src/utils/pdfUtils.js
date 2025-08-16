@@ -148,8 +148,9 @@ export const generatePDF = async (
         const imgX = previewToMm(image.x, settings, "x");
         const imgY = previewToMm(image.y, settings, "y");
 
-        // Determine image format from the base64 data
-        const imageFormat = getImageFormat(image.src);
+        // Use print version for PDF generation, fallback to legacy src
+        const printSrc = image.printSrc || image.src;
+        const imageFormat = getImageFormat(printSrc);
 
         // For full cover layout, crop the image to fit the allocated space for PDF
         if (settings.designStyle === "full_cover" || image.fullCoverMode) {
@@ -165,7 +166,7 @@ export const generatePDF = async (
               const { cropImageWithScaleAndPosition } = await import(
                 "./imageCropUtils.js"
               );
-              const sourceImage = image.originalSrc || image.src;
+              const sourceImage = image.originalPrintSrc || image.printSrc || image.originalSrc || image.src;
 
               // Use SAME base dimensions as preview for consistency
               const croppedImageSrc = await cropImageWithScaleAndPosition(
@@ -205,7 +206,7 @@ export const generatePDF = async (
             try {
               const { cropForFullCover } = await import("./imageCropUtils.js");
               const croppedImageSrc = await cropForFullCover(
-                image.src,
+                printSrc,
                 allocatedWidth * 2, // Reduced from 3x for better performance
                 allocatedHeight * 2,
                 {
@@ -253,7 +254,7 @@ export const generatePDF = async (
           }
 
           pdf.addImage(
-            image.src,
+            printSrc,
             imageFormat,
             finalX,
             finalY,

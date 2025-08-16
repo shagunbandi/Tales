@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
 import {
   Button,
@@ -18,46 +18,11 @@ const PagesHeader = ({
   onSaveAlbum,
   currentAlbumId,
   currentAlbumName,
-  lastSaveTime,
 }) => {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [albumName, setAlbumName] = useState("");
   const [albumDescription, setAlbumDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [timeDisplay, setTimeDisplay] = useState("");
-
-  // Function to format last save time
-  const formatLastSaveTime = (timestamp) => {
-    if (!timestamp) return "";
-
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
-
-    if (minutes > 0) {
-      return `saved ${minutes}m ago`;
-    } else if (seconds > 0) {
-      return `saved ${seconds}s ago`;
-    } else {
-      return "saved just now";
-    }
-  };
-
-  // Update time display every minute
-  useEffect(() => {
-    if (lastSaveTime) {
-      setTimeDisplay(formatLastSaveTime(lastSaveTime));
-
-      const interval = setInterval(() => {
-        setTimeDisplay(formatLastSaveTime(lastSaveTime));
-      }, 60000); // Update every minute
-
-      return () => clearInterval(interval);
-    } else {
-      setTimeDisplay("");
-    }
-  }, [lastSaveTime]);
 
   // Auto-fill album name when we have a current album
   React.useEffect(() => {

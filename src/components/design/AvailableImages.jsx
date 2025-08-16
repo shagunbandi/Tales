@@ -259,7 +259,7 @@ const DraggableImage = React.memo(({
     >
       <div className="aspect-square">
         <img
-          src={image.src}
+          src={image.webpSrc || image.src}
           alt={image.file?.name || image.name || "Image"}
           className="h-full w-full object-cover"
         />

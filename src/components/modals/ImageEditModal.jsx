@@ -20,8 +20,8 @@ const ImageEditModal = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(null);
 
-  // Work with original image source
-  const originalImageSrc = image?.originalSrc || image?.src;
+  // Work with original image source - prioritize print version for editing
+  const originalImageSrc = image?.originalPrintSrc || image?.printSrc || image?.originalSrc || image?.src;
 
   const imageRef = useRef(null);
   const containerRef = useRef(null);

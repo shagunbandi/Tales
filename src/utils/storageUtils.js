@@ -26,7 +26,6 @@ export const ALBUM_SCHEMA = {
     designStyle: "string",
     pageMargin: "number",
     imageGap: "number",
-    imageQuality: "number",
     maxImagesPerRow: "number",
     maxNumberOfRows: "number",
     maxNumberOfPages: "number",
@@ -122,8 +121,18 @@ class IndexedDBStorage {
   async saveAlbum(albumData) {
     await this.init();
 
+    // Check if this is an update by seeing if album already exists
+    let isUpdate = false;
+    try {
+      const existingAlbum = await this.getAlbum(albumData.id);
+      isUpdate = !!existingAlbum;
+    } catch (error) {
+      // Album doesn't exist, so this is a new save
+      isUpdate = false;
+    }
+
     // First compress album data (this may take time with async operations)
-    const compressedAlbum = await this.compressAlbumData(albumData);
+    const compressedAlbum = await this.compressAlbumData(albumData, isUpdate);
 
     // Then start a new transaction for the actual save operation
     const transaction = this.db.transaction(
@@ -241,7 +250,7 @@ class IndexedDBStorage {
     }
   }
 
-  async compressAlbumData(albumData) {
+  async compressAlbumData(albumData, isUpdate = false) {
     // Create a clean metadata-only copy (small JSON)
     const album = {
       id: albumData.id,
@@ -258,6 +267,29 @@ class IndexedDBStorage {
 
     // Collect all images to be stored separately
     const imagesToSave = [];
+    const usedImageRefs = new Set(); // Track which image refs are being used
+    
+    // If this is an update, get existing album to clean up old images
+    let existingImageRefs = new Set();
+    if (isUpdate) {
+      try {
+        const existingAlbum = await this.getAlbum(albumData.id);
+        if (existingAlbum) {
+          // Collect all existing image references
+          for (const page of existingAlbum.pages) {
+            for (const image of page.images) {
+              if (image.imageRef) existingImageRefs.add(image.imageRef);
+              if (image.originalImageRef) existingImageRefs.add(image.originalImageRef);
+            }
+          }
+          for (const image of existingAlbum.availableImages) {
+            if (image.imageRef) existingImageRefs.add(image.imageRef);
+          }
+        }
+      } catch (error) {
+        console.warn("Could not fetch existing album for cleanup:", error);
+      }
+    }
 
     // Process pages - store only metadata, not image data
     for (let pageIndex = 0; pageIndex < albumData.pages.length; pageIndex++) {
@@ -300,24 +332,21 @@ class IndexedDBStorage {
           originalImageRef: null, // Will be set if there's an original version
         };
 
-        // Store the actual image data separately
-        if (originalImage.src && originalImage.src.startsWith("data:")) {
-          const compressedImage = await this.compressImageLossless(
-            originalImage.src,
-          );
+        // Store the print version (optimized quality for PDF) - this is our new storage standard
+        const srcToStore = originalImage.printSrc || originalImage.src;
+        if (srcToStore && srcToStore.startsWith("data:")) {
+          const compressedImage = await this.compressImageLossless(srcToStore);
           imagesToSave.push({ id: imageId, blob: compressedImage });
+          usedImageRefs.add(imageId); // Track used image ref
 
-          // Handle original (uncropped) version if present
-          if (
-            originalImage.originalSrc &&
-            originalImage.originalSrc.startsWith("data:")
-          ) {
+          // Handle original (uncropped) print version if present
+          const originalSrcToStore = originalImage.originalPrintSrc || originalImage.originalSrc;
+          if (originalSrcToStore && originalSrcToStore.startsWith("data:")) {
             const originalId = `${imageId}_original`;
-            const compressedOriginal = await this.compressImageLossless(
-              originalImage.originalSrc,
-            );
+            const compressedOriginal = await this.compressImageLossless(originalSrcToStore);
             imagesToSave.push({ id: originalId, blob: compressedOriginal });
             cleanImage.originalImageRef = originalId;
+            usedImageRefs.add(originalId); // Track used original image ref
           }
         }
 
@@ -352,12 +381,12 @@ class IndexedDBStorage {
         imageRef: imageId,
       };
 
-      // Store the actual image data separately
-      if (originalImage.src && originalImage.src.startsWith("data:")) {
-        const compressedImage = await this.compressImageLossless(
-          originalImage.src,
-        );
+      // Store the print version (optimized quality) - this is our new storage standard
+      const srcToStore = originalImage.printSrc || originalImage.src;
+      if (srcToStore && srcToStore.startsWith("data:")) {
+        const compressedImage = await this.compressImageLossless(srcToStore);
         imagesToSave.push({ id: imageId, blob: compressedImage });
+        usedImageRefs.add(imageId); // Track used image ref
       }
 
       album.availableImages.push(cleanImage);
@@ -368,7 +397,106 @@ class IndexedDBStorage {
       await this.saveImagesBatch(imagesToSave);
     }
 
+    // Clean up orphaned images if this is an update
+    if (isUpdate && existingImageRefs.size > 0) {
+      const orphanedRefs = Array.from(existingImageRefs).filter(ref => !usedImageRefs.has(ref));
+      if (orphanedRefs.length > 0) {
+        console.log(`Cleaning up ${orphanedRefs.length} orphaned images from album update`);
+        await this.deleteImagesBatch(orphanedRefs);
+      }
+    }
+
     return album;
+  }
+
+  // Helper function to create dual image versions during album loading
+  async createDualVersionFromSingleSrc(originalSrc) {
+    try {
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = originalSrc;
+      });
+
+      // Create really small WebP version for UI previews (100-200KB)
+      const webpResult = this.compressWebPToTargetSize(img, 200 * 1024, 800);
+      
+      // Create minimal print version (never upscale, moderate compression)
+      const maxPrintWidth = Math.min(img.naturalWidth, 2048); // Max 2K instead of 4K
+      const maxPrintHeight = Math.min(img.naturalHeight, 2048);
+      const printResult = this.createOptimizedImage(img, maxPrintWidth, maxPrintHeight, 'image/jpeg', 0.85);
+      
+      return {
+        webpSrc: webpResult?.dataURL || originalSrc,
+        printSrc: printResult?.dataURL || originalSrc,
+        src: originalSrc // Keep for backward compatibility
+      };
+    } catch (error) {
+      console.warn("Failed to create dual versions, using original:", error);
+      return {
+        webpSrc: originalSrc,
+        printSrc: originalSrc,
+        src: originalSrc
+      };
+    }
+  }
+
+  // Helper functions copied from imageUtils.js for use in storage
+  createOptimizedImage(img, maxWidth, maxHeight, format = 'image/webp', quality = 0.8) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    
+    if (!ctx || !img.naturalWidth || !img.naturalHeight) {
+      return null;
+    }
+
+    const scaleWidth = maxWidth / img.naturalWidth;
+    const scaleHeight = maxHeight / img.naturalHeight;
+    const scale = Math.min(scaleWidth, scaleHeight, 1);
+    
+    const scaledWidth = Math.floor(img.naturalWidth * scale);
+    const scaledHeight = Math.floor(img.naturalHeight * scale);
+    
+    canvas.width = scaledWidth;
+    canvas.height = scaledHeight;
+    
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+    
+    return {
+      dataURL: canvas.toDataURL(format, quality),
+      width: scaledWidth,
+      height: scaledHeight
+    };
+  }
+
+  compressWebPToTargetSize(img, targetBytes = 200 * 1024, maxDimension = 800) {
+    let result = null;
+    
+    // Aggressive compression for really small WebP previews
+    const attempts = [
+      { dim: Math.min(maxDimension, img.naturalWidth, img.naturalHeight), qual: 0.7 },
+      { dim: Math.min(Math.floor(maxDimension * 0.8), img.naturalWidth, img.naturalHeight), qual: 0.7 },
+      { dim: Math.min(Math.floor(maxDimension * 0.8), img.naturalWidth, img.naturalHeight), qual: 0.5 },
+      { dim: Math.min(Math.floor(maxDimension * 0.6), img.naturalWidth, img.naturalHeight), qual: 0.7 },
+      { dim: Math.min(Math.floor(maxDimension * 0.6), img.naturalWidth, img.naturalHeight), qual: 0.5 },
+      { dim: Math.min(Math.floor(maxDimension * 0.5), img.naturalWidth, img.naturalHeight), qual: 0.4 },
+      { dim: Math.min(400, img.naturalWidth, img.naturalHeight), qual: 0.3 } // Very aggressive fallback
+    ];
+    
+    for (const { dim, qual } of attempts) {
+      result = this.createOptimizedImage(img, dim, dim, 'image/webp', qual);
+      if (result) {
+        const estimatedSize = result.dataURL.length * 0.75;
+        if (estimatedSize <= targetBytes) {
+          break;
+        }
+      }
+    }
+    
+    return result;
   }
 
   async decompressAlbumData(albumData) {
@@ -382,10 +510,20 @@ class IndexedDBStorage {
         if (image.imageRef) {
           try {
             const imageBlob = await this.getImageBlob(image.imageRef);
-            image.src = await this.blobToDataURL(imageBlob);
+            const originalSrc = await this.blobToDataURL(imageBlob);
+            
+            // Check if this is a legacy image (only has src) and create dual versions
+            if (!image.webpSrc && !image.printSrc) {
+              const dualVersions = await this.createDualVersionFromSingleSrc(originalSrc);
+              Object.assign(image, dualVersions);
+            } else {
+              image.src = originalSrc; // Legacy compatibility
+            }
           } catch (error) {
             console.warn(`Failed to load image ${image.imageRef}:`, error);
             image.src = ""; // Fallback to empty string
+            image.webpSrc = "";
+            image.printSrc = "";
           }
         }
 
@@ -395,7 +533,15 @@ class IndexedDBStorage {
             const originalBlob = await this.getImageBlob(
               image.originalImageRef,
             );
-            image.originalSrc = await this.blobToDataURL(originalBlob);
+            const originalSrc = await this.blobToDataURL(originalBlob);
+            
+            // Create dual versions for original image as well
+            if (!image.originalWebpSrc && !image.originalPrintSrc) {
+              const dualVersions = await this.createDualVersionFromSingleSrc(originalSrc);
+              image.originalWebpSrc = dualVersions.webpSrc;
+              image.originalPrintSrc = dualVersions.printSrc;
+            }
+            image.originalSrc = originalSrc; // Legacy compatibility
           } catch (error) {
             console.warn(
               `Failed to load original image ${image.originalImageRef}:`,
@@ -416,13 +562,23 @@ class IndexedDBStorage {
       if (image.imageRef) {
         try {
           const imageBlob = await this.getImageBlob(image.imageRef);
-          image.src = await this.blobToDataURL(imageBlob);
+          const originalSrc = await this.blobToDataURL(imageBlob);
+          
+          // Check if this is a legacy image and create dual versions
+          if (!image.webpSrc && !image.printSrc) {
+            const dualVersions = await this.createDualVersionFromSingleSrc(originalSrc);
+            Object.assign(image, dualVersions);
+          } else {
+            image.src = originalSrc; // Legacy compatibility
+          }
         } catch (error) {
           console.warn(
             `Failed to load available image ${image.imageRef}:`,
             error,
           );
           image.src = "";
+          image.webpSrc = "";
+          image.printSrc = "";
         }
       }
 

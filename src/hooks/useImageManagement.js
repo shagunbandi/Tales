@@ -582,11 +582,13 @@ export const useImageManagement = (settings = null) => {
         const imageToRemove = currentPage.images[imageIndex];
 
         // Restore original image if it was cropped
-        const originalImage = imageToRemove.originalSrc
+        const originalImage = imageToRemove.originalWebpSrc
           ? {
               ...imageToRemove,
-              src: imageToRemove.originalSrc,
-              originalSrc: undefined,
+              webpSrc: imageToRemove.originalWebpSrc,
+              printSrc: imageToRemove.originalPrintSrc,
+              originalWebpSrc: undefined,
+              originalPrintSrc: undefined,
               previewWidth: undefined,
               previewHeight: undefined,
               x: undefined,
@@ -664,11 +666,13 @@ export const useImageManagement = (settings = null) => {
 
           sortedImages.forEach((image) => {
             // Restore original image if it was cropped
-            const originalImage = image.originalSrc
+            const originalImage = image.originalWebpSrc
               ? {
                   ...image,
-                  src: image.originalSrc,
-                  originalSrc: undefined,
+                  webpSrc: image.originalWebpSrc,
+                  printSrc: image.originalPrintSrc,
+                  originalWebpSrc: undefined,
+                  originalPrintSrc: undefined,
                   previewWidth: undefined,
                   previewHeight: undefined,
                   x: undefined,
@@ -1157,12 +1161,12 @@ export const useImageManagement = (settings = null) => {
         setIsProcessing(false);
       }
     },
-    [memoizedSettings],
+    [pages, memoizedSettings],
   );
 
   // Album storage functionality - with auto-overwrite support
   const saveCurrentAsAlbum = useCallback(
-    async (albumName, albumDescription = "", existingId = null, isAutoSave = false) => {
+    async (albumName, albumDescription = "", existingId = null) => {
       if (!albumName?.trim()) {
         toast.error("Please provide a name for the album");
         return null;
@@ -1173,12 +1177,9 @@ export const useImageManagement = (settings = null) => {
         return null;
       }
 
-      // Only block UI for manual saves, not auto-saves
-      if (!isAutoSave) {
-        setIsProcessing(true);
-      }
+      setIsProcessing(true);
 
-      const toastId = isAutoSave ? "auto-save-progress" : "save-album-progress";
+      const toastId = "save-album-progress";
       let currentStep = 0;
       const totalSteps = 5;
 
@@ -1190,31 +1191,27 @@ export const useImageManagement = (settings = null) => {
             total: totalSteps,
             message,
             currentFileName: "",
-            showBlocking: !isAutoSave,
+            showBlocking: true,
           }),
           {
             id: toastId,
-            duration: isAutoSave ? 3000 : 0, // Auto-save toasts auto-dismiss
+            duration: 0,
           },
         );
       };
 
       try {
         // Step 1: Start
-        updateProgress(1, isAutoSave ? "Auto-saving..." : (existingId ? "Updating album..." : "Saving album..."));
-        await new Promise(resolve => setTimeout(resolve, isAutoSave ? 100 : 200));
+        updateProgress(1, existingId ? "Updating album..." : "Saving album...");
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         // Step 2: Generate thumbnail
-        if (!isAutoSave) {
-          updateProgress(2, "Generating thumbnail...");
-        }
+        updateProgress(2, "Generating thumbnail...");
         const thumbnail = await storageManager.generateThumbnail(pages);
-        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         // Step 3: Prepare data
-        if (!isAutoSave) {
-          updateProgress(3, "Preparing album data...");
-        }
+        updateProgress(3, "Preparing album data...");
 
         let albumId = existingId;
         let originalCreatedTime = Date.now();
@@ -1252,51 +1249,38 @@ export const useImageManagement = (settings = null) => {
           thumbnail,
         };
 
-        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         // Step 4: Save to storage
-        if (!isAutoSave) {
-          updateProgress(4, "Saving to storage...");
-        }
+        updateProgress(4, "Saving to storage...");
 
         const savedId = await storageManager.saveAlbum(albumToSave);
-        if (!isAutoSave) await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         // Step 5: Complete
-        if (!isAutoSave) {
-          updateProgress(5, "Save complete!");
-        }
+        updateProgress(5, "Save complete!");
 
         // Dismiss progress toast
         toast.dismiss(toastId);
 
-        if (isAutoSave) {
-          // Subtle notification for auto-save
-          toast.success(`📁 Auto-saved`, { duration: 2000 });
+        if (existingId) {
+          toast.success(`💾 Album "${albumName}" updated successfully!`, {
+            icon: "✅",
+          });
         } else {
-          if (existingId) {
-            toast.success(`💾 Album "${albumName}" updated successfully!`, {
-              icon: "✅",
-            });
-          } else {
-            toast.success(`💾 Album "${albumName}" saved successfully!`, {
-              icon: "🎉",
-            });
-          }
+          toast.success(`💾 Album "${albumName}" saved successfully!`, {
+            icon: "🎉",
+          });
         }
 
         return savedId;
       } catch (error) {
         console.error("Error saving album:", error);
         toast.dismiss(toastId);
-        if (!isAutoSave) {
-          toast.error("Failed to save album. Please try again.");
-        }
+        toast.error("Failed to save album. Please try again.");
         return null;
       } finally {
-        if (!isAutoSave) {
-          setIsProcessing(false);
-        }
+        setIsProcessing(false);
       }
     },
     [pages, availableImages, memoizedSettings],
@@ -1417,37 +1401,6 @@ export const useImageManagement = (settings = null) => {
     }
   }, []);
 
-  // Auto-save functionality (optional)
-  const enableAutoSave = useCallback(
-    (albumId, intervalMs = 300000) => {
-      let autoSaveInterval;
-
-      const performAutoSave = async () => {
-        if (pages.length > 0 || availableImages.length > 0) {
-          try {
-            const album = await storageManager.getAlbum(albumId);
-            if (album) {
-              // Non-blocking auto-save
-              await saveCurrentAsAlbum(album.name, album.description, albumId, true);
-            }
-          } catch (error) {
-            console.error("Auto-save failed:", error);
-            // Don't show error toast for auto-save failures
-          }
-        }
-      };
-
-      autoSaveInterval = setInterval(performAutoSave, intervalMs);
-
-      // Return cleanup function
-      return () => {
-        if (autoSaveInterval) {
-          clearInterval(autoSaveInterval);
-        }
-      };
-    },
-    [pages, availableImages, saveCurrentAsAlbum],
-  );
 
   const totalImages =
     pages.reduce((sum, page) => sum + page.images.length, 0) +
@@ -1487,7 +1440,6 @@ export const useImageManagement = (settings = null) => {
     clearCurrentWork,
     getCurrentAlbumData,
     loadAlbumData,
-    enableAutoSave,
 
     // Per-page processing helper
     isPageProcessing: (pageId) => pageProcessing.has(pageId),

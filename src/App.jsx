@@ -8,7 +8,6 @@ import {
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { useImageManagement } from "./hooks/useImageManagement";
-import { useAutoSave } from "./hooks/useAutoSave";
 import { DEFAULT_SETTINGS } from "./constants";
 import TabNavigation from "./components/TabNavigation";
 import DesignStyleTab from "./components/DesignStyleTab";
@@ -68,28 +67,9 @@ function App() {
     clearCurrentWork,
     getCurrentAlbumData,
     loadAlbumData,
-    enableAutoSave,
     isPageProcessing,
   } = useImageManagement(settings);
 
-  // Auto-save functionality
-  const {
-    lastSaveTime,
-    isAutoSaving,
-    enableAutoSave: enableAutoSaveHook,
-    disableAutoSave,
-    manualSave,
-    hasUnsavedChanges,
-  } = useAutoSave({
-    pages,
-    availableImages,
-    saveCurrentAsAlbum,
-    enabled:
-      totalImages > 0 && (activeTab === "design" || activeTab === "settings"), // Only auto-save when working on design
-    intervalMs: 60000, // 1 minute
-    currentAlbumId,
-    currentAlbumName,
-  });
 
   // Validation function to check if settings are valid
   const validateSettings = () => {
@@ -128,11 +108,6 @@ function App() {
     // Max number of pages validation
     if (!isValidNumber(settings.maxNumberOfPages, 1, 100)) {
       errors.maxNumberOfPages = "Max number of pages must be between 1 and 100";
-    }
-
-    // Image quality validation
-    if (!isValidNumber(settings.imageQuality, 0.1, 1.0)) {
-      errors.imageQuality = "Image quality must be between 0.1 and 1.0";
     }
 
     return errors;
@@ -240,9 +215,6 @@ function App() {
         <DarkThemeToggle />
       </div>
       <AppHeader
-        isAutoSaving={isAutoSaving}
-        lastSaveTime={lastSaveTime}
-        hasUnsavedChanges={hasUnsavedChanges}
         currentAlbumName={currentAlbumName}
       />
 
@@ -342,7 +314,6 @@ function App() {
               onSaveAlbum={handleSaveAlbum}
               currentAlbumId={currentAlbumId}
               currentAlbumName={currentAlbumName}
-              lastSaveTime={lastSaveTime}
               settings={settings}
               isPageProcessing={isPageProcessing}
               onAddSelectedToPage={addSelectedToPage}

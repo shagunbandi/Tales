@@ -65,7 +65,6 @@ export const DEFAULT_SETTINGS = {
   designStyle: DESIGN_STYLES.CLASSIC,
   pageMargin: 20,
   imageGap: 10,
-  imageQuality: 0.9,
   maxImagesPerRow: 4,
   maxNumberOfRows: 4,
   maxNumberOfPages: 4,

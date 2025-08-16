@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug PDF Generation</title>
+</head>
+<body>
+    <h1>PDF Generation Debug</h1>
+    <input type="file" id="fileInput" multiple accept="image/*">
+    <button id="generatePDF">Generate PDF</button>
+    <div id="status"></div>
+    <div id="imageInfo"></div>
+
+    <script type="module">
+        import { loadImage, processFiles } from './src/utils/imageUtils.js';
+        import { generatePDF } from './src/utils/pdfUtils.js';
+        import { DEFAULT_SETTINGS } from './src/constants.js';
+
+        const fileInput = document.getElementById('fileInput');
+        const generateBtn = document.getElementById('generatePDF');
+        const status = document.getElementById('status');
+        const imageInfo = document.getElementById('imageInfo');
+
+        let processedImages = [];
+
+        fileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            status.textContent = 'Processing images...';
+            
+            try {
+                processedImages = await processFiles(files, 0, DEFAULT_SETTINGS);
+                status.textContent = `Processed ${processedImages.length} images successfully!`;
+                
+                // Display image info
+                imageInfo.innerHTML = processedImages.map((img, i) => `
+                    <div>
+                        <h3>Image ${i + 1}:</h3>
+                        <p>WebP src: ${img.webpSrc ? 'Present' : 'Missing'}</p>
+                        <p>Print src: ${img.printSrc ? 'Present' : 'Missing'}</p>
+                        <p>Legacy src: ${img.src ? 'Present' : 'Missing'}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                status.textContent = `Error: ${error.message}`;
+                console.error(error);
+            }
+        });
+
+        generateBtn.addEventListener('click', async () => {
+            if (processedImages.length === 0) {
+                status.textContent = 'No images to generate PDF from';
+                return;
+            }
+
+            status.textContent = 'Generating PDF...';
+            
+            try {
+                const pages = [{
+                    id: 'test-page',
+                    images: processedImages,
+                    color: { color: '#ffffff' }
+                }];
+
+                await generatePDF(pages, DEFAULT_SETTINGS, (progress) => {
+                    status.textContent = `PDF Generation: ${progress.message}`;
+                });
+                
+                status.textContent = 'PDF generated successfully!';
+            } catch (error) {
+                status.textContent = `PDF Error: ${error.message}`;
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>

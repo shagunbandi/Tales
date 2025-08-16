@@ -6,8 +6,7 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
   const handleSettingChange = (key, value) => {
     let parsedValue = value;
     if (value !== "" && !isNaN(value)) {
-      parsedValue =
-        key === "imageQuality" ? parseFloat(value) : parseInt(value);
+      parsedValue = parseInt(value);
     }
     onSettingsChange({ ...settings, [key]: parsedValue });
   };
@@ -49,9 +48,6 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
     }
     if (!isValidNumber(settings.maxNumberOfPages, 1, 100)) {
       errors.maxNumberOfPages = "Max number of pages must be between 1 and 100";
-    }
-    if (!isValidNumber(settings.imageQuality, 0.1, 1.0)) {
-      errors.imageQuality = "Image quality must be between 0.1 and 1.0";
     }
 
     return errors;
@@ -104,14 +100,6 @@ const SettingsTab = ({ settings, onSettingsChange, onNext }) => {
       min: 1,
       max: 100,
       help: "Maximum pages in the generated PDF",
-    },
-    {
-      id: "imageQuality",
-      label: "Image Quality:",
-      min: 0.1,
-      max: 1.0,
-      step: 0.1,
-      help: "Quality of images (0.1 = low, 1.0 = high)",
     },
   ];
 

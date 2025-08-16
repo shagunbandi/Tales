@@ -1,10 +1,6 @@
 import React from "react";
-import AutoSaveIndicator from "./AutoSaveIndicator";
 
 const AppHeader = ({
-  isAutoSaving,
-  lastSaveTime,
-  hasUnsavedChanges,
   currentAlbumName,
 }) => {
   return (
@@ -31,15 +27,14 @@ const AppHeader = ({
         ></div>
       </div>
 
-      {/* Auto-save indicator */}
-      <div className="mt-3">
-        <AutoSaveIndicator
-          isAutoSaving={isAutoSaving}
-          lastSaveTime={lastSaveTime}
-          hasUnsavedChanges={hasUnsavedChanges}
-          currentAlbumName={currentAlbumName}
-        />
-      </div>
+      {/* Current album name display */}
+      {currentAlbumName && (
+        <div className="mt-3">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            Working on: {currentAlbumName}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

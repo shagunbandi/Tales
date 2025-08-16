@@ -373,7 +373,7 @@ const PageImage = React.memo(({
     }
   }, [onSwapImagesInPage, pageId, index, pages]);
 
-  if (!image?.src) return null;
+  if (!image?.webpSrc && !image?.src) return null;
 
   const isFullCover =
     settings?.designStyle === "full_cover" || image.fullCoverMode;
@@ -404,7 +404,7 @@ const PageImage = React.memo(({
       data-testid={`page-image-${pageIndex}-${index}`}
     >
       <img
-        src={image.src}
+        src={image.webpSrc || image.src}
         alt={image.file?.name || "Image"}
         className={`h-full w-full rounded ${objectFitClass}`}
       />
