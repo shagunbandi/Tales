@@ -385,7 +385,7 @@ const DesignTab = ({
             />
 
             {/* Settings and Design Style Buttons */}
-            <div className="flex flex-wrap gap-2 pb-4">
+            <div className="flex flex-wrap gap-2">
               <Button
                 onClick={() => setShowDesignStyleModal(true)}
                 size="sm"
@@ -404,6 +404,8 @@ const DesignTab = ({
                 <HiCog className="mr-2 h-4 w-4" />
                 Settings
               </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 pb-4">
               <Button
                 onClick={handleLoadProjectClick}
                 size="sm"
