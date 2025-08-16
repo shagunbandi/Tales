@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { cropImageWithScaleAndPosition } from './imageCropUtils.js';
 
 /**
  * Convert base64 data URL to blob
@@ -68,7 +69,8 @@ function createProjectMetadata(pages, availableImages, settings) {
         cropping: {
           scale: image.scale || 1,
           cropOffsetX: image.cropOffsetX || 0,
-          cropOffsetY: image.cropOffsetY || 0
+          cropOffsetY: image.cropOffsetY || 0,
+          hasOriginalImage: !!image.originalSrc
         },
         fullCoverMode: image.fullCoverMode || false,
         originalFileName: image.name || '',
@@ -77,7 +79,7 @@ function createProjectMetadata(pages, availableImages, settings) {
     })),
     availableImages: availableImages.map(image => ({
       id: image.id,
-      filename: `image_${image.id}.${getExtensionFromMimeType(image.src.split(';')[0].split(':')[1])}`,
+      filename: `image_${image.id}.${getExtensionFromMimeType((image.originalSrc || image.src).split(';')[0].split(':')[1])}`,
       originalIndex: image.originalIndex,
       dimensions: {
         originalWidth: image.width,
@@ -148,8 +150,10 @@ export async function exportProject(pages, availableImages, settings, onProgress
       if (!image.src || !image.src.startsWith('data:')) {
         console.warn(`Skipping image ${image.id}: invalid data URL`);
       } else {
-        filename = `image_${image.id}.${getExtensionFromMimeType(image.src.split(';')[0].split(':')[1])}`;
-        const blob = dataURLToBlob(image.src);
+        // Use original image if available, otherwise use current src
+        const imageSource = image.originalSrc || image.src;
+        filename = `image_${image.id}.${getExtensionFromMimeType(imageSource.split(';')[0].split(':')[1])}`;
+        const blob = dataURLToBlob(imageSource);
         
         imagesFolder.file(filename, blob);
         processedSuccessfully = true;
@@ -272,19 +276,56 @@ export async function loadProject(file, onProgress = null) {
   }
   
   // Reconstruct pages with loaded images
-  const reconstructedPages = metadata.pages.map(page => ({
+  const reconstructedPages = await Promise.all(metadata.pages.map(async page => ({
     id: page.id,
     color: page.color,
-    images: page.images.map(imageMetadata => {
+    images: await Promise.all(page.images.map(async imageMetadata => {
       const imageData = loadedImages.get(imageMetadata.id);
       if (!imageData) {
         console.warn(`Image not found: ${imageMetadata.id}`);
         return null;
       }
       
+      const hasCropping = imageMetadata.cropping && (
+        imageMetadata.cropping.cropOffsetX !== 0 || 
+        imageMetadata.cropping.cropOffsetY !== 0 || 
+        imageMetadata.cropping.scale !== 1
+      );
+      
+      let processedImageSrc = imageData;
+      let originalSrc = undefined;
+      
+      // If the image has cropping data and we stored the original, apply cropping
+      // For new format: only apply cropping if hasOriginalImage is true
+      // For old format: don't apply cropping as the stored image is already processed
+      const isNewFormat = imageMetadata.cropping && typeof imageMetadata.cropping.hasOriginalImage === 'boolean';
+      const shouldApplyCropping = hasCropping && isNewFormat && imageMetadata.cropping.hasOriginalImage;
+      
+      if (shouldApplyCropping) {
+        try {
+          // The loaded imageData is the original, so we need to apply cropping to get the display version
+          originalSrc = imageData;
+          processedImageSrc = await cropImageWithScaleAndPosition(
+            imageData,
+            imageMetadata.dimensions.previewWidth,
+            imageMetadata.dimensions.previewHeight,
+            {
+              scale: imageMetadata.cropping.scale,
+              cropOffsetX: imageMetadata.cropping.cropOffsetX,
+              cropOffsetY: imageMetadata.cropping.cropOffsetY
+            }
+          );
+        } catch (error) {
+          console.warn(`Failed to apply cropping to image ${imageMetadata.id}:`, error);
+          // Fallback to using the loaded image as-is
+          processedImageSrc = imageData;
+        }
+      }
+      
       return {
         id: imageMetadata.id,
-        src: imageData,
+        src: processedImageSrc,
+        originalSrc: originalSrc,
         name: imageMetadata.originalFileName,
         originalIndex: imageMetadata.originalIndex,
         x: imageMetadata.position.x,
@@ -301,8 +342,8 @@ export async function loadProject(file, onProgress = null) {
         fullCoverMode: imageMetadata.fullCoverMode,
         uploadTimestamp: imageMetadata.uploadTimestamp
       };
-    }).filter(Boolean)
-  }));
+    })).then(results => results.filter(Boolean))
+  })));
   
   // Reconstruct available images
   const reconstructedAvailableImages = metadata.availableImages.map(imageMetadata => {
