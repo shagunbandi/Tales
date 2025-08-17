@@ -341,7 +341,7 @@ async function applyLayoutToImages(images, layout, settings) {
   // Create settings with forced layout
   const forcedSettings = {
     ...settings,
-    _forcedLayout: layout,
+    _forcedLayout: Array.isArray(layout) ? layout : null,
   };
 
   try {
@@ -438,7 +438,9 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
 
       if (selectedOption.type === FULL_COVER_LAYOUT_TYPES.GRID) {
         // Re-apply grid layout
-        layoutSettings._forcedLayout = selectedOption.layout;
+        if (Array.isArray(selectedOption.layout)) {
+          layoutSettings._forcedLayout = selectedOption.layout;
+        }
         layoutSettings._fullCoverLayoutType = FULL_COVER_LAYOUT_TYPES.GRID;
       } else {
         // Re-apply flexible layout

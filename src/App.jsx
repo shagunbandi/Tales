@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -10,11 +10,34 @@ import { useImageManagement } from "./hooks/useImageManagement";
 import { DEFAULT_SETTINGS } from "./constants";
 import DesignTab from "./components/DesignTab";
 import AppHeader from "./components/AppHeader";
+import LoadingOverlay from "./components/LoadingOverlay";
 import { DarkThemeToggle } from "flowbite-react";
+import { loadAppState } from "./utils/storageUtils";
 
 function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const fileInputRef = React.useRef(null);
+
+  // Load settings from storage on app initialization
+  useEffect(() => {
+    const loadStoredSettings = async () => {
+      try {
+        const storedState = await loadAppState();
+        if (storedState && storedState.settings) {
+          setSettings({ ...DEFAULT_SETTINGS, ...storedState.settings });
+        }
+        // Small delay to ensure loading indicator is visible
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error('Failed to load stored settings:', error);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    loadStoredSettings();
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -28,6 +51,7 @@ function App() {
     pages,
     availableImages,
     isProcessing,
+    isLoadingFromStorage,
     totalImages,
     handleFiles,
     handleDragEnd,
@@ -70,6 +94,9 @@ function App() {
       await handleFiles(files);
     }
   };
+
+  // Show loading overlay while app is initializing
+  const isAppLoading = isLoadingSettings || isLoadingFromStorage;
 
   return (
     <div
@@ -164,6 +191,11 @@ function App() {
           }}
         />
       </div>
+
+      {/* Loading overlay */}
+      {isAppLoading && (
+        <LoadingOverlay message="Restoring your work..." />
+      )}
     </div>
   );
 }

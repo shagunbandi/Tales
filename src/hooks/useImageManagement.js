@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import ProgressToast from "../components/ProgressToast.jsx";
 import { processFiles } from "../utils/imageUtils.js";
@@ -29,11 +29,43 @@ import {
 } from "../utils/hardcodedLayouts.js";
 import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
 import { exportProject, loadProject } from "../utils/projectUtils.js";
+import { debouncedSaveAppState, loadAppState, clearAppState } from "../utils/storageUtils.js";
 
 export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
   const [availableImages, setAvailableImages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(true);
+
+  // Load state from storage on initialization
+  useEffect(() => {
+    const loadStoredState = async () => {
+      try {
+        const storedState = await loadAppState();
+        if (storedState && storedState.pages && storedState.availableImages) {
+          setPages(storedState.pages);
+          setAvailableImages(storedState.availableImages);
+        }
+        // Small delay to ensure loading indicator is visible
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (error) {
+        console.error('Failed to load stored state:', error);
+      } finally {
+        setIsInitialized(true);
+        setIsLoadingFromStorage(false);
+      }
+    };
+
+    loadStoredState();
+  }, []);
+
+  // Auto-save state changes
+  useEffect(() => {
+    if (isInitialized && settings) {
+      debouncedSaveAppState(pages, availableImages, settings);
+    }
+  }, [pages, availableImages, settings, isInitialized]);
 
   /**
    * Detect the current layout structure from positioned images
@@ -1156,9 +1188,15 @@ export const useImageManagement = (settings = null) => {
     [pages, settings],
   );
 
-  const clearCurrentWork = useCallback(() => {
+  const clearCurrentWork = useCallback(async () => {
     setPages([]);
     setAvailableImages([]);
+    // Clear stored state as well
+    try {
+      await clearAppState();
+    } catch (error) {
+      console.error('Failed to clear stored state:', error);
+    }
     toast.success("Work area cleared");
   }, []);
 
@@ -1280,6 +1318,7 @@ export const useImageManagement = (settings = null) => {
     pages,
     availableImages,
     isProcessing,
+    isLoadingFromStorage,
     totalImages,
     handleFiles,
     handleDragEnd,

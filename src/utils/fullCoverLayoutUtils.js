@@ -161,7 +161,7 @@ function calculateFlexibleRowDistribution(
   if (totalImages === 1) return [1];
 
   // Check if we have a forced layout structure
-  if (settings._forcedLayout) {
+  if (settings._forcedLayout && Array.isArray(settings._forcedLayout)) {
     return [...settings._forcedLayout]; // Return a copy of the forced layout
   }
 

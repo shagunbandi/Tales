@@ -186,7 +186,7 @@ export function arrangeAndCenterImages(
   let bestLayout = null;
 
   // Check if we have a forced layout structure
-  if (settings._forcedLayout) {
+  if (settings._forcedLayout && Array.isArray(settings._forcedLayout)) {
     // Use forced layout structure
     const forcedCombination = {
       numRows: settings._forcedLayout.length,

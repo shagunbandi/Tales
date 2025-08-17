@@ -3,3 +3,16 @@
 @source "../.flowbite-react/class-list.json";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom animation delays for loading spinner */
+.animation-delay-75 {
+  animation-delay: 75ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
