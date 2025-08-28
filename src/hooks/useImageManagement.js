@@ -1246,7 +1246,7 @@ export const useImageManagement = (settings = null) => {
   );
 
   const handleLoadProject = useCallback(
-    async (file) => {
+    async (file, onSettingsLoaded) => {
       if (!file) {
         toast.error("No file selected");
         return;
@@ -1294,9 +1294,8 @@ export const useImageManagement = (settings = null) => {
         setAvailableImages(projectData.availableImages);
         
         // Update settings if provided
-        if (projectData.settings) {
-          // Note: This would need to be handled at the App level to update settings
-          console.log("Project settings:", projectData.settings);
+        if (projectData.settings && onSettingsLoaded) {
+          onSettingsLoaded(projectData.settings);
         }
 
         toast.success("Project loaded successfully!");

@@ -95,6 +95,12 @@ function App() {
     }
   };
 
+  const handleLoadProjectWithSettings = async (file) => {
+    await handleLoadProject(file, (loadedSettings) => {
+      setSettings(loadedSettings);
+    });
+  };
+
   // Show loading overlay while app is initializing
   const isAppLoading = isLoadingSettings || isLoadingFromStorage;
 
@@ -149,7 +155,7 @@ function App() {
             isPageProcessing={isPageProcessing}
             onAddSelectedToPage={addSelectedToPage}
             onExportProject={handleExportProject}
-            onLoadProject={handleLoadProject}
+            onLoadProject={handleLoadProjectWithSettings}
           />
         </div>
       </DndContext>

@@ -58,6 +58,7 @@ const PagePreview = ({
 
   // Check if hardcoded layouts are available for full cover design
   const hasHardcodedLayoutsForPage = settings?.designStyle === "full_cover" && 
+    imageCount > 0 &&
     hasHardcodedLayouts(settings?.pageSize?.toUpperCase() || "A4", imageCount);
 
   useEffect(() => {
@@ -160,7 +161,7 @@ const PagePreview = ({
                 <HiRefresh className="h-3 w-3" />
                 {isPageBusy ? "Shuffling..." : "Shuffle Images"}
               </Button>
-              {hasHardcodedLayoutsForPage ? (
+              {settings?.designStyle === "full_cover" && hasHardcodedLayoutsForPage ? (
                 <Button
                   size="xs"
                   color="purple"
