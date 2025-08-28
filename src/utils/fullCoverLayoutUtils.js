@@ -1,4 +1,4 @@
-import { getPreviewDimensions, PAGE_SIZES } from "../constants.js";
+import { getPreviewDimensions, PAGE_SIZES, getHardcodedLayoutsKey } from "../constants.js";
 import { cropForFullCover, cropImagesForGrid } from "./imageCropUtils.js";
 import { getLayoutOptions, convertToFullCoverFormat } from "./hardcodedLayouts.js";
 
@@ -69,14 +69,15 @@ async function arrangeImagesHardcoded(images, usableWidth, usableHeight, setting
   }
 
   // Get paper size from settings
-  const pageSize = settings?.pageSize?.toUpperCase() || "A4";
+  const pageSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
   
   // Get available layouts for this paper size and number of images
   const availableLayouts = getLayoutOptions(pageSize, images.length);
   
   if (availableLayouts.length === 0) {
-    // Fall back to flexible layout if no hardcoded layout exists
-    return await arrangeImagesFlexible(images, usableWidth, usableHeight, settings);
+    // Fall back to simple grid layout if no hardcoded layout exists
+    console.warn(`No hardcoded layouts available for ${images.length} images, falling back to grid layout`);
+    return await arrangeImagesGrid(images, usableWidth, usableHeight, settings);
   }
 
   // Check if user has specified a particular layout
@@ -478,6 +479,13 @@ async function arrangeImagesFlexible(
 
   // Score each layout and pick the best one
   const bestLayout = selectBestFlexibleLayout(layoutOptions, images);
+  
+  if (!bestLayout) {
+    // Fallback to simple grid layout when flexible layouts fail
+    console.warn("Flexible layout failed, falling back to simple grid layout");
+    return await arrangeImagesGrid(images, usableWidth, usableHeight, settings);
+  }
+  
   return bestLayout;
 }
 
@@ -843,6 +851,12 @@ function generateDynamicGridTemplates(numImages) {
  * Select best layout based on image aspect ratios and minimal cropping
  */
 function selectBestFlexibleLayout(layoutOptions, images) {
+  if (layoutOptions.length === 0) {
+    // No valid layouts available, return fallback layout
+    console.warn("No valid flexible layouts generated, falling back to simple grid");
+    return null;
+  }
+  
   if (layoutOptions.length === 1) {
     return layoutOptions[0];
   }

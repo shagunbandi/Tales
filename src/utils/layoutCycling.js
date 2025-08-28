@@ -3,7 +3,7 @@
  */
 
 import { arrangeImages } from "./layoutUtils.js";
-import { getPreviewDimensions } from "../constants.js";
+import { getPreviewDimensions, getHardcodedLayoutsKey } from "../constants.js";
 import {
   arrangeImagesFullCover,
   FULL_COVER_LAYOUT_TYPES,
@@ -39,7 +39,7 @@ function ensureFullCoverState(pageId, images, settings) {
     return pageLayoutState.get(fullCoverPageId);
   }
 
-  const paperSize = settings?.pageSize?.toUpperCase() || "A4";
+  const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
   const imageCount = images?.length || 0;
 
   const state = {
@@ -54,10 +54,16 @@ function ensureFullCoverState(pageId, images, settings) {
       state.layouts.push({ type: FULL_COVER_LAYOUT_TYPES.GRID, layout });
     }
 
-    // FLEXIBLE options from count helper
-    const flexibleCount = getFlexibleLayoutCount(imageCount);
-    for (let i = 0; i < flexibleCount; i++) {
-      state.layouts.push({ type: FULL_COVER_LAYOUT_TYPES.FLEXIBLE, layoutIndex: i });
+    // Only add flexible options if no hardcoded layouts are available
+    // This avoids the empty cell errors in flexible layout generation
+    if (hardcodedLayouts.length === 0) {
+      console.warn(`No hardcoded layouts for ${imageCount} images on ${paperSize}, skipping flexible layouts to avoid errors`);
+      // Instead of flexible layouts, just use different grid arrangements
+      // For now, provide a single basic grid option
+      state.layouts.push({ 
+        type: "BASIC_GRID", 
+        description: `Grid arrangement for ${imageCount} images` 
+      });
     }
   }
 
@@ -516,7 +522,24 @@ async function cycleFullCoverLayout(images, settings, pageId, direction) {
       );
     }
 
+    if (selected.type === "BASIC_GRID") {
+      // Use the safe basic grid layout instead of problematic flexible layouts
+      const layoutSettings = {
+        ...settings,
+        _fullCoverLayoutType: "GRID", // Use simple grid, not flexible
+      };
+
+      const { arrangeImagesFullCover } = await import("./fullCoverLayoutUtils.js");
+      return await arrangeImagesFullCover(
+        images,
+        previewWidth,
+        previewHeight,
+        layoutSettings,
+      );
+    }
+
     // FLEXIBLE path delegates to arrangeImagesFullCover with a forced variation
+    // Note: This should rarely be reached now since we avoid flexible layouts when they cause errors
     const layoutSettings = {
       ...settings,
       _fullCoverLayoutType: FULL_COVER_LAYOUT_TYPES.FLEXIBLE,
@@ -599,7 +622,7 @@ function isLayoutApplied(layout, images, settings) {
 }
 
 function getCurrentFullCoverLayoutInfo(pageId, images, settings) {
-  const paperSize = settings?.pageSize?.toUpperCase() || "A4";
+  const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
   const hardcodedLayouts = getLayoutOptions(paperSize, images.length);
   
   if (hardcodedLayouts.length === 0) {

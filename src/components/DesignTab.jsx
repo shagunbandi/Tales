@@ -9,6 +9,9 @@ import {
   DESIGN_STYLES,
   DESIGN_STYLE_LABELS,
   DESIGN_STYLE_DESCRIPTIONS,
+  PAGE_SIZE_LABELS,
+  ORIENTATIONS,
+  ORIENTATION_LABELS,
 } from "../constants.js";
 
 // Settings Modal Component
@@ -143,6 +146,62 @@ const SettingsModal = ({ show, onClose, settings, onSettingsChange }) => {
             )}
           </p>
 
+          {/* Page Configuration */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Page Size */}
+            <div className="space-y-1">
+              <label
+                htmlFor="pageSize"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+              >
+                Page Size:
+              </label>
+              <select
+                id="pageSize"
+                value={settings.pageSize || "a4"}
+                onChange={(e) => handleSettingChange("pageSize", e.target.value)}
+                className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                data-testid="settings-select-pageSize"
+              >
+                {Object.keys(PAGE_SIZE_LABELS).map((size) => (
+                  <option key={size} value={size}>
+                    {PAGE_SIZE_LABELS[size]}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Choose the paper size for your PDF
+              </p>
+            </div>
+
+            {/* Orientation */}
+            <div className="space-y-1">
+              <label
+                htmlFor="orientation"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+              >
+                Orientation:
+              </label>
+              <select
+                id="orientation"
+                value={settings.orientation || ORIENTATIONS.LANDSCAPE}
+                onChange={(e) => handleSettingChange("orientation", e.target.value)}
+                className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                data-testid="settings-select-orientation"
+              >
+                {Object.values(ORIENTATIONS).map((orientation) => (
+                  <option key={orientation} value={orientation}>
+                    {ORIENTATION_LABELS[orientation]}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Page orientation for your layout
+              </p>
+            </div>
+          </div>
+
+          {/* Layout Settings */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {settingFields
               .filter((field) => !field.hidden)

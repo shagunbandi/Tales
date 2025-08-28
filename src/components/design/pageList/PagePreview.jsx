@@ -14,7 +14,6 @@ import {
 } from "react-icons/hi";
 import { getPreviewDimensions } from "../../../constants";
 import { getCurrentLayoutInfo } from "../../../utils/layoutCycling.js";
-import { hasHardcodedLayouts } from "../../../utils/hardcodedLayouts.js";
 import FullCoverImage from "./FullCoverImage.jsx";
 import LayoutSelectionModal from "./LayoutSelectionModal.jsx";
 
@@ -56,10 +55,8 @@ const PagePreview = ({
   const [scale, setScale] = useState(1);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
 
-  // Check if hardcoded layouts are available for full cover design
-  const hasHardcodedLayoutsForPage = settings?.designStyle === "full_cover" && 
-    imageCount > 0 &&
-    hasHardcodedLayouts(settings?.pageSize?.toUpperCase() || "A4", imageCount);
+  // Note: In Full Cover mode, we always show the Choose Layout button
+  // The modal will handle cases where no layouts are available
 
   useEffect(() => {
     const updateScale = () => {
@@ -161,7 +158,7 @@ const PagePreview = ({
                 <HiRefresh className="h-3 w-3" />
                 {isPageBusy ? "Shuffling..." : "Shuffle Images"}
               </Button>
-              {settings?.designStyle === "full_cover" && hasHardcodedLayoutsForPage ? (
+              {settings?.designStyle === "full_cover" ? (
                 <Button
                   size="xs"
                   color="purple"

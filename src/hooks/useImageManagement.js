@@ -27,7 +27,7 @@ import {
   getLayoutOptions,
   hasHardcodedLayouts,
 } from "../utils/hardcodedLayouts.js";
-import { COLOR_PALETTE, getPreviewDimensions } from "../constants.js";
+import { COLOR_PALETTE, getPreviewDimensions, getHardcodedLayoutsKey } from "../constants.js";
 import { exportProject, loadProject } from "../utils/projectUtils.js";
 import { debouncedSaveAppState, loadAppState, clearAppState } from "../utils/storageUtils.js";
 
@@ -1042,7 +1042,7 @@ export const useImageManagement = (settings = null) => {
 
           // Arrange both pages. For full cover, switch to hardcoded layouts for new counts to avoid gaps/overlaps
           if (settings.designStyle === "full_cover") {
-            const paperSize = settings?.pageSize?.toUpperCase() || "A4";
+            const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
             const { width, height } = getPreviewDimensions(settings);
 
             let sourceArrangedImages = [];
@@ -1310,8 +1310,8 @@ export const useImageManagement = (settings = null) => {
   );
 
   const totalImages =
-    pages.reduce((sum, page) => sum + page.images.length, 0) +
-    availableImages.length;
+    (pages || []).reduce((sum, page) => sum + (page?.images?.length || 0), 0) +
+    (availableImages?.length || 0);
 
   return {
     pages,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button } from "flowbite-react";
 import { HiViewGrid } from "react-icons/hi";
 import { getLayoutOptions, convertToFullCoverFormat } from "../../../utils/hardcodedLayouts.js";
-import { getPreviewDimensions } from "../../../constants.js";
+import { getPreviewDimensions, getHardcodedLayoutsKey } from "../../../constants.js";
 
 const LayoutSelectionModal = ({ 
   isOpen, 
@@ -18,7 +18,7 @@ const LayoutSelectionModal = ({
 
   useEffect(() => {
     if (isOpen && images && images.length > 0) {
-      const paperSize = settings?.pageSize?.toUpperCase() || "A4";
+      const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
       const layouts = getLayoutOptions(paperSize, images.length);
       setAvailableLayouts(layouts);
       

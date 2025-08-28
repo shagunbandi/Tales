@@ -1501,12 +1501,22 @@ const HARDCODED_LAYOUTS_RAW = {
   }
 };
 
+// Create the final HARDCODED_LAYOUTS object - all paper sizes use the same layout proportions
+const UNIVERSAL_LAYOUTS = HARDCODED_LAYOUTS_RAW.A4;
+
+const HARDCODED_LAYOUTS = {
+  A4: UNIVERSAL_LAYOUTS,
+  A3: UNIVERSAL_LAYOUTS,
+  Letter: UNIVERSAL_LAYOUTS,
+  Legal: UNIVERSAL_LAYOUTS,
+};
+
 // Future paper sizes can be added here
-export const SUPPORTED_PAPER_SIZES = ["A4", "Letter", "Legal"];
+export const SUPPORTED_PAPER_SIZES = ["A4", "A3", "Letter", "Legal"];
 
 /**
  * Get layout options for a specific paper size and number of images
- * @param {string} paperSize - Paper size (A4, Letter, Legal)
+ * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @param {number} imageCount - Number of images
  * @returns {Array} Array of layout options
  */
@@ -1521,7 +1531,7 @@ export function getLayoutOptions(paperSize = "A4", imageCount = 1) {
 
 /**
  * Get all available layouts for a paper size
- * @param {string} paperSize - Paper size (A4, Letter, Legal)
+ * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @returns {Object} Object with image counts as keys and layout arrays as values
  */
 export function getAllLayouts(paperSize = "A4") {
@@ -1575,7 +1585,7 @@ export function convertToFullCoverFormat(layout, images, pageWidth, pageHeight) 
 
 /**
  * Get layout names and IDs for UI selection
- * @param {string} paperSize - Paper size (A4, Letter, Legal)
+ * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @param {number} imageCount - Number of images
  * @returns {Array} Array of {id, name} objects for UI display
  */
@@ -1590,7 +1600,7 @@ export function getLayoutSelectionOptions(paperSize = "A4", imageCount = 1) {
 
 /**
  * Check if hardcoded layouts are available for given parameters
- * @param {string} paperSize - Paper size (A4, Letter, Legal)
+ * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @param {number} imageCount - Number of images
  * @returns {boolean} True if layouts are available
  */
@@ -1670,12 +1680,12 @@ function filterValidLayouts(layouts) {
 }
 
 // Use pre-validated hardcoded layouts (no runtime filtering)
-export const HARDCODED_LAYOUTS = HARDCODED_LAYOUTS_RAW;
+export { HARDCODED_LAYOUTS };
 
 /**
  * Get current layout ID from positioned images (reverse engineering)
  * @param {Array} images - Array of positioned images
- * @param {string} paperSize - Paper size (A4, Letter, Legal)
+ * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @returns {string|null} Layout ID if detected, null otherwise
  */
 export function detectCurrentLayoutId(images, paperSize = "A4") {

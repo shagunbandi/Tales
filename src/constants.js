@@ -40,8 +40,26 @@ export const COLOR_PALETTE = [
 
 export const PAGE_SIZES = {
   a4: { width: 297, height: 210, name: "A4" },
+  a3: { width: 420, height: 297, name: "A3" },
   letter: { width: 279, height: 216, name: "Letter" },
   legal: { width: 356, height: 216, name: "Legal" },
+};
+
+export const ORIENTATIONS = {
+  LANDSCAPE: "landscape",
+  PORTRAIT: "portrait",
+};
+
+export const ORIENTATION_LABELS = {
+  [ORIENTATIONS.LANDSCAPE]: "Landscape",
+  [ORIENTATIONS.PORTRAIT]: "Portrait",
+};
+
+export const PAGE_SIZE_LABELS = {
+  a4: "A4",
+  a3: "A3", 
+  letter: "Letter",
+  legal: "Legal",
 };
 
 export const DESIGN_STYLES = {
@@ -74,6 +92,16 @@ export const DEFAULT_SETTINGS = {
 };
 
 export const PREVIEW_SCALE = 0.8;
+
+export const getHardcodedLayoutsKey = (pageSize) => {
+  const mapping = {
+    'a4': 'A4',
+    'a3': 'A3', 
+    'letter': 'Letter',
+    'legal': 'Legal'
+  };
+  return mapping[pageSize] || 'A4';
+};
 
 export const getPreviewDimensions = (settings) => {
   const pageSize = PAGE_SIZES[settings?.pageSize || "a4"];
