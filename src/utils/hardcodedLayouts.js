@@ -337,6 +337,17 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 2 },
           { imageIndex: 3, row: 3, col: 0, rowSpan: 3, colSpan: 2 }
         ]
+      },
+      {
+        id: "4-large-left-tall",
+        name: "Large Left + 3 Stacked",
+        grid: { rows: 3, cols: 3 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 3, colSpan: 2 },
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 2, row: 1, col: 2, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 3, row: 2, col: 2, rowSpan: 1, colSpan: 1 }
+        ]
       }
     ],
 
@@ -850,6 +861,21 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 5, row: 2, col: 0, rowSpan: 1, colSpan: 1 },
           { imageIndex: 6, row: 2, col: 1, rowSpan: 1, colSpan: 1 },
           { imageIndex: 7, row: 2, col: 2, rowSpan: 1, colSpan: 1 }
+        ]
+      },
+      {
+        id: "8-center-column",
+        name: "Center Column + Sides",
+        grid: { rows: 3, cols: 7 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 2, colSpan: 3 },
+          { imageIndex: 2, row: 0, col: 5, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 3, row: 1, col: 0, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 4, row: 1, col: 5, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 5, row: 2, col: 0, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 6, row: 2, col: 2, rowSpan: 1, colSpan: 3 },
+          { imageIndex: 7, row: 2, col: 5, rowSpan: 1, colSpan: 2 }
         ]
       }
     ],
