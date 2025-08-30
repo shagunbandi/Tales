@@ -384,6 +384,7 @@ const DesignTab = ({
 }) => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDesignStyleModal, setShowDesignStyleModal] = useState(false);
+  const [isImagesExpanded, setIsImagesExpanded] = useState(false);
   const projectFileInputRef = React.useRef(null);
 
   const handleLoadProjectClick = () => {
@@ -404,6 +405,15 @@ const DesignTab = ({
     }
   };
 
+  const handleToggleImagesExpanded = () => {
+    setIsImagesExpanded(prev => !prev);
+  };
+
+  const handleAddSelectedToPageWithCollapse = (selectedImages, pageId) => {
+    onAddSelectedToPage(selectedImages, pageId);
+    setIsImagesExpanded(false); // Auto-collapse after adding to page
+  };
+
   return (
     <div className="space-y-6 p-4 sm:p-6">
       {/* Hidden file input for project loading */}
@@ -415,110 +425,131 @@ const DesignTab = ({
         className="hidden"
       />
       
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        {/* Available Images - Sticky Sidebar */}
-        <div
-          className="w-full lg:sticky lg:top-6 lg:w-1/3 lg:min-w-0 lg:self-start"
-          data-testid="available-images-panel"
-        >
-          <Card className="h-fit lg:h-[calc(100vh-8rem)]">
+      {isImagesExpanded ? (
+        /* Expanded Images View - Full Width */
+        <div className="w-full" data-testid="expanded-images-panel">
+          <Card className="h-[calc(100vh-8rem)]">
             <AvailableImages
               availableImages={availableImages}
               removeAvailableImage={onRemoveAvailableImage}
               totalImages={totalImages}
               onAddMoreImages={onAddMoreImages}
               pages={pages}
-              onAddSelectedToPage={onAddSelectedToPage}
+              onAddSelectedToPage={handleAddSelectedToPageWithCollapse}
+              isExpanded={true}
+              onToggleExpanded={handleToggleImagesExpanded}
             />
           </Card>
         </div>
+      ) : (
+        /* Normal Two-Column Layout */
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          {/* Available Images - Sticky Sidebar */}
+          <div
+            className="w-full lg:sticky lg:top-6 lg:w-1/3 lg:min-w-0 lg:self-start"
+            data-testid="available-images-panel"
+          >
+            <Card className="h-fit lg:h-[calc(100vh-8rem)]">
+              <AvailableImages
+                availableImages={availableImages}
+                removeAvailableImage={onRemoveAvailableImage}
+                totalImages={totalImages}
+                onAddMoreImages={onAddMoreImages}
+                pages={pages}
+                onAddSelectedToPage={onAddSelectedToPage}
+                isExpanded={false}
+                onToggleExpanded={handleToggleImagesExpanded}
+              />
+            </Card>
+          </div>
 
-        {/* Pages Design */}
-        <div className="w-full lg:w-2/3 lg:min-w-0" data-testid="pages-panel">
-          <Card>
-            <PagesHeader
-              isProcessing={isProcessing}
-              availableImages={availableImages}
-              totalImages={totalImages}
-              onAutoArrange={onAutoArrange}
-            />
+          {/* Pages Design */}
+          <div className="w-full lg:w-2/3 lg:min-w-0" data-testid="pages-panel">
+            <Card>
+              <PagesHeader
+                isProcessing={isProcessing}
+                availableImages={availableImages}
+                totalImages={totalImages}
+                onAutoArrange={onAutoArrange}
+              />
 
-            {/* Settings and Design Style Buttons */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => setShowDesignStyleModal(true)}
-                size="sm"
-                color="gray"
-                data-testid="design-style-button"
-              >
-                <HiTemplate className="mr-2 h-4 w-4" />
-                Design Style
-              </Button>
-              <Button
-                onClick={() => setShowSettingsModal(true)}
-                size="sm"
-                color="gray"
-                data-testid="settings-button"
-              >
-                <HiCog className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 pb-4">
-              <Button
-                onClick={handleLoadProjectClick}
-                size="sm"
-                color="blue"
-                disabled={isProcessing}
-                data-testid="load-project-button"
-              >
-                <HiUpload className="mr-2 h-4 w-4" />
-                Load Project
-              </Button>
-              <Button
-                onClick={onExportProject}
-                size="sm"
-                color="green"
-                disabled={isProcessing || (pages.length === 0 && availableImages.length === 0)}
-                data-testid="export-project-button"
-              >
-                <HiDownload className="mr-2 h-4 w-4" />
-                Export Project
-              </Button>
-            </div>
-            <div className="border-t border-gray-200 pt-4 dark:border-gray-700"></div>
+              {/* Settings and Design Style Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => setShowDesignStyleModal(true)}
+                  size="sm"
+                  color="gray"
+                  data-testid="design-style-button"
+                >
+                  <HiTemplate className="mr-2 h-4 w-4" />
+                  Design Style
+                </Button>
+                <Button
+                  onClick={() => setShowSettingsModal(true)}
+                  size="sm"
+                  color="gray"
+                  data-testid="settings-button"
+                >
+                  <HiCog className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 pb-4">
+                <Button
+                  onClick={handleLoadProjectClick}
+                  size="sm"
+                  color="blue"
+                  disabled={isProcessing}
+                  data-testid="load-project-button"
+                >
+                  <HiUpload className="mr-2 h-4 w-4" />
+                  Load Project
+                </Button>
+                <Button
+                  onClick={onExportProject}
+                  size="sm"
+                  color="green"
+                  disabled={isProcessing || (pages.length === 0 && availableImages.length === 0)}
+                  data-testid="export-project-button"
+                >
+                  <HiDownload className="mr-2 h-4 w-4" />
+                  Export Project
+                </Button>
+              </div>
+              <div className="border-t border-gray-200 pt-4 dark:border-gray-700"></div>
 
-            <PagesList
-              pages={pages}
-              onAddPageBetween={onAddPageBetween}
-              onRemovePage={onRemovePage}
-              onChangePageColor={onChangePageColor}
-              onAddPage={onAddPage}
-              onMoveImageBack={onMoveImageBack}
-              onMoveAllImagesBack={onMoveAllImagesBack}
-              onAutoArrangePage={onAutoArrangePage}
-              onRandomizePage={onRandomizePage}
-              onRandomizeLayout={onRandomizeLayout}
-              onNextLayout={onNextLayout}
-              onPreviousLayout={onPreviousLayout}
-              onSelectLayout={onSelectLayout}
-              onUpdateImagePosition={onUpdateImagePosition}
-              onMoveImageToPreviousPage={onMoveImageToPreviousPage}
-              onMoveImageToNextPage={onMoveImageToNextPage}
-              onSwapImagesInPage={onSwapImagesInPage}
-              settings={settings}
-              isProcessing={isProcessing}
-              isPageProcessing={isPageProcessing}
-            />
+              <PagesList
+                pages={pages}
+                onAddPageBetween={onAddPageBetween}
+                onRemovePage={onRemovePage}
+                onChangePageColor={onChangePageColor}
+                onAddPage={onAddPage}
+                onMoveImageBack={onMoveImageBack}
+                onMoveAllImagesBack={onMoveAllImagesBack}
+                onAutoArrangePage={onAutoArrangePage}
+                onRandomizePage={onRandomizePage}
+                onRandomizeLayout={onRandomizeLayout}
+                onNextLayout={onNextLayout}
+                onPreviousLayout={onPreviousLayout}
+                onSelectLayout={onSelectLayout}
+                onUpdateImagePosition={onUpdateImagePosition}
+                onMoveImageToPreviousPage={onMoveImageToPreviousPage}
+                onMoveImageToNextPage={onMoveImageToNextPage}
+                onSwapImagesInPage={onSwapImagesInPage}
+                settings={settings}
+                isProcessing={isProcessing}
+                isPageProcessing={isPageProcessing}
+              />
 
-            <GeneratePDFButton
-              onGeneratePDF={onGeneratePDF}
-              pages={pages}
-              isProcessing={isProcessing}
-            />
-          </Card>
+              <GeneratePDFButton
+                onGeneratePDF={onGeneratePDF}
+                pages={pages}
+                isProcessing={isProcessing}
+              />
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Settings Modal */}
       <SettingsModal
