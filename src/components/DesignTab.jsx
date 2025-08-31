@@ -545,6 +545,7 @@ const DesignTab = ({
                 onGeneratePDF={onGeneratePDF}
                 pages={pages}
                 isProcessing={isProcessing}
+                settings={settings}
               />
             </Card>
           </div>
