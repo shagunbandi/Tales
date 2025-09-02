@@ -348,6 +348,28 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 2, row: 1, col: 2, rowSpan: 1, colSpan: 1 },
           { imageIndex: 3, row: 2, col: 2, rowSpan: 1, colSpan: 1 }
         ]
+      },
+      {
+        id: "2-narrow-2-wide",
+        name: "2 Narrow + 2 Wide",
+        grid: { rows: 2, cols: 3 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 1, row: 0, col: 1, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 2, row: 1, col: 0, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 3, row: 1, col: 1, rowSpan: 1, colSpan: 2 }
+        ]
+      },
+      {
+        id: "2-wide-2-narrow",
+        name: "2 Wide + 2 Narrow",
+        grid: { rows: 2, cols: 3 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 2, row: 1, col: 0, rowSpan: 1, colSpan: 2 },
+          { imageIndex: 3, row: 1, col: 2, rowSpan: 1, colSpan: 1 }
+        ]
       }
     ],
 
