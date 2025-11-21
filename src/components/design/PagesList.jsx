@@ -8,6 +8,7 @@ const PagesList = ({
   onRemovePage,
   onChangePageColor,
   onChangeImageBorderColor,
+  onTogglePageBorder,
   onAddPage,
   onMoveImageBack,
   onMoveAllImagesBack,
@@ -49,6 +50,7 @@ const PagesList = ({
               pages={pages}
               onChangeColor={onChangePageColor}
               onChangeImageBorderColor={onChangeImageBorderColor}
+              onTogglePageBorder={onTogglePageBorder}
               onRemovePage={onRemovePage}
               onMoveImageBack={onMoveImageBack}
               onMoveAllImagesBack={onMoveAllImagesBack}

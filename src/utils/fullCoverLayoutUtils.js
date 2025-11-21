@@ -27,13 +27,16 @@ export async function arrangeImagesFullCover(
   totalWidth,
   totalHeight,
   settings,
+  pageData = null,
 ) {
   if (!images || images.length === 0) {
     return [];
   }
 
   // Calculate page border offset - reduces usable space on all sides
-  const borderWidth = getPreviewBorderWidth(settings);
+  // Check if this page has borders enabled (default to true if not specified)
+  const borderEnabled = pageData?.enablePageBorder !== false;
+  const borderWidth = getPreviewBorderWidth(settings, borderEnabled);
   
   // For full cover, we use the entire page (no margins or gaps)
   // But subtract border space if page border is enabled
@@ -57,17 +60,18 @@ export async function arrangeImagesFullCover(
       usableWidth,
       usableHeight,
       settings,
+      pageData,
     );
   } else {
     // Default grid layout
-    return await arrangeImagesGrid(images, usableWidth, usableHeight, settings);
+    return await arrangeImagesGrid(images, usableWidth, usableHeight, settings, pageData);
   }
 }
 
 /**
  * Hardcoded layout arrangement using predefined templates
  */
-async function arrangeImagesHardcoded(images, usableWidth, usableHeight, settings) {
+async function arrangeImagesHardcoded(images, usableWidth, usableHeight, settings, pageData = null) {
   if (!images || images.length === 0) {
     return [];
   }
@@ -81,7 +85,7 @@ async function arrangeImagesHardcoded(images, usableWidth, usableHeight, setting
   if (availableLayouts.length === 0) {
     // Fall back to simple grid layout if no hardcoded layout exists
     console.warn(`No hardcoded layouts available for ${images.length} images, falling back to grid layout`);
-    return await arrangeImagesGrid(images, usableWidth, usableHeight, settings);
+    return await arrangeImagesGrid(images, usableWidth, usableHeight, settings, pageData);
   }
 
   // Check if user has specified a particular layout
@@ -95,7 +99,8 @@ async function arrangeImagesHardcoded(images, usableWidth, usableHeight, setting
   }
 
   // Get border offset to properly position images
-  const borderWidth = getPreviewBorderWidth(settings);
+  const borderEnabled = pageData?.enablePageBorder !== false;
+  const borderWidth = getPreviewBorderWidth(settings, borderEnabled);
 
   // Convert the hardcoded layout to the full cover format with border offset
   return convertToFullCoverFormat(selectedLayout, images, usableWidth, usableHeight, borderWidth);
@@ -104,7 +109,7 @@ async function arrangeImagesHardcoded(images, usableWidth, usableHeight, setting
 /**
  * Grid-based arrangement (original implementation)
  */
-async function arrangeImagesGrid(images, usableWidth, usableHeight, settings) {
+async function arrangeImagesGrid(images, usableWidth, usableHeight, settings, pageData = null) {
   // Calculate flexible grid layout for full cover with smart algorithm
   const rowDistribution = calculateFlexibleRowDistribution(
     images.length,
@@ -118,7 +123,8 @@ async function arrangeImagesGrid(images, usableWidth, usableHeight, settings) {
   let imageIndex = 0;
   
   // Get border offset to properly position images
-  const borderWidth = getPreviewBorderWidth(settings);
+  const borderEnabled = pageData?.enablePageBorder !== false;
+  const borderWidth = getPreviewBorderWidth(settings, borderEnabled);
 
   // Arrange images row by row with flexible column counts
   for (let rowIdx = 0; rowIdx < rowDistribution.length; rowIdx++) {

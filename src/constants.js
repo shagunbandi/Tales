@@ -135,10 +135,11 @@ export const getPreviewDimensions = (settings) => {
 /**
  * Converts page border width from mm to preview pixels
  * @param {Object} settings - The current settings object
+ * @param {boolean} borderEnabled - Whether border is enabled for this page (optional, defaults to true)
  * @returns {number} The border width in preview pixels
  */
-export const getPreviewBorderWidth = (settings) => {
-  if (!settings || settings.designStyle !== DESIGN_STYLES.FULL_COVER) {
+export const getPreviewBorderWidth = (settings, borderEnabled = true) => {
+  if (!settings || settings.designStyle !== DESIGN_STYLES.FULL_COVER || !borderEnabled) {
     return 0;
   }
   

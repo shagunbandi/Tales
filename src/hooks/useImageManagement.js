@@ -81,12 +81,14 @@ export const useImageManagement = (settings = null) => {
     if (isInitialized && isFullCover && currentBorderWidth !== previousBorderWidth) {
       setPreviousBorderWidth(currentBorderWidth);
       
-      // Re-arrange all pages with images
+      // Re-arrange all pages with images (only those with borders enabled)
       if (pages.length > 0) {
         setPages((currentPages) => {
           // Process each page asynchronously
           currentPages.forEach(async (page) => {
             if (page.images.length === 0) return;
+            // Only re-arrange if borders are enabled for this page
+            if (page.enablePageBorder === false) return;
             
             try {
               const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
@@ -111,7 +113,7 @@ export const useImageManagement = (settings = null) => {
         });
       }
     }
-  }, [settings?.pageBorderWidth, settings?.designStyle, previousBorderWidth, isInitialized, pages.length]);
+  }, [settings?.pageBorderWidth, settings?.designStyle, previousBorderWidth, isInitialized, pages.length, pages]);
 
   /**
    * Detect the current layout structure from positioned images
@@ -468,6 +470,7 @@ export const useImageManagement = (settings = null) => {
       images: [],
       color: getRandomColor(),
       imageBorderColor: "#FFFFFF", // Default white picture border
+      enablePageBorder: true, // Enable page border by default
     };
     setPages((prev) => [...prev, newPage]);
   }, []);
@@ -478,6 +481,7 @@ export const useImageManagement = (settings = null) => {
       images: [],
       color: getRandomColor(),
       imageBorderColor: "#FFFFFF", // Default white picture border
+      enablePageBorder: true, // Enable page border by default
     };
     setPages((prev) => {
       if (afterPageId === "start") {
@@ -552,6 +556,51 @@ export const useImageManagement = (settings = null) => {
       ),
     );
   }, []);
+
+  const togglePageBorder = useCallback(async (pageId) => {
+    const targetPage = pages.find((page) => page.id === pageId);
+    if (!targetPage) return;
+    
+    // Toggle the flag
+    const newEnableState = !targetPage.enablePageBorder;
+    
+    // If no images, just toggle
+    if (targetPage.images.length === 0) {
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enablePageBorder: newEnableState } : page,
+        ),
+      );
+      return;
+    }
+
+    // Re-arrange the page with border settings based on new state
+    try {
+      const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+      
+      // Create modified settings with borders disabled if toggling off
+      const modifiedSettings = newEnableState ? settings : {
+        ...settings,
+        pageBorderWidth: 0,
+        pictureBorderWidth: 0,
+      };
+      
+      const rearranged = await arrangeImages(
+        targetPage.images,
+        previewWidth,
+        previewHeight,
+        modifiedSettings
+      );
+      
+      setPages((p) =>
+        p.map((pg) =>
+          pg.id === pageId ? { ...pg, images: rearranged, enablePageBorder: newEnableState } : pg
+        )
+      );
+    } catch (error) {
+      console.error(`Failed to re-arrange page ${pageId}:`, error);
+    }
+  }, [pages, settings]);
 
   const removeAvailableImage = useCallback((index) => {
     setAvailableImages((prev) => prev.filter((_, i) => i !== index));
@@ -1389,6 +1438,7 @@ export const useImageManagement = (settings = null) => {
     removePage,
     changePageColor,
     changeImageBorderColor,
+    togglePageBorder,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,

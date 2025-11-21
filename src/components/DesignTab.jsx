@@ -395,6 +395,7 @@ const DesignTab = ({
   onRemovePage,
   onChangePageColor,
   onChangeImageBorderColor,
+  onTogglePageBorder,
   onRemoveAvailableImage,
   onAddMoreImages,
   onGeneratePDF,
@@ -560,6 +561,7 @@ const DesignTab = ({
                 onRemovePage={onRemovePage}
                 onChangePageColor={onChangePageColor}
                 onChangeImageBorderColor={onChangeImageBorderColor}
+                onTogglePageBorder={onTogglePageBorder}
                 onAddPage={onAddPage}
                 onMoveImageBack={onMoveImageBack}
                 onMoveAllImagesBack={onMoveAllImagesBack}

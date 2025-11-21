@@ -60,6 +60,7 @@ function App() {
     removePage,
     changePageColor,
     changeImageBorderColor,
+    togglePageBorder,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,
@@ -141,6 +142,7 @@ function App() {
             onRemovePage={removePage}
             onChangePageColor={changePageColor}
             onChangeImageBorderColor={changeImageBorderColor}
+            onTogglePageBorder={togglePageBorder}
             onRemoveAvailableImage={removeAvailableImage}
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}

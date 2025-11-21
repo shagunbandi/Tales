@@ -23,6 +23,7 @@ const PagePreview = ({
   pages,
   onChangeColor,
   onChangeImageBorderColor,
+  onTogglePageBorder,
   onRemovePage,
   onMoveImageBack,
   onMoveAllImagesBack,
@@ -49,7 +50,9 @@ const PagePreview = ({
   });
 
   const previewDimensions = getPreviewDimensions(settings);
-  const previewBorderWidth = getPreviewBorderWidth(settings);
+  // Only apply borders if enabled for this page
+  const borderEnabled = page.enablePageBorder !== false;
+  const previewBorderWidth = getPreviewBorderWidth(settings, borderEnabled);
   const imageCount = page.images.length;
   const layoutInfo = getCurrentLayoutInfo(page.id, page.images, settings);
 
@@ -150,19 +153,40 @@ const PagePreview = ({
 
         {/* Action buttons line */}
 
-        <div className="flex justify-end gap-2">
-          <Button
-            size="xs"
-            color="gray"
-            onClick={() => setShowPageColorPicker(!showPageColorPicker)}
-            className="flex items-center gap-1"
-            data-testid={`change-page-color-${pageIndex}`}
-          >
-            <HiColorSwatch className="h-3 w-3" />
-            Page Color
-          </Button>
-          {page.images.length > 0 && (
-            <>
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            {/* Border Toggle - Only show in Full Cover mode when borders are configured */}
+            {settings?.designStyle === "full_cover" && (settings?.pageBorderWidth > 0 || settings?.pictureBorderWidth > 0) && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                  Borders:
+                </label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={page.enablePageBorder !== false}
+                    onChange={() => onTogglePageBorder && onTogglePageBorder(page.id)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              size="xs"
+              color="gray"
+              onClick={() => setShowPageColorPicker(!showPageColorPicker)}
+              className="flex items-center gap-1"
+              data-testid={`change-page-color-${pageIndex}`}
+            >
+              <HiColorSwatch className="h-3 w-3" />
+              Page Color
+            </Button>
+            {page.images.length > 0 && (
+              <>
               <Button
                 size="xs"
                 color="blue"
@@ -218,6 +242,7 @@ const PagePreview = ({
               )}
             </>
           )}
+          </div>
         </div>
 
         {/* Page Color Picker - Controls page background, page border, and picture border */}

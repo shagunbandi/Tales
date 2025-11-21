@@ -112,8 +112,9 @@ const FullCoverImage = ({
   if (!image?.src) return null;
 
   // Get border settings - use page background color for borders
-  // Convert mm to pixels for CSS border
-  const borderWidthMm = settings?.pictureBorderWidth ?? 0;
+  // Only apply border if enabled for this page
+  const borderEnabled = page?.enablePageBorder !== false;
+  const borderWidthMm = borderEnabled ? (settings?.pictureBorderWidth ?? 0) : 0;
   const borderColor = page?.color?.color ?? "#FFFFFF"; // Use page background color
   
   // Convert mm to preview pixels

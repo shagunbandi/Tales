@@ -195,8 +195,9 @@ export const generatePDF = async (
                 0, // rotation
               );
 
-              // Add border if configured - use page background color
-              if (settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
+              // Add border if configured and enabled for this page - use page background color
+              const borderEnabled = page.enablePageBorder !== false;
+              if (borderEnabled && settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
                 const borderWidthMm = settings.pictureBorderWidth; // Already in mm
                 const borderColor = page.color.color || "#FFFFFF"; // Use page background color
                 // Convert hex color to RGB
@@ -241,8 +242,9 @@ export const generatePDF = async (
                 0, // rotation
               );
 
-              // Add border if configured - use page background color
-              if (settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
+              // Add border if configured and enabled for this page - use page background color
+              const borderEnabled = page.enablePageBorder !== false;
+              if (borderEnabled && settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
                 const borderWidthMm = settings.pictureBorderWidth; // Already in mm
                 const borderColor = page.color.color || "#FFFFFF"; // Use page background color
                 // Convert hex color to RGB
