@@ -197,7 +197,7 @@ export const generatePDF = async (
 
               // Add border if configured - use page background color
               if (settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
-                const borderWidthMm = previewToMm(settings.pictureBorderWidth, settings, "width");
+                const borderWidthMm = settings.pictureBorderWidth; // Already in mm
                 const borderColor = page.color.color || "#FFFFFF"; // Use page background color
                 // Convert hex color to RGB
                 const r = parseInt(borderColor.slice(1, 3), 16);
@@ -243,7 +243,7 @@ export const generatePDF = async (
 
               // Add border if configured - use page background color
               if (settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
-                const borderWidthMm = previewToMm(settings.pictureBorderWidth, settings, "width");
+                const borderWidthMm = settings.pictureBorderWidth; // Already in mm
                 const borderColor = page.color.color || "#FFFFFF"; // Use page background color
                 // Convert hex color to RGB
                 const r = parseInt(borderColor.slice(1, 3), 16);

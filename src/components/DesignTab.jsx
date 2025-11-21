@@ -20,7 +20,7 @@ const SettingsModal = ({ show, onClose, settings, onSettingsChange }) => {
     let parsedValue = value;
     if (value !== "" && !isNaN(value)) {
       parsedValue =
-        key === "imageQuality" || key === "pageBorderWidth" ? parseFloat(value) : parseInt(value);
+        key === "imageQuality" || key === "pageBorderWidth" || key === "pictureBorderWidth" ? parseFloat(value) : parseInt(value);
     }
     onSettingsChange({ ...settings, [key]: parsedValue });
   };
@@ -55,8 +55,8 @@ const SettingsModal = ({ show, onClose, settings, onSettingsChange }) => {
     }
 
     if (settings.designStyle === DESIGN_STYLES.FULL_COVER) {
-      if (!isValidNumber(settings.pictureBorderWidth, 0, 50)) {
-        errors.pictureBorderWidth = "Picture border width must be between 0 and 50 pixels";
+      if (settings.pictureBorderWidth !== undefined && settings.pictureBorderWidth !== null && settings.pictureBorderWidth !== "" && (isNaN(settings.pictureBorderWidth) || settings.pictureBorderWidth < 0)) {
+        errors.pictureBorderWidth = "Picture border width must be 0 or greater";
       }
       if (settings.pageBorderWidth !== undefined && settings.pageBorderWidth !== null && settings.pageBorderWidth !== "" && (isNaN(settings.pageBorderWidth) || settings.pageBorderWidth < 0)) {
         errors.pageBorderWidth = "Page border width must be 0 or greater";

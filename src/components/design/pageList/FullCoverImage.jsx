@@ -9,6 +9,7 @@ import {
 } from "react-icons/hi";
 import ImageEditModal from "../../modals/ImageEditModal.jsx";
 import { cropImageWithScaleAndPosition } from "../../../utils/imageCropUtils.js";
+import { getPreviewDimensions, PAGE_SIZES } from "../../../constants.js";
 
 const FullCoverImage = ({
   image,
@@ -111,15 +112,27 @@ const FullCoverImage = ({
   if (!image?.src) return null;
 
   // Get border settings - use page background color for borders
-  const borderWidth = settings?.pictureBorderWidth ?? 0;
+  // Convert mm to pixels for CSS border
+  const borderWidthMm = settings?.pictureBorderWidth ?? 0;
   const borderColor = page?.color?.color ?? "#FFFFFF"; // Use page background color
+  
+  // Convert mm to preview pixels
+  let borderWidthPx = 0;
+  if (borderWidthMm > 0 && settings) {
+    const pageSize = PAGE_SIZES[settings.pageSize || "a4"];
+    const isLandscape = settings.orientation !== "portrait";
+    const pageSizeWidth = isLandscape ? pageSize.width : pageSize.height;
+    const previewDimensions = getPreviewDimensions(settings);
+    const mmToPreviewPx = previewDimensions.width / pageSizeWidth;
+    borderWidthPx = borderWidthMm * mmToPreviewPx;
+  }
 
   const containerStyle = {
     left: image.x ?? 0,
     top: image.y ?? 0,
     width: image.previewWidth ?? 100,
     height: image.previewHeight ?? 100,
-    border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
+    border: borderWidthPx > 0 ? `${borderWidthPx}px solid ${borderColor}` : "none",
     boxSizing: "border-box",
   };
 

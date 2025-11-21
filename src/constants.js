@@ -96,7 +96,7 @@ export const DEFAULT_SETTINGS = {
   maxNumberOfPages: 4,
   imagesPerPage: 10,
   _fullCoverLayoutType: "hardcoded", // Use hardcoded layouts for full cover mode
-  pictureBorderWidth: 0, // Border width in pixels for borders around individual pictures (0 = no border)
+  pictureBorderWidth: 0, // Border width in mm for borders around individual pictures (0 = no border)
   fullCoverBorderColor: "#FFFFFF", // Border color for full cover images (deprecated - use per-page imageBorderColor)
   pageBorderWidth: 0, // Page border width in mm - creates a frame around entire page content (full cover mode only)
 };
