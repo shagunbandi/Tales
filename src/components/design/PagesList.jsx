@@ -9,6 +9,8 @@ const PagesList = ({
   onChangePageColor,
   onChangeImageBorderColor,
   onTogglePageBorder,
+  onSetAllPageColors,
+  onEnableAllPageBorders,
   onAddPage,
   onMoveImageBack,
   onMoveAllImagesBack,

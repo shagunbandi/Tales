@@ -557,6 +557,50 @@ export const useImageManagement = (settings = null) => {
     );
   }, []);
 
+  const setAllPageColors = useCallback((color) => {
+    setPages((prev) =>
+      prev.map((page) => ({ ...page, color }))
+    );
+  }, []);
+
+  const enableAllPageBorders = useCallback(async (enable) => {
+    setPages((prev) =>
+      prev.map((page) => ({ ...page, enablePageBorder: enable }))
+    );
+
+    // Re-arrange all pages with images that have borders enabled
+    if (pages.length > 0) {
+      pages.forEach(async (page) => {
+        if (page.images.length === 0) return;
+        
+        try {
+          const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+          
+          const modifiedSettings = enable ? settings : {
+            ...settings,
+            pageBorderWidth: 0,
+            pictureBorderWidth: 0,
+          };
+          
+          const rearranged = await arrangeImages(
+            page.images,
+            previewWidth,
+            previewHeight,
+            modifiedSettings
+          );
+          
+          setPages((p) =>
+            p.map((pg) =>
+              pg.id === page.id ? { ...pg, images: rearranged, enablePageBorder: enable } : pg
+            )
+          );
+        } catch (error) {
+          console.error(`Failed to re-arrange page ${page.id}:`, error);
+        }
+      });
+    }
+  }, [pages, settings]);
+
   const togglePageBorder = useCallback(async (pageId) => {
     const targetPage = pages.find((page) => page.id === pageId);
     if (!targetPage) return;
@@ -1439,6 +1483,8 @@ export const useImageManagement = (settings = null) => {
     changePageColor,
     changeImageBorderColor,
     togglePageBorder,
+    setAllPageColors,
+    enableAllPageBorders,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,

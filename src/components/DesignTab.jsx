@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, Button, Modal } from "flowbite-react";
-import { HiCog, HiTemplate, HiDownload, HiUpload } from "react-icons/hi";
+import { HiCog, HiTemplate, HiDownload, HiUpload, HiColorSwatch } from "react-icons/hi";
 import AvailableImages from "./design/AvailableImages.jsx";
 import PagesHeader from "./design/PagesHeader.jsx";
 import PagesList from "./design/PagesList.jsx";
@@ -12,6 +12,7 @@ import {
   PAGE_SIZE_LABELS,
   ORIENTATIONS,
   ORIENTATION_LABELS,
+  COLOR_PALETTE,
 } from "../constants.js";
 
 // Settings Modal Component
@@ -396,6 +397,8 @@ const DesignTab = ({
   onChangePageColor,
   onChangeImageBorderColor,
   onTogglePageBorder,
+  onSetAllPageColors,
+  onEnableAllPageBorders,
   onRemoveAvailableImage,
   onAddMoreImages,
   onGeneratePDF,
@@ -422,6 +425,8 @@ const DesignTab = ({
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDesignStyleModal, setShowDesignStyleModal] = useState(false);
   const [isImagesExpanded, setIsImagesExpanded] = useState(false);
+  const [showBulkColorPicker, setShowBulkColorPicker] = useState(false);
+  const [tempBulkColor, setTempBulkColor] = useState("#FFFFFF");
   const projectFileInputRef = React.useRef(null);
 
   const handleLoadProjectClick = () => {
@@ -531,27 +536,124 @@ const DesignTab = ({
                   Settings
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2 pb-4">
-                <Button
-                  onClick={handleLoadProjectClick}
-                  size="sm"
-                  color="blue"
-                  disabled={isProcessing}
-                  data-testid="load-project-button"
-                >
-                  <HiUpload className="mr-2 h-4 w-4" />
-                  Load Project
-                </Button>
-                <Button
-                  onClick={onExportProject}
-                  size="sm"
-                  color="green"
-                  disabled={isProcessing || (pages.length === 0 && availableImages.length === 0)}
-                  data-testid="export-project-button"
-                >
-                  <HiDownload className="mr-2 h-4 w-4" />
-                  Export Project
-                </Button>
+              <div className="space-y-3 pb-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={handleLoadProjectClick}
+                    size="sm"
+                    color="blue"
+                    disabled={isProcessing}
+                    data-testid="load-project-button"
+                  >
+                    <HiUpload className="mr-2 h-4 w-4" />
+                    Load Project
+                  </Button>
+                  <Button
+                    onClick={onExportProject}
+                    size="sm"
+                    color="green"
+                    disabled={isProcessing || (pages.length === 0 && availableImages.length === 0)}
+                    data-testid="export-project-button"
+                  >
+                    <HiDownload className="mr-2 h-4 w-4" />
+                    Export Project
+                  </Button>
+                </div>
+                
+                {/* Bulk Border Operations */}
+                {pages.length > 0 && (
+                  <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Bulk Operations
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() => setShowBulkColorPicker(!showBulkColorPicker)}
+                        size="xs"
+                        color="light"
+                        disabled={isProcessing}
+                      >
+                        <HiColorSwatch className="mr-1 h-3 w-3" />
+                        Set Color for All Pages
+                      </Button>
+                      <Button
+                        onClick={() => onEnableAllPageBorders(true)}
+                        size="xs"
+                        color="light"
+                        disabled={isProcessing}
+                      >
+                        Enable All Borders
+                      </Button>
+                      <Button
+                        onClick={() => onEnableAllPageBorders(false)}
+                        size="xs"
+                        color="light"
+                        disabled={isProcessing}
+                      >
+                        Disable All Borders
+                      </Button>
+                    </div>
+
+                    {/* Bulk Color Picker */}
+                    {showBulkColorPicker && (
+                      <div className="mt-2 rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-900">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Choose Color for All Pages
+                              </label>
+                              {settings?.designStyle === "full_cover" && (settings?.pageBorderWidth > 0 || settings?.pictureBorderWidth > 0) && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  Will update page background, page border & picture borders for all pages
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              size="xs"
+                              color="blue"
+                              onClick={() => setShowBulkColorPicker(false)}
+                            >
+                              Done
+                            </Button>
+                          </div>
+                          
+                          {/* Color Palette Grid */}
+                          <div className="grid grid-cols-6 gap-2">
+                            {COLOR_PALETTE.map((color) => (
+                              <button
+                                key={color.color}
+                                onClick={() => {
+                                  setTempBulkColor(color.color);
+                                  onSetAllPageColors(color);
+                                }}
+                                className={`h-10 w-full rounded border-2 transition-all hover:scale-110 ${
+                                  tempBulkColor === color.color
+                                    ? "border-blue-500 ring-2 ring-blue-300"
+                                    : "border-gray-300 dark:border-gray-600"
+                                }`}
+                                style={{ backgroundColor: color.color }}
+                                title={color.name}
+                              />
+                            ))}
+                          </div>
+                          
+                          {/* Show selected color info */}
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Selected:</span>
+                            <div
+                              className="h-6 w-6 rounded border border-gray-300 dark:border-gray-600"
+                              style={{ backgroundColor: tempBulkColor }}
+                            />
+                            <span className="text-gray-700 dark:text-gray-200">
+                              {COLOR_PALETTE.find(c => c.color === tempBulkColor)?.name || tempBulkColor}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="border-t border-gray-200 pt-4 dark:border-gray-700"></div>
 

@@ -61,6 +61,8 @@ function App() {
     changePageColor,
     changeImageBorderColor,
     togglePageBorder,
+    setAllPageColors,
+    enableAllPageBorders,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,
@@ -143,6 +145,8 @@ function App() {
             onChangePageColor={changePageColor}
             onChangeImageBorderColor={changeImageBorderColor}
             onTogglePageBorder={togglePageBorder}
+            onSetAllPageColors={setAllPageColors}
+            onEnableAllPageBorders={enableAllPageBorders}
             onRemoveAvailableImage={removeAvailableImage}
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}
