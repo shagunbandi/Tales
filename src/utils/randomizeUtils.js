@@ -1,23 +1,44 @@
 import { arrangeImages } from "./layoutUtils.js";
-import { getPreviewDimensions } from "../constants.js";
+import { getPreviewDimensions, getPreviewBorderWidth, DESIGN_STYLES } from "../constants.js";
+import { reapplyCurrentLayout } from "./layoutCycling.js";
 
 /**
  * Shuffles images within the exact same layout structure (keeps positions, swaps images)
+ * For full cover mode, re-applies layout to account for border changes
  * @param {Array} images - Array of images with current positions to shuffle
- * @param {Object} settings - Layout settings (not used, but kept for consistency)
+ * @param {Object} settings - Layout settings
+ * @param {string} pageId - Page ID for layout tracking (optional)
  * @returns {Promise<Array>} Array of images with shuffled assignments to same positions
  */
-export async function shuffleImagesInLayout(images, settings) {
+export async function shuffleImagesInLayout(images, settings, pageId = null) {
   if (!images || images.length === 0) {
     return [];
   }
 
-  console.log("Shuffling images in same layout structure");
-  console.log(
-    "Original images:",
-    images.map((img) => ({ id: img.id, x: img.x, y: img.y })),
-  );
+  // For full cover mode, ALWAYS recalculate positions with current settings
+  // This ensures border changes are applied
+  if (settings?.designStyle === DESIGN_STYLES.FULL_COVER) {
+    // Shuffle the image order
+    const shuffledImages = shuffleArray([...images]);
+    
+    // Use arrangeImages to get fresh layout with current settings
+    try {
+      const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+      
+      const rearranged = await arrangeImages(
+        shuffledImages,
+        previewWidth,
+        previewHeight,
+        settings
+      );
+      
+      return rearranged;
+    } catch (error) {
+      console.error("Failed to rearrange, falling back to old layout:", error);
+    }
+  }
 
+  // Fallback for classic mode or if full cover fails:
   // Extract the current layout positions (x, y, width, height, rowIndex, colIndex)
   const layoutPositions = images.map((img) => ({
     x: img.x,
@@ -49,11 +70,6 @@ export async function shuffleImagesInLayout(images, settings) {
     ...shuffledImageData[index],
     ...position, // This overwrites any position data with the preserved layout
   }));
-
-  console.log(
-    "Shuffled result:",
-    result.map((img) => ({ id: img.id, x: img.x, y: img.y })),
-  );
 
   return result;
 }

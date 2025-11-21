@@ -135,6 +135,7 @@ export const generatePDF = async (
     for (const image of page.images) {
       try {
         // Convert preview dimensions to mm with proper dimension types
+        // Note: image positions already include border offset from layout calculation
         const allocatedWidth = previewToMm(
           image.previewWidth,
           settings,
@@ -193,6 +194,19 @@ export const generatePDF = async (
                 "SLOW", // compression
                 0, // rotation
               );
+
+              // Add border if configured - use page background color
+              if (settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
+                const borderWidthMm = previewToMm(settings.pictureBorderWidth, settings, "width");
+                const borderColor = page.color.color || "#FFFFFF"; // Use page background color
+                // Convert hex color to RGB
+                const r = parseInt(borderColor.slice(1, 3), 16);
+                const g = parseInt(borderColor.slice(3, 5), 16);
+                const b = parseInt(borderColor.slice(5, 7), 16);
+                pdf.setDrawColor(r, g, b);
+                pdf.setLineWidth(borderWidthMm);
+                pdf.rect(imgX, imgY, allocatedWidth, allocatedHeight);
+              }
             } catch (error) {
               console.warn(
                 "Failed to crop image for PDF, using standard crop:",
@@ -226,6 +240,19 @@ export const generatePDF = async (
                 "SLOW", // compression
                 0, // rotation
               );
+
+              // Add border if configured - use page background color
+              if (settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
+                const borderWidthMm = previewToMm(settings.pictureBorderWidth, settings, "width");
+                const borderColor = page.color.color || "#FFFFFF"; // Use page background color
+                // Convert hex color to RGB
+                const r = parseInt(borderColor.slice(1, 3), 16);
+                const g = parseInt(borderColor.slice(3, 5), 16);
+                const b = parseInt(borderColor.slice(5, 7), 16);
+                pdf.setDrawColor(r, g, b);
+                pdf.setLineWidth(borderWidthMm);
+                pdf.rect(imgX, imgY, allocatedWidth, allocatedHeight);
+              }
             } catch (error) {
               console.warn("Failed to crop standard image for PDF:", error);
               // Fallback to original image processing

@@ -1,4 +1,4 @@
-import { getPreviewDimensions, PAGE_SIZES, getHardcodedLayoutsKey } from "../constants.js";
+import { getPreviewDimensions, PAGE_SIZES, getHardcodedLayoutsKey, getPreviewBorderWidth } from "../constants.js";
 import { cropForFullCover, cropImagesForGrid } from "./imageCropUtils.js";
 import { getLayoutOptions, convertToFullCoverFormat } from "./hardcodedLayouts.js";
 
@@ -32,9 +32,13 @@ export async function arrangeImagesFullCover(
     return [];
   }
 
+  // Calculate page border offset - reduces usable space on all sides
+  const borderWidth = getPreviewBorderWidth(settings);
+  
   // For full cover, we use the entire page (no margins or gaps)
-  const usableWidth = totalWidth;
-  const usableHeight = totalHeight;
+  // But subtract border space if page border is enabled
+  const usableWidth = totalWidth - (2 * borderWidth);
+  const usableHeight = totalHeight - (2 * borderWidth);
 
   // Check which layout type to use
   const layoutType =
@@ -90,8 +94,11 @@ async function arrangeImagesHardcoded(images, usableWidth, usableHeight, setting
     }
   }
 
-  // Convert the hardcoded layout to the full cover format
-  return convertToFullCoverFormat(selectedLayout, images, usableWidth, usableHeight);
+  // Get border offset to properly position images
+  const borderWidth = getPreviewBorderWidth(settings);
+
+  // Convert the hardcoded layout to the full cover format with border offset
+  return convertToFullCoverFormat(selectedLayout, images, usableWidth, usableHeight, borderWidth);
 }
 
 /**
@@ -109,6 +116,9 @@ async function arrangeImagesGrid(images, usableWidth, usableHeight, settings) {
 
   const arrangedImages = [];
   let imageIndex = 0;
+  
+  // Get border offset to properly position images
+  const borderWidth = getPreviewBorderWidth(settings);
 
   // Arrange images row by row with flexible column counts
   for (let rowIdx = 0; rowIdx < rowDistribution.length; rowIdx++) {
@@ -124,8 +134,8 @@ async function arrangeImagesGrid(images, usableWidth, usableHeight, settings) {
 
         arrangedImages.push({
           ...image,
-          x: colIdx * cellWidth,
-          y: rowIdx * cellHeight,
+          x: colIdx * cellWidth + borderWidth,
+          y: rowIdx * cellHeight + borderWidth,
           previewWidth: cellWidth,
           previewHeight: cellHeight,
           rowIndex: rowIdx,

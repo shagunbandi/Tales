@@ -59,6 +59,7 @@ function App() {
     addPageBetween,
     removePage,
     changePageColor,
+    changeImageBorderColor,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,
@@ -86,6 +87,11 @@ function App() {
       fileInputRef.current.value = "";
       fileInputRef.current.click();
     }
+  };
+
+  const handleSettingsChange = async (newSettings) => {
+    setSettings(newSettings);
+    // Note: Auto re-arrangement of pages is handled by useEffect in useImageManagement hook
   };
 
   const handleFileInputChange = async (event) => {
@@ -134,6 +140,7 @@ function App() {
             onAddPageBetween={addPageBetween}
             onRemovePage={removePage}
             onChangePageColor={changePageColor}
+            onChangeImageBorderColor={changeImageBorderColor}
             onRemoveAvailableImage={removeAvailableImage}
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}
@@ -151,7 +158,7 @@ function App() {
             onMoveImageToNextPage={moveImageToNextPage}
             onSwapImagesInPage={swapImagesInPage}
             settings={settings}
-            onSettingsChange={setSettings}
+            onSettingsChange={handleSettingsChange}
             isPageProcessing={isPageProcessing}
             onAddSelectedToPage={addSelectedToPage}
             onExportProject={handleExportProject}

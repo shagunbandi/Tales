@@ -3,7 +3,7 @@
  */
 
 import { arrangeImages } from "./layoutUtils.js";
-import { getPreviewDimensions, getHardcodedLayoutsKey } from "../constants.js";
+import { getPreviewDimensions, getHardcodedLayoutsKey, getPreviewBorderWidth } from "../constants.js";
 import {
   arrangeImagesFullCover,
   FULL_COVER_LAYOUT_TYPES,
@@ -425,12 +425,14 @@ export async function reapplyCurrentLayout(images, settings, pageId) {
       // Re-apply previously selected hardcoded layout
       if (selectedOption.type === "HARDCODED" && selectedOption.hardcodedLayout) {
         const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+        const borderWidth = getPreviewBorderWidth(settings);
         try {
           return convertToFullCoverFormat(
             selectedOption.hardcodedLayout,
             images,
-            previewWidth,
-            previewHeight,
+            previewWidth - (2 * borderWidth),
+            previewHeight - (2 * borderWidth),
+            borderWidth,
           );
         } catch (error) {
           console.error("Error reapplying hardcoded layout:", error);
@@ -511,14 +513,16 @@ async function cycleFullCoverLayout(images, settings, pageId, direction) {
   const selected = state.layouts[state.currentIndex];
   const { width: previewWidth, height: previewHeight } =
     getPreviewDimensions(settings);
+  const borderWidth = getPreviewBorderWidth(settings);
 
   try {
     if (selected.type === FULL_COVER_LAYOUT_TYPES.GRID && selected.layout) {
       return convertToFullCoverFormat(
         selected.layout,
         images,
-        previewWidth,
-        previewHeight,
+        previewWidth - (2 * borderWidth),
+        previewHeight - (2 * borderWidth),
+        borderWidth,
       );
     }
 
@@ -593,11 +597,13 @@ function isLayoutApplied(layout, images, settings) {
   
   // Get what the layout should look like  
   const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+  const borderWidth = getPreviewBorderWidth(settings);
   const expectedImages = convertToFullCoverFormat(
     layout, 
     images, 
-    previewWidth, 
-    previewHeight
+    previewWidth - (2 * borderWidth), 
+    previewHeight - (2 * borderWidth),
+    borderWidth
   );
   
   // Compare positions (allow some tolerance for floating point precision)

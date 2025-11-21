@@ -50,6 +50,7 @@ function createProjectMetadata(pages, availableImages, settings) {
     pages: pages.map(page => ({
       id: page.id,
       color: page.color,
+      imageBorderColor: page.imageBorderColor || "#FFFFFF",
       images: page.images.map(image => ({
         id: image.id,
         filename: `image_${image.id}.${getExtensionFromMimeType(image.src.split(';')[0].split(':')[1])}`,
@@ -279,6 +280,7 @@ export async function loadProject(file, onProgress = null) {
   const reconstructedPages = await Promise.all(metadata.pages.map(async page => ({
     id: page.id,
     color: page.color,
+    imageBorderColor: page.imageBorderColor || "#FFFFFF", // Default to white if not present (for backward compatibility)
     images: await Promise.all(page.images.map(async imageMetadata => {
       const imageData = loadedImages.get(imageMetadata.id);
       if (!imageData) {

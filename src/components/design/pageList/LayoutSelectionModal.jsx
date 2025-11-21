@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button } from "flowbite-react";
 import { HiViewGrid } from "react-icons/hi";
 import { getLayoutOptions, convertToFullCoverFormat } from "../../../utils/hardcodedLayouts.js";
-import { getPreviewDimensions, getHardcodedLayoutsKey } from "../../../constants.js";
+import { getPreviewDimensions, getHardcodedLayoutsKey, getPreviewBorderWidth } from "../../../constants.js";
 
 const LayoutSelectionModal = ({ 
   isOpen, 
@@ -123,18 +123,27 @@ const LayoutPreviewCard = ({
   const [previewImages, setPreviewImages] = useState([]);
 
   useEffect(() => {
-    // Convert layout to preview format
+    // Convert layout to preview format with border
     const mockPreviewWidth = 180; // Fixed preview width
     const mockPreviewHeight = (previewDimensions.height / previewDimensions.width) * mockPreviewWidth;
+    
+    // Calculate border for the mock preview
+    const borderWidth = getPreviewBorderWidth(settings);
+    const scaleFactor = mockPreviewWidth / previewDimensions.width;
+    const mockBorderWidth = borderWidth * scaleFactor;
+    
+    const usableMockWidth = mockPreviewWidth - (2 * mockBorderWidth);
+    const usableMockHeight = mockPreviewHeight - (2 * mockBorderWidth);
     
     const convertedImages = convertToFullCoverFormat(
       layout, 
       images, 
-      mockPreviewWidth, 
-      mockPreviewHeight
+      usableMockWidth, 
+      usableMockHeight,
+      mockBorderWidth
     );
     setPreviewImages(convertedImages);
-  }, [layout, images, previewDimensions]);
+  }, [layout, images, previewDimensions, settings]);
 
   return (
     <div 

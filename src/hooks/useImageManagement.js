@@ -27,7 +27,7 @@ import {
   getLayoutOptions,
   hasHardcodedLayouts,
 } from "../utils/hardcodedLayouts.js";
-import { COLOR_PALETTE, getPreviewDimensions, getHardcodedLayoutsKey } from "../constants.js";
+import { COLOR_PALETTE, getPreviewDimensions, getHardcodedLayoutsKey, getPreviewBorderWidth } from "../constants.js";
 import { exportProject, loadProject } from "../utils/projectUtils.js";
 import { debouncedSaveAppState, loadAppState, clearAppState } from "../utils/storageUtils.js";
 
@@ -37,6 +37,7 @@ export const useImageManagement = (settings = null) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(true);
+  const [previousBorderWidth, setPreviousBorderWidth] = useState(settings?.pageBorderWidth || 0);
 
   // Load state from storage on initialization
   useEffect(() => {
@@ -44,7 +45,12 @@ export const useImageManagement = (settings = null) => {
       try {
         const storedState = await loadAppState();
         if (storedState && storedState.pages && storedState.availableImages) {
-          setPages(storedState.pages);
+          // Migrate pages to ensure they have image border properties
+          const migratedPages = storedState.pages.map(page => ({
+            ...page,
+            imageBorderColor: page.imageBorderColor || "#FFFFFF", // Default to white if not present
+          }));
+          setPages(migratedPages);
           setAvailableImages(storedState.availableImages);
         }
         // Small delay to ensure loading indicator is visible
@@ -66,6 +72,46 @@ export const useImageManagement = (settings = null) => {
       debouncedSaveAppState(pages, availableImages, settings);
     }
   }, [pages, availableImages, settings, isInitialized]);
+
+  // Auto re-arrange when page border width changes in full cover mode
+  useEffect(() => {
+    const currentBorderWidth = settings?.pageBorderWidth || 0;
+    const isFullCover = settings?.designStyle === "full_cover";
+    
+    if (isInitialized && isFullCover && currentBorderWidth !== previousBorderWidth) {
+      setPreviousBorderWidth(currentBorderWidth);
+      
+      // Re-arrange all pages with images
+      if (pages.length > 0) {
+        setPages((currentPages) => {
+          // Process each page asynchronously
+          currentPages.forEach(async (page) => {
+            if (page.images.length === 0) return;
+            
+            try {
+              const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+              const rearranged = await arrangeImages(
+                page.images,
+                previewWidth,
+                previewHeight,
+                settings
+              );
+              
+              setPages((p) =>
+                p.map((pg) =>
+                  pg.id === page.id ? { ...pg, images: rearranged } : pg
+                )
+              );
+            } catch (error) {
+              console.error(`Failed to re-arrange page ${page.id}:`, error);
+            }
+          });
+          
+          return currentPages;
+        });
+      }
+    }
+  }, [settings?.pageBorderWidth, settings?.designStyle, previousBorderWidth, isInitialized, pages.length]);
 
   /**
    * Detect the current layout structure from positioned images
@@ -421,6 +467,7 @@ export const useImageManagement = (settings = null) => {
       id: `page-${Date.now()}`,
       images: [],
       color: getRandomColor(),
+      imageBorderColor: "#FFFFFF", // Default white picture border
     };
     setPages((prev) => [...prev, newPage]);
   }, []);
@@ -430,6 +477,7 @@ export const useImageManagement = (settings = null) => {
       id: `page-${Date.now()}`,
       images: [],
       color: getRandomColor(),
+      imageBorderColor: "#FFFFFF", // Default white picture border
     };
     setPages((prev) => {
       if (afterPageId === "start") {
@@ -489,10 +537,18 @@ export const useImageManagement = (settings = null) => {
     [pages.length, pages],
   );
 
-  const changePageColor = useCallback((pageId) => {
+  const changePageColor = useCallback((pageId, color = null) => {
     setPages((prev) =>
       prev.map((page) =>
-        page.id === pageId ? { ...page, color: getRandomColor() } : page,
+        page.id === pageId ? { ...page, color: color || getRandomColor() } : page,
+      ),
+    );
+  }, []);
+
+  const changeImageBorderColor = useCallback((pageId, imageBorderColor) => {
+    setPages((prev) =>
+      prev.map((page) =>
+        page.id === pageId ? { ...page, imageBorderColor } : page,
       ),
     );
   }, []);
@@ -837,6 +893,7 @@ export const useImageManagement = (settings = null) => {
         const shuffledImages = await shuffleImagesInLayout(
           targetPage.images,
           settings,
+          pageId,
         );
 
         setPages((currentPages) =>
@@ -944,15 +1001,21 @@ export const useImageManagement = (settings = null) => {
       markPageProcessing(pageId, true);
 
       try {
-        // Get preview dimensions
+        // Get preview dimensions and border width
         const previewDimensions = getPreviewDimensions(settings);
+        const borderWidth = getPreviewBorderWidth(settings);
+        
+        // Calculate usable dimensions with border
+        const usableWidth = previewDimensions.width - (2 * borderWidth);
+        const usableHeight = previewDimensions.height - (2 * borderWidth);
 
-        // Apply the selected hardcoded layout
+        // Apply the selected hardcoded layout with border
         const newLayoutImages = applyHardcodedLayout(
           selectedLayout,
           targetPage.images,
-          previewDimensions.width,
-          previewDimensions.height
+          usableWidth,
+          usableHeight,
+          borderWidth
         );
 
         // Persist the chosen hardcoded layout for future reapplication on moves
@@ -1325,6 +1388,7 @@ export const useImageManagement = (settings = null) => {
     addPageBetween,
     removePage,
     changePageColor,
+    changeImageBorderColor,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,

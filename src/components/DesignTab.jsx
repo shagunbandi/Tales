@@ -20,7 +20,7 @@ const SettingsModal = ({ show, onClose, settings, onSettingsChange }) => {
     let parsedValue = value;
     if (value !== "" && !isNaN(value)) {
       parsedValue =
-        key === "imageQuality" ? parseFloat(value) : parseInt(value);
+        key === "imageQuality" || key === "pageBorderWidth" ? parseFloat(value) : parseInt(value);
     }
     onSettingsChange({ ...settings, [key]: parsedValue });
   };
@@ -53,6 +53,16 @@ const SettingsModal = ({ show, onClose, settings, onSettingsChange }) => {
         errors.maxNumberOfRows = "Max number of rows must be at least 1";
       }
     }
+
+    if (settings.designStyle === DESIGN_STYLES.FULL_COVER) {
+      if (!isValidNumber(settings.pictureBorderWidth, 0, 50)) {
+        errors.pictureBorderWidth = "Picture border width must be between 0 and 50 pixels";
+      }
+      if (settings.pageBorderWidth !== undefined && settings.pageBorderWidth !== null && settings.pageBorderWidth !== "" && (isNaN(settings.pageBorderWidth) || settings.pageBorderWidth < 0)) {
+        errors.pageBorderWidth = "Page border width must be 0 or greater";
+      }
+    }
+
     if (!isValidNumber(settings.imagesPerPage, 1, Infinity)) {
       errors.imagesPerPage = "Images per page must be at least 1";
     }
@@ -99,6 +109,22 @@ const SettingsModal = ({ show, onClose, settings, onSettingsChange }) => {
       min: 1,
       help: "Maximum number of rows per page",
       hidden: isFullCover,
+    },
+    {
+      id: "pictureBorderWidth",
+      label: "Picture Border Width (mm):",
+      min: 0,
+      step: 0.5,
+      help: "Width of border around each picture (0 = no border)",
+      hidden: !isFullCover,
+    },
+    {
+      id: "pageBorderWidth",
+      label: "Page Border Width (mm):",
+      min: 0,
+      step: 0.5,
+      help: "Creates a frame around entire page content (0 = no border)",
+      hidden: !isFullCover,
     },
     {
       id: "imagesPerPage",
@@ -244,6 +270,15 @@ const SettingsModal = ({ show, onClose, settings, onSettingsChange }) => {
                 </div>
               ))}
           </div>
+
+          {/* Info note for Full Cover borders */}
+          {isFullCover && (settings.pageBorderWidth > 0 || settings.pictureBorderWidth > 0) && (
+            <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Border Colors:</strong> Use the "Page Color" button on each page to set the color for the page background, page border, and picture borders - all controlled by one color.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -359,6 +394,7 @@ const DesignTab = ({
   onAddPageBetween,
   onRemovePage,
   onChangePageColor,
+  onChangeImageBorderColor,
   onRemoveAvailableImage,
   onAddMoreImages,
   onGeneratePDF,
@@ -523,6 +559,7 @@ const DesignTab = ({
                 onAddPageBetween={onAddPageBetween}
                 onRemovePage={onRemovePage}
                 onChangePageColor={onChangePageColor}
+                onChangeImageBorderColor={onChangeImageBorderColor}
                 onAddPage={onAddPage}
                 onMoveImageBack={onMoveImageBack}
                 onMoveAllImagesBack={onMoveAllImagesBack}

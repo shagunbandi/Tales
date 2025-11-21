@@ -12,7 +12,7 @@ import {
   HiChevronUp,
   HiChevronDown,
 } from "react-icons/hi";
-import { getPreviewDimensions } from "../../../constants";
+import { getPreviewDimensions, COLOR_PALETTE, getPreviewBorderWidth } from "../../../constants";
 import { getCurrentLayoutInfo } from "../../../utils/layoutCycling.js";
 import FullCoverImage from "./FullCoverImage.jsx";
 import LayoutSelectionModal from "./LayoutSelectionModal.jsx";
@@ -22,6 +22,7 @@ const PagePreview = ({
   pageIndex,
   pages,
   onChangeColor,
+  onChangeImageBorderColor,
   onRemovePage,
   onMoveImageBack,
   onMoveAllImagesBack,
@@ -48,12 +49,15 @@ const PagePreview = ({
   });
 
   const previewDimensions = getPreviewDimensions(settings);
+  const previewBorderWidth = getPreviewBorderWidth(settings);
   const imageCount = page.images.length;
   const layoutInfo = getCurrentLayoutInfo(page.id, page.images, settings);
 
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
+  const [showPageColorPicker, setShowPageColorPicker] = useState(false);
+  const [tempPageColor, setTempPageColor] = useState(page.color.color || "#FFFFFF");
 
   // Note: In Full Cover mode, we always show the Choose Layout button
   // The modal will handle cases where no layouts are available
@@ -83,6 +87,19 @@ const PagePreview = ({
   const handleSelectLayout = (pageId, selectedLayout) => {
     if (onSelectLayout) {
       onSelectLayout(pageId, selectedLayout);
+    }
+  };
+
+  const handlePageColorApply = () => {
+    setShowPageColorPicker(false);
+  };
+
+  const handlePageColorChange = (colorHex) => {
+    // Find color object from palette
+    const colorObj = COLOR_PALETTE.find(c => c.color === colorHex);
+    if (colorObj && onChangeColor) {
+      onChangeColor(page.id, colorObj);
+      setTempPageColor(colorHex);
     }
   };
 
@@ -137,12 +154,12 @@ const PagePreview = ({
           <Button
             size="xs"
             color="gray"
-            onClick={() => onChangeColor(page.id)}
+            onClick={() => setShowPageColorPicker(!showPageColorPicker)}
             className="flex items-center gap-1"
-            data-testid={`change-color-${pageIndex}`}
+            data-testid={`change-page-color-${pageIndex}`}
           >
             <HiColorSwatch className="h-3 w-3" />
-            Color
+            Page Color
           </Button>
           {page.images.length > 0 && (
             <>
@@ -202,6 +219,62 @@ const PagePreview = ({
             </>
           )}
         </div>
+
+        {/* Page Color Picker - Controls page background, page border, and picture border */}
+        {showPageColorPicker && (
+          <div className="mt-2 rounded-lg border border-gray-300 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-800">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Page Color
+                  </label>
+                  {settings?.designStyle === "full_cover" && (settings?.pageBorderWidth > 0 || settings?.pictureBorderWidth > 0) && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Controls page background, page border & picture borders
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="xs"
+                  color="blue"
+                  onClick={handlePageColorApply}
+                >
+                  Done
+                </Button>
+              </div>
+              
+              {/* Color Palette Grid */}
+              <div className="grid grid-cols-6 gap-2">
+                {COLOR_PALETTE.map((color) => (
+                  <button
+                    key={color.color}
+                    onClick={() => handlePageColorChange(color.color)}
+                    className={`h-10 w-full rounded border-2 transition-all hover:scale-110 ${
+                      tempPageColor === color.color
+                        ? "border-blue-500 ring-2 ring-blue-300"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    style={{ backgroundColor: color.color }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+              
+              {/* Show selected color info */}
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Selected:</span>
+                <div
+                  className="h-6 w-6 rounded border border-gray-300 dark:border-gray-600"
+                  style={{ backgroundColor: tempPageColor }}
+                />
+                <span className="text-gray-700 dark:text-gray-200">
+                  {COLOR_PALETTE.find(c => c.color === tempPageColor)?.name || tempPageColor}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
@@ -225,12 +298,12 @@ const PagePreview = ({
                 ref={setDroppableRef}
                 className={`relative ${
                   settings?.designStyle === "full_cover"
-                    ? "border-2 border-solid"
+                    ? ""
                     : "rounded border-2 border-dashed"
                 } ${
                   isOver
                     ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                    : "border-gray-300 dark:border-gray-600"
+                    : settings?.designStyle !== "full_cover" ? "border-gray-300 dark:border-gray-600" : ""
                 }`}
                 style={{
                   backgroundColor: page.color.color,
@@ -251,6 +324,7 @@ const PagePreview = ({
                       <FullCoverImage
                         key={`${page.id}-${image.id}`}
                         image={image}
+                        page={page}
                         pageId={page.id}
                         pageIndex={pageIndex}
                         index={index}

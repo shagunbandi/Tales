@@ -12,6 +12,7 @@ import { cropImageWithScaleAndPosition } from "../../../utils/imageCropUtils.js"
 
 const FullCoverImage = ({
   image,
+  page,
   pageId,
   pageIndex,
   index,
@@ -109,11 +110,17 @@ const FullCoverImage = ({
 
   if (!image?.src) return null;
 
+  // Get border settings - use page background color for borders
+  const borderWidth = settings?.pictureBorderWidth ?? 0;
+  const borderColor = page?.color?.color ?? "#FFFFFF"; // Use page background color
+
   const containerStyle = {
     left: image.x ?? 0,
     top: image.y ?? 0,
     width: image.previewWidth ?? 100,
     height: image.previewHeight ?? 100,
+    border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
+    boxSizing: "border-box",
   };
 
   const currentPage = pages.find((p) => p.id === pageId);

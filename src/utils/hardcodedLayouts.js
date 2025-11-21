@@ -1594,7 +1594,7 @@ export function getAllLayouts(paperSize = "A4") {
  * @param {number} pageHeight - Page height in pixels
  * @returns {Array} Array of positioned images
  */
-export function convertToFullCoverFormat(layout, images, pageWidth, pageHeight) {
+export function convertToFullCoverFormat(layout, images, pageWidth, pageHeight, borderOffset = 0) {
   const { grid, positions } = layout;
   const cellWidth = pageWidth / grid.cols;
   const cellHeight = pageHeight / grid.rows;
@@ -1605,8 +1605,8 @@ export function convertToFullCoverFormat(layout, images, pageWidth, pageHeight) 
     if (pos.imageIndex >= images.length) continue;
 
     const image = images[pos.imageIndex];
-    const x = pos.col * cellWidth;
-    const y = pos.row * cellHeight;
+    const x = pos.col * cellWidth + borderOffset;
+    const y = pos.row * cellHeight + borderOffset;
     const width = pos.colSpan * cellWidth;
     const height = pos.rowSpan * cellHeight;
 
@@ -1665,12 +1665,12 @@ export function hasHardcodedLayouts(paperSize = "A4", imageCount = 1) {
  * @param {number} pageHeight - Page height in pixels
  * @returns {Array} Array of positioned images with layout applied
  */
-export function applyHardcodedLayout(layout, images, pageWidth, pageHeight) {
+export function applyHardcodedLayout(layout, images, pageWidth, pageHeight, borderOffset = 0) {
   if (!layout || !images || images.length === 0) {
     return images;
   }
 
-  return convertToFullCoverFormat(layout, images, pageWidth, pageHeight);
+  return convertToFullCoverFormat(layout, images, pageWidth, pageHeight, borderOffset);
 }
 
 /**
