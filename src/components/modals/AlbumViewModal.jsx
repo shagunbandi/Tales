@@ -5,6 +5,7 @@ import {
   HiChevronRight,
   HiX,
   HiEye,
+  HiArrowsExpand,
 } from "react-icons/hi";
 import { getPreviewDimensions, PAGE_SIZES, getPreviewBorderWidth } from "../../constants.js";
 
@@ -15,6 +16,7 @@ const AlbumViewModal = ({
   settings,
 }) => {
   const [currentSpread, setCurrentSpread] = useState(0); // 0 means pages 1-2, 1 means pages 3-4, etc.
+  const [orientation, setOrientation] = useState("horizontal"); // "horizontal" or "vertical"
 
   const previewDimensions = getPreviewDimensions(settings);
   
@@ -43,22 +45,38 @@ const AlbumViewModal = ({
   const maxViewportWidth = typeof window !== 'undefined' ? window.innerWidth * 0.8 : 1200;
   const maxViewportHeight = typeof window !== 'undefined' ? window.innerHeight * 0.65 : 600;
   
-  // Calculate optimal size for two pages side by side
-  const maxAlbumWidth = maxViewportWidth / 2 - 20; // Account for gap and margins
-  const maxAlbumHeight = maxViewportHeight;
-  
-  // Use aspect ratio to determine best fit
+  // Calculate optimal size based on orientation
   const aspectRatio = previewDimensions.width / previewDimensions.height;
   let albumPageWidth, albumPageHeight;
   
-  if (maxAlbumWidth / aspectRatio <= maxAlbumHeight) {
-    // Width is limiting factor
-    albumPageWidth = maxAlbumWidth;
-    albumPageHeight = maxAlbumWidth / aspectRatio;
+  if (orientation === "horizontal") {
+    // Calculate optimal size for two pages side by side
+    const maxAlbumWidth = maxViewportWidth / 2 - 20; // Account for gap and margins
+    const maxAlbumHeight = maxViewportHeight;
+    
+    if (maxAlbumWidth / aspectRatio <= maxAlbumHeight) {
+      // Width is limiting factor
+      albumPageWidth = maxAlbumWidth;
+      albumPageHeight = maxAlbumWidth / aspectRatio;
+    } else {
+      // Height is limiting factor
+      albumPageHeight = maxAlbumHeight;
+      albumPageWidth = maxAlbumHeight * aspectRatio;
+    }
   } else {
-    // Height is limiting factor
-    albumPageHeight = maxAlbumHeight;
-    albumPageWidth = maxAlbumHeight * aspectRatio;
+    // Vertical orientation - pages stacked top to bottom
+    const maxAlbumWidth = maxViewportWidth;
+    const maxAlbumHeight = maxViewportHeight / 2 - 20; // Account for gap and margins
+    
+    if (maxAlbumWidth / aspectRatio <= maxAlbumHeight) {
+      // Width is limiting factor
+      albumPageWidth = maxAlbumWidth;
+      albumPageHeight = maxAlbumWidth / aspectRatio;
+    } else {
+      // Height is limiting factor
+      albumPageHeight = maxAlbumHeight;
+      albumPageWidth = maxAlbumHeight * aspectRatio;
+    }
   }
   
   const albumScale = albumPageWidth / previewDimensions.width;
@@ -107,7 +125,41 @@ const AlbumViewModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Minimal header */}
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          {/* Orientation toggle */}
+          <div className="flex items-center bg-black bg-opacity-50 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setOrientation("horizontal")}
+              className={`px-3 py-2 flex items-center gap-1 transition-all ${
+                orientation === "horizontal"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:text-white hover:bg-opacity-75"
+              }`}
+              title="Horizontal view (side by side)"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <rect x="2" y="5" width="7" height="10" rx="1" />
+                <rect x="11" y="5" width="7" height="10" rx="1" />
+              </svg>
+              <span className="text-xs">Side</span>
+            </button>
+            <button
+              onClick={() => setOrientation("vertical")}
+              className={`px-3 py-2 flex items-center gap-1 transition-all ${
+                orientation === "vertical"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:text-white hover:bg-opacity-75"
+              }`}
+              title="Vertical view (top to bottom)"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <rect x="5" y="2" width="10" height="7" rx="1" />
+                <rect x="5" y="11" width="10" height="7" rx="1" />
+              </svg>
+              <span className="text-xs">Stack</span>
+            </button>
+          </div>
+          
           <button
             onClick={onClose}
             className="text-gray-300 hover:text-white p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition-all"
@@ -130,46 +182,84 @@ const AlbumViewModal = ({
             {/* Book shadow */}
             <div 
               className="absolute inset-0 bg-black opacity-20 blur-lg transform translate-y-4 translate-x-2"
-              style={{
-                width: albumPageWidth * 2 + 8,
-                height: albumPageHeight + 20,
-                top: -10,
-                left: -4
-              }}
+              style={
+                orientation === "horizontal" 
+                  ? {
+                      width: albumPageWidth * 2 + 8,
+                      height: albumPageHeight + 20,
+                      top: -10,
+                      left: -4
+                    }
+                  : {
+                      width: albumPageWidth + 20,
+                      height: albumPageHeight * 2 + 8,
+                      top: -4,
+                      left: -10
+                    }
+              }
             ></div>
             
             {/* Book spine/binding */}
-            <div 
-              className="absolute bg-gray-800 shadow-inner"
-              style={{
-                width: '8px',
-                height: albumPageHeight + 20,
-                left: albumPageWidth - 4,
-                top: -10,
-                zIndex: 10,
-                background: 'linear-gradient(to right, #4a4a4a, #2a2a2a, #1a1a1a)',
-                borderRadius: '0 2px 2px 0'
-              }}
-            ></div>
+            {orientation === "horizontal" ? (
+              <div 
+                className="absolute bg-gray-800 shadow-inner"
+                style={{
+                  width: '8px',
+                  height: albumPageHeight + 20,
+                  left: albumPageWidth - 4,
+                  top: -10,
+                  zIndex: 10,
+                  background: 'linear-gradient(to right, #4a4a4a, #2a2a2a, #1a1a1a)',
+                  borderRadius: '0 2px 2px 0'
+                }}
+              ></div>
+            ) : (
+              <div 
+                className="absolute bg-gray-800 shadow-inner"
+                style={{
+                  width: albumPageWidth + 20,
+                  height: '8px',
+                  left: -10,
+                  top: albumPageHeight - 4,
+                  zIndex: 10,
+                  background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a, #1a1a1a)',
+                  borderRadius: '0 0 2px 2px'
+                }}
+              ></div>
+            )}
 
             {/* Pages container */}
-            <div className="flex" style={{ gap: '0px' }}>
+            <div className={orientation === "horizontal" ? "flex" : "flex flex-col"} style={{ gap: '0px' }}>
               {/* Left page */}
               <div className="flex flex-col">
                 {leftPage ? (
                   <div
                     className="relative shadow-2xl bg-white transform"
-                    style={{
-                      width: albumPageWidth,
-                      height: albumPageHeight,
-                      backgroundColor: leftPage.color?.color || '#ffffff',
-                      borderRadius: '8px 0 0 8px',
-                      border: '1px solid #e5e5e5',
-                      borderRight: 'none',
-                      transform: 'rotateY(-1deg)',
-                      transformOrigin: 'right center',
-                      zIndex: 5
-                    }}
+                    style={
+                      orientation === "horizontal"
+                        ? {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            backgroundColor: leftPage.color?.color || '#ffffff',
+                            borderRadius: '8px 0 0 8px',
+                            border: '1px solid #e5e5e5',
+                            borderRight: 'none',
+                            transform: 'rotateY(-1deg)',
+                            transformOrigin: 'right center',
+                            zIndex: 5
+                          }
+                        : {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            backgroundColor: leftPage.color?.color || '#ffffff',
+                            borderRadius: '8px 8px 0 0',
+                            border: '1px solid #e5e5e5',
+                            borderBottom: 'none',
+                            transform: 'rotateX(1deg)',
+                            transformOrigin: 'bottom center',
+                            zIndex: 5
+                          }
+                    }
                   >
                       {/* Page border inset (if enabled) */}
                       {(() => {
@@ -224,16 +314,29 @@ const AlbumViewModal = ({
                 ) : (
                   <div
                     className="shadow-2xl bg-gray-100 flex items-center justify-center text-gray-400 transform"
-                    style={{
-                      width: albumPageWidth,
-                      height: albumPageHeight,
-                      borderRadius: '8px 0 0 8px',
-                      border: '1px solid #e5e5e5',
-                      borderRight: 'none',
-                      transform: 'rotateY(-1deg)',
-                      transformOrigin: 'right center',
-                      zIndex: 5
-                    }}
+                    style={
+                      orientation === "horizontal"
+                        ? {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            borderRadius: '8px 0 0 8px',
+                            border: '1px solid #e5e5e5',
+                            borderRight: 'none',
+                            transform: 'rotateY(-1deg)',
+                            transformOrigin: 'right center',
+                            zIndex: 5
+                          }
+                        : {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            borderRadius: '8px 8px 0 0',
+                            border: '1px solid #e5e5e5',
+                            borderBottom: 'none',
+                            transform: 'rotateX(1deg)',
+                            transformOrigin: 'bottom center',
+                            zIndex: 5
+                          }
+                    }
                   >
                     {currentSpread === 0 ? "Cover" : "Empty page"}
                   </div>
@@ -245,17 +348,31 @@ const AlbumViewModal = ({
                 {rightPage ? (
                   <div
                     className="relative shadow-2xl bg-white transform"
-                    style={{
-                      width: albumPageWidth,
-                      height: albumPageHeight,
-                      backgroundColor: rightPage.color?.color || '#ffffff',
-                      borderRadius: '0 8px 8px 0',
-                      border: '1px solid #e5e5e5',
-                      borderLeft: 'none',
-                      transform: 'rotateY(1deg)',
-                      transformOrigin: 'left center',
-                      zIndex: 5
-                    }}
+                    style={
+                      orientation === "horizontal"
+                        ? {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            backgroundColor: rightPage.color?.color || '#ffffff',
+                            borderRadius: '0 8px 8px 0',
+                            border: '1px solid #e5e5e5',
+                            borderLeft: 'none',
+                            transform: 'rotateY(1deg)',
+                            transformOrigin: 'left center',
+                            zIndex: 5
+                          }
+                        : {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            backgroundColor: rightPage.color?.color || '#ffffff',
+                            borderRadius: '0 0 8px 8px',
+                            border: '1px solid #e5e5e5',
+                            borderTop: 'none',
+                            transform: 'rotateX(-1deg)',
+                            transformOrigin: 'top center',
+                            zIndex: 5
+                          }
+                    }
                   >
                       {/* Page border inset (if enabled) */}
                       {(() => {
@@ -310,16 +427,29 @@ const AlbumViewModal = ({
                 ) : (
                   <div
                     className="shadow-2xl bg-gray-100 flex items-center justify-center text-gray-400 transform"
-                    style={{
-                      width: albumPageWidth,
-                      height: albumPageHeight,
-                      borderRadius: '0 8px 8px 0',
-                      border: '1px solid #e5e5e5',
-                      borderLeft: 'none',
-                      transform: 'rotateY(1deg)',
-                      transformOrigin: 'left center',
-                      zIndex: 5
-                    }}
+                    style={
+                      orientation === "horizontal"
+                        ? {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            borderRadius: '0 8px 8px 0',
+                            border: '1px solid #e5e5e5',
+                            borderLeft: 'none',
+                            transform: 'rotateY(1deg)',
+                            transformOrigin: 'left center',
+                            zIndex: 5
+                          }
+                        : {
+                            width: albumPageWidth,
+                            height: albumPageHeight,
+                            borderRadius: '0 0 8px 8px',
+                            border: '1px solid #e5e5e5',
+                            borderTop: 'none',
+                            transform: 'rotateX(-1deg)',
+                            transformOrigin: 'top center',
+                            zIndex: 5
+                          }
+                    }
                   >
                     {pages.length % 2 === 1 && leftPageIndex === pages.length - 1 ? "Back cover" : "Empty page"}
                   </div>
