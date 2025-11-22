@@ -370,6 +370,28 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 2, row: 1, col: 0, rowSpan: 1, colSpan: 2 },
           { imageIndex: 3, row: 1, col: 2, rowSpan: 1, colSpan: 1 }
         ]
+      },
+      {
+        id: "4-large-left-large-right-bottom",
+        name: "Large TL + Large BR",
+        grid: { rows: 3, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top-left (rows 0-1, cols 0-1)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 2, colSpan: 2 }, // Image 2 - Large top-right (rows 0-1, cols 2-3)
+          { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 2 }, // Image 3 - Wide bottom-left (row 2, cols 0-1)
+          { imageIndex: 3, row: 2, col: 2, rowSpan: 1, colSpan: 2 }  // Image 4 - Wide bottom-right (row 2, cols 2-3)
+        ]
+      },
+      {
+        id: "4-two-large-two-wide",
+        name: "2 Large Top + 2 Wide Bottom",
+        grid: { rows: 3, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top-left (rows 0-1, cols 0-1)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 2, colSpan: 2 }, // Image 2 - Large top-right (rows 0-1, cols 2-3)
+          { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 2 }, // Image 3 - Wide bottom-left (row 2, cols 0-1)
+          { imageIndex: 3, row: 2, col: 2, rowSpan: 1, colSpan: 2 }  // Image 4 - Wide bottom-right (row 2, cols 2-3)
+        ]
       }
     ],
 
@@ -615,6 +637,32 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 4, row: 1, col: 0, rowSpan: 1, colSpan: 1 },
           { imageIndex: 5, row: 2, col: 0, rowSpan: 1, colSpan: 1 }
         ]
+      },
+      {
+        id: "6-large-left-large-right",
+        name: "Large Left + Large Right",
+        grid: { rows: 3, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top-left (rows 0-1, cols 0-1)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 1, colSpan: 1 }, // Image 2 - Top-middle-right
+          { imageIndex: 2, row: 0, col: 3, rowSpan: 1, colSpan: 1 }, // Image 3 - Top-right
+          { imageIndex: 3, row: 1, col: 2, rowSpan: 2, colSpan: 2 }, // Image 4 - Large middle-right (rows 1-2, cols 2-3)
+          { imageIndex: 4, row: 2, col: 0, rowSpan: 1, colSpan: 1 }, // Image 5 - Bottom-left
+          { imageIndex: 5, row: 2, col: 1, rowSpan: 1, colSpan: 1 }  // Image 6 - Bottom-middle-left
+        ]
+      },
+      {
+        id: "6-two-large-four-small",
+        name: "2 Large Top + 4 Small Bottom",
+        grid: { rows: 3, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top-left (rows 0-1, cols 0-1)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 2, colSpan: 2 }, // Image 2 - Large top-right (rows 0-1, cols 2-3)
+          { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 1 }, // Image 3 - Bottom-left
+          { imageIndex: 3, row: 2, col: 1, rowSpan: 1, colSpan: 1 }, // Image 4 - Bottom-middle-left
+          { imageIndex: 4, row: 2, col: 2, rowSpan: 1, colSpan: 1 }, // Image 5 - Bottom-middle-right
+          { imageIndex: 5, row: 2, col: 3, rowSpan: 1, colSpan: 1 }  // Image 6 - Bottom-right
+        ]
       }
     ],
 
@@ -744,6 +792,62 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 4, row: 1, col: 1, rowSpan: 1, colSpan: 1 },
           { imageIndex: 5, row: 2, col: 0, rowSpan: 1, colSpan: 1 },
           { imageIndex: 6, row: 2, col: 1, rowSpan: 1, colSpan: 1 }
+        ]
+      },
+      {
+        id: "7-two-large-top",
+        name: "2 Large Top + 5 Bottom",
+        grid: { rows: 4, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top-left (rows 0-1, cols 0-1)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 2, colSpan: 2 }, // Image 2 - Large top-right (rows 0-1, cols 2-3)
+          { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 1 }, // Image 3 - Bottom row left
+          { imageIndex: 3, row: 2, col: 1, rowSpan: 1, colSpan: 1 }, // Image 4 - Bottom row
+          { imageIndex: 4, row: 2, col: 2, rowSpan: 1, colSpan: 1 }, // Image 5 - Bottom row
+          { imageIndex: 5, row: 2, col: 3, rowSpan: 1, colSpan: 1 }, // Image 6 - Bottom row right
+          { imageIndex: 6, row: 3, col: 0, rowSpan: 1, colSpan: 4 }  // Image 7 - Wide bottom strip
+        ]
+      },
+      {
+        id: "7-two-large-balanced",
+        name: "2 Large + 5 Balanced",
+        grid: { rows: 3, cols: 5 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top-left (2x2)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 2, colSpan: 2 }, // Image 2 - Large top-right (2x2)
+          { imageIndex: 2, row: 0, col: 4, rowSpan: 1, colSpan: 1 }, // Image 3 - Small top-right
+          { imageIndex: 3, row: 1, col: 4, rowSpan: 1, colSpan: 1 }, // Image 4 - Small middle-right
+          { imageIndex: 4, row: 2, col: 0, rowSpan: 1, colSpan: 1 }, // Image 5 - Small bottom-left
+          { imageIndex: 5, row: 2, col: 1, rowSpan: 1, colSpan: 2 }, // Image 6 - Wide bottom-middle (1x2)
+          { imageIndex: 6, row: 2, col: 3, rowSpan: 1, colSpan: 2 }  // Image 7 - Wide bottom-right (1x2)
+        ]
+      },
+      {
+        id: "7-two-large-right-stack",
+        name: "2 Large + 3 Right Stack",
+        grid: { rows: 3, cols: 5 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top-left (2x2)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 2, colSpan: 2 }, // Image 2 - Large top-center-right (2x2)
+          { imageIndex: 2, row: 0, col: 4, rowSpan: 1, colSpan: 1 }, // Image 3 - Small top-right
+          { imageIndex: 3, row: 1, col: 4, rowSpan: 1, colSpan: 1 }, // Image 4 - Small middle-right
+          { imageIndex: 4, row: 2, col: 4, rowSpan: 1, colSpan: 1 }, // Image 5 - Small bottom-right
+          { imageIndex: 5, row: 2, col: 0, rowSpan: 1, colSpan: 2 }, // Image 6 - Wide bottom-left (1x2)
+          { imageIndex: 6, row: 2, col: 2, rowSpan: 1, colSpan: 2 }  // Image 7 - Wide bottom-center (1x2)
+        ]
+      },
+      {
+        id: "7-four-large-left",
+        name: "4 Large Left + 3 Right",
+        grid: { rows: 6, cols: 6 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 3, colSpan: 2 }, // Image 1 - Large tall top-left (3x2)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 3, colSpan: 2 }, // Image 2 - Large tall top-center-left (3x2)
+          { imageIndex: 2, row: 3, col: 0, rowSpan: 3, colSpan: 2 }, // Image 3 - Large tall bottom-left (3x2)
+          { imageIndex: 3, row: 3, col: 2, rowSpan: 3, colSpan: 2 }, // Image 4 - Large tall bottom-center-left (3x2)
+          { imageIndex: 4, row: 0, col: 4, rowSpan: 2, colSpan: 2 }, // Image 5 - Top-right (2x2) - same size as 6, 7
+          { imageIndex: 5, row: 2, col: 4, rowSpan: 2, colSpan: 2 }, // Image 6 - Middle-right (2x2) - same size as 5, 7
+          { imageIndex: 6, row: 4, col: 4, rowSpan: 2, colSpan: 2 }  // Image 7 - Bottom-right (2x2) - same size as 5, 6
         ]
       }
     ],

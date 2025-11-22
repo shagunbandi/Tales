@@ -6,7 +6,7 @@ import {
   HiX,
   HiEye,
 } from "react-icons/hi";
-import { getPreviewDimensions } from "../../constants.js";
+import { getPreviewDimensions, PAGE_SIZES, getPreviewBorderWidth } from "../../constants.js";
 
 const AlbumViewModal = ({
   isOpen,
@@ -17,6 +17,27 @@ const AlbumViewModal = ({
   const [currentSpread, setCurrentSpread] = useState(0); // 0 means pages 1-2, 1 means pages 3-4, etc.
 
   const previewDimensions = getPreviewDimensions(settings);
+  
+  // Helper function to calculate picture border width in pixels for album view
+  const calculatePictureBorderWidth = (page) => {
+    const borderEnabled = page?.enablePageBorder !== false;
+    const borderWidthMm = borderEnabled ? (settings?.pictureBorderWidth ?? 0) : 0;
+    
+    if (borderWidthMm <= 0 || !settings) return 0;
+    
+    const pageSize = PAGE_SIZES[settings.pageSize || "a4"];
+    const isLandscape = settings.orientation !== "portrait";
+    const pageSizeWidth = isLandscape ? pageSize.width : pageSize.height;
+    const mmToPreviewPx = previewDimensions.width / pageSizeWidth;
+    return borderWidthMm * mmToPreviewPx * albumScale;
+  };
+  
+  // Helper function to calculate page border (inset) in pixels for album view
+  const calculatePageBorderInset = (page) => {
+    const borderEnabled = page?.enablePageBorder !== false;
+    const previewBorderWidth = getPreviewBorderWidth(settings, borderEnabled);
+    return previewBorderWidth * albumScale;
+  };
   
   // Calculate album page dimensions to maximize screen space
   const maxViewportWidth = typeof window !== 'undefined' ? window.innerWidth * 0.8 : 1200;
@@ -42,8 +63,8 @@ const AlbumViewModal = ({
   
   const albumScale = albumPageWidth / previewDimensions.width;
 
-  // Calculate total spreads (2 pages per spread)
-  const totalSpreads = Math.max(1, Math.ceil(pages.length / 2));
+  // Calculate total spreads (2 pages per spread, with page 1 starting on the right)
+  const totalSpreads = Math.max(1, Math.ceil((pages.length + 1) / 2));
 
   const handlePrevious = useCallback(() => {
     setCurrentSpread(prev => Math.max(0, prev - 1));
@@ -64,9 +85,10 @@ const AlbumViewModal = ({
   }, [handlePrevious, handleNext, onClose]);
 
   // Get current pages for the spread
-  const leftPageIndex = currentSpread * 2;
-  const rightPageIndex = leftPageIndex + 1;
-  const leftPage = pages[leftPageIndex];
+  // Page 1 starts on the right side (like opening a book cover)
+  const leftPageIndex = currentSpread * 2 - 1;
+  const rightPageIndex = currentSpread * 2;
+  const leftPage = leftPageIndex >= 0 ? pages[leftPageIndex] : null;
   const rightPage = rightPageIndex < pages.length ? pages[rightPageIndex] : null;
 
   console.log("AlbumViewModal render:", { isOpen, pagesCount: pages?.length || 0 });
@@ -149,9 +171,33 @@ const AlbumViewModal = ({
                       zIndex: 5
                     }}
                   >
+                      {/* Page border inset (if enabled) */}
+                      {(() => {
+                        const pageBorderInset = calculatePageBorderInset(leftPage);
+                        const borderColor = leftPage.color?.color ?? "#FFFFFF";
+                        
+                        if (pageBorderInset > 0) {
+                          return (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                inset: `${pageBorderInset}px`,
+                                border: `${pageBorderInset}px solid ${borderColor}`,
+                                pointerEvents: 'none',
+                                boxSizing: 'border-box',
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })()}
+                      
                       {/* Render page images */}
                       {leftPage.images?.map((image, index) => {
                         if (!image?.src) return null;
+                        
+                        const pictureBorderWidth = calculatePictureBorderWidth(leftPage);
+                        const borderColor = leftPage.color?.color ?? "#FFFFFF";
                         
                         const scaledStyle = {
                           position: 'absolute',
@@ -159,6 +205,8 @@ const AlbumViewModal = ({
                           top: (image.y ?? 0) * albumScale,
                           width: (image.previewWidth ?? 100) * albumScale,
                           height: (image.previewHeight ?? 100) * albumScale,
+                          border: pictureBorderWidth > 0 ? `${pictureBorderWidth}px solid ${borderColor}` : 'none',
+                          boxSizing: 'border-box',
                         };
 
                         return (
@@ -187,7 +235,7 @@ const AlbumViewModal = ({
                       zIndex: 5
                     }}
                   >
-                    Empty page
+                    {currentSpread === 0 ? "Cover" : "Empty page"}
                   </div>
                 )}
               </div>
@@ -209,9 +257,33 @@ const AlbumViewModal = ({
                       zIndex: 5
                     }}
                   >
+                      {/* Page border inset (if enabled) */}
+                      {(() => {
+                        const pageBorderInset = calculatePageBorderInset(rightPage);
+                        const borderColor = rightPage.color?.color ?? "#FFFFFF";
+                        
+                        if (pageBorderInset > 0) {
+                          return (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                inset: `${pageBorderInset}px`,
+                                border: `${pageBorderInset}px solid ${borderColor}`,
+                                pointerEvents: 'none',
+                                boxSizing: 'border-box',
+                              }}
+                            />
+                          );
+                        }
+                        return null;
+                      })()}
+                      
                       {/* Render page images */}
                       {rightPage.images?.map((image, index) => {
                         if (!image?.src) return null;
+                        
+                        const pictureBorderWidth = calculatePictureBorderWidth(rightPage);
+                        const borderColor = rightPage.color?.color ?? "#FFFFFF";
                         
                         const scaledStyle = {
                           position: 'absolute',
@@ -219,6 +291,8 @@ const AlbumViewModal = ({
                           top: (image.y ?? 0) * albumScale,
                           width: (image.previewWidth ?? 100) * albumScale,
                           height: (image.previewHeight ?? 100) * albumScale,
+                          border: pictureBorderWidth > 0 ? `${pictureBorderWidth}px solid ${borderColor}` : 'none',
+                          boxSizing: 'border-box',
                         };
 
                         return (
@@ -281,9 +355,15 @@ const AlbumViewModal = ({
                   {pages.length === 0 ? "No pages" : 
                    `Spread ${currentSpread + 1} of ${totalSpreads}`}
                 </div>
-                {leftPage && (
+                {(leftPage || rightPage) && (
                   <div className="text-gray-300 text-sm mt-1">
-                    Page {leftPageIndex + 1}{rightPage ? ` - ${rightPageIndex + 1}` : ''}
+                    {leftPage && rightPage ? (
+                      `Pages ${leftPageIndex + 1} - ${rightPageIndex + 1}`
+                    ) : leftPage ? (
+                      `Page ${leftPageIndex + 1}`
+                    ) : (
+                      `Page ${rightPageIndex + 1}`
+                    )}
                   </div>
                 )}
               </div>
