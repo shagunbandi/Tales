@@ -16,8 +16,6 @@ import {
   cycleLayoutStructure,
 } from "../utils/randomizeUtils.js";
 import {
-  nextPageLayout,
-  previousPageLayout,
   resetPageLayoutState,
   reapplyCurrentLayout,
   setCurrentHardcodedLayout,
@@ -56,7 +54,7 @@ export const useImageManagement = (settings = null) => {
         // Small delay to ensure loading indicator is visible
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
-        console.error('Failed to load stored state:', error);
+        // Failed to load stored state
       } finally {
         setIsInitialized(true);
         setIsLoadingFromStorage(false);
@@ -105,7 +103,7 @@ export const useImageManagement = (settings = null) => {
                 )
               );
             } catch (error) {
-              console.error(`Failed to re-arrange page ${page.id}:`, error);
+              // Failed to re-arrange page
             }
           });
           
@@ -198,7 +196,7 @@ export const useImageManagement = (settings = null) => {
 
         return positionedImages;
       } catch (error) {
-        console.error("Error in placeImagesInOrder:", error);
+
         return images || [];
       }
     },
@@ -207,8 +205,7 @@ export const useImageManagement = (settings = null) => {
 
   /**
    * Arrange images using the appropriate layout method based on design style
-   * For classical: uses proper margins, gaps, and centering
-   * For full cover: maintains current layout structure
+   * Uses proper margins, gaps, and centering for layouts
    */
   const arrangeImagesWithCorrectLayout = useCallback(
     async (images, preserveLayoutStructure = false, pageId = null) => {
@@ -237,7 +234,7 @@ export const useImageManagement = (settings = null) => {
           const currentLayout = detectCurrentLayout(images);
           return placeImagesInOrder(images, currentLayout);
         } else {
-          // For both classical (always) and full cover (when not preserving structure)
+          // For both default layouts and full cover (when not preserving structure)
           // This properly handles margins, gaps, and layout calculations
           const result = await arrangeImages(
             images,
@@ -248,7 +245,7 @@ export const useImageManagement = (settings = null) => {
           return result;
         }
       } catch (error) {
-        console.error("Error in arrangeImagesWithCorrectLayout:", error);
+
         return images || [];
       }
     },
@@ -270,7 +267,7 @@ export const useImageManagement = (settings = null) => {
         // Simple grid positioning that preserves order but doesn't use smart algorithms
         return images.map((image, index) => {
           if (!image || typeof image !== 'object') {
-            console.warn("Invalid image in preserveManualLayout:", image);
+
             return image;
           }
 
@@ -297,7 +294,7 @@ export const useImageManagement = (settings = null) => {
           };
         });
       } catch (error) {
-        console.error("Error in preserveManualLayout:", error);
+
         return images || [];
       }
     },
@@ -595,7 +592,7 @@ export const useImageManagement = (settings = null) => {
             )
           );
         } catch (error) {
-          console.error(`Failed to re-arrange page ${page.id}:`, error);
+
         }
       });
     }
@@ -642,7 +639,7 @@ export const useImageManagement = (settings = null) => {
         )
       );
     } catch (error) {
-      console.error(`Failed to re-arrange page ${pageId}:`, error);
+
     }
   }, [pages, settings]);
 
@@ -752,7 +749,7 @@ export const useImageManagement = (settings = null) => {
         const currentPage = currentPages.find((p) => p.id === pageId);
 
         if (!currentPage || !currentPage.images || !currentPage.images[imageIndex]) {
-          console.warn("Invalid page or image index in moveImageBack:", { pageId, imageIndex, currentPage });
+
           return;
         }
 
@@ -797,7 +794,7 @@ export const useImageManagement = (settings = null) => {
             // Safety check: if the layout function returns fewer images than we expect,
             // fall back to using preserveManualLayout
             if (!arrangedImages || arrangedImages.length !== newImages.length) {
-              console.warn("Layout function returned unexpected number of images, using manual layout");
+
               arrangedImages = preserveManualLayout(newImages);
             }
           }
@@ -808,7 +805,7 @@ export const useImageManagement = (settings = null) => {
             ),
           );
         } catch (layoutError) {
-          console.error("Error arranging images in moveImageBack:", layoutError);
+
           // Fallback to manual layout to preserve all images
           const fallbackImages = preserveManualLayout(newImages);
           setPages((prev) =>
@@ -818,7 +815,7 @@ export const useImageManagement = (settings = null) => {
           );
         }
       } catch (error) {
-        console.error("Critical error in moveImageBack:", error, { pageId, imageIndex });
+
         // Show user-friendly error message
         toast.error("Failed to move image back. Please try again.");
       }
@@ -933,7 +930,7 @@ export const useImageManagement = (settings = null) => {
         toast.dismiss("arrange-progress");
         toast.success("Page layout updated!");
       } catch (error) {
-        console.error("Error in autoArrangePage:", error);
+
         toast.dismiss("arrange-progress");
         toast.error("Failed to arrange page layout");
       } finally {
@@ -998,7 +995,7 @@ export const useImageManagement = (settings = null) => {
         toast.dismiss("shuffle-progress");
         toast.success("Images shuffled!");
       } catch (error) {
-        console.error("Error in randomizePage:", error);
+
         toast.dismiss("shuffle-progress");
         toast.error("Failed to shuffle images");
       } finally {
@@ -1022,67 +1019,6 @@ export const useImageManagement = (settings = null) => {
       return next;
     });
   }, []);
-
-  const nextLayout = useCallback(
-    async (pageId) => {
-      const targetPage = pages.find((page) => page.id === pageId);
-      if (!targetPage || targetPage.images.length === 0) return;
-
-      // Prevent multiple simultaneous operations for this page only
-      if (pageProcessing.has(pageId)) return;
-
-      markPageProcessing(pageId, true);
-
-      try {
-        const newLayoutImages = await nextPageLayout(
-          targetPage.images,
-          settings,
-          pageId,
-        );
-
-        setPages((currentPages) =>
-          currentPages.map((page) =>
-            page.id === pageId ? { ...page, images: newLayoutImages } : page,
-          ),
-        );
-      } catch (error) {
-        console.error("Error in nextLayout:", error);
-      } finally {
-        markPageProcessing(pageId, false);
-      }
-    },
-    [pages, settings, pageProcessing, markPageProcessing],
-  );
-
-  const previousLayout = useCallback(
-    async (pageId) => {
-      const targetPage = pages.find((page) => page.id === pageId);
-      if (!targetPage || targetPage.images.length === 0) return;
-
-      if (pageProcessing.has(pageId)) return;
-
-      markPageProcessing(pageId, true);
-
-      try {
-        const newLayoutImages = await previousPageLayout(
-          targetPage.images,
-          settings,
-          pageId,
-        );
-
-        setPages((currentPages) =>
-          currentPages.map((page) =>
-            page.id === pageId ? { ...page, images: newLayoutImages } : page,
-          ),
-        );
-      } catch (error) {
-        console.error("Error in previousLayout:", error);
-      } finally {
-        markPageProcessing(pageId, false);
-      }
-    },
-    [pages, settings, pageProcessing, markPageProcessing],
-  );
 
   const selectLayout = useCallback(
     async (pageId, selectedLayout) => {
@@ -1115,7 +1051,7 @@ export const useImageManagement = (settings = null) => {
         try {
           setCurrentHardcodedLayout(pageId, selectedLayout);
         } catch (e) {
-          console.warn("Could not persist hardcoded layout selection:", e);
+
         }
 
         setPages((currentPages) =>
@@ -1124,20 +1060,12 @@ export const useImageManagement = (settings = null) => {
           ),
         );
       } catch (error) {
-        console.error("Error in selectLayout:", error);
+
       } finally {
         markPageProcessing(pageId, false);
       }
     },
     [pages, settings, pageProcessing, markPageProcessing],
-  );
-
-  // Legacy function - now calls nextLayout for backward compatibility
-  const randomizeLayout = useCallback(
-    async (pageId) => {
-      return await nextLayout(pageId);
-    },
-    [nextLayout],
   );
 
   const updateImagePosition = useCallback(
@@ -1256,7 +1184,7 @@ export const useImageManagement = (settings = null) => {
             );
           }
         } catch (error) {
-          console.error("Error in moveImageToPreviousPage:", error);
+
         }
       }
     },
@@ -1301,7 +1229,7 @@ export const useImageManagement = (settings = null) => {
           ),
         );
       } catch (error) {
-        console.error("Error in swapImagesInPage:", error);
+
       }
     },
     [pages, arrangeImagesWithCorrectLayout],
@@ -1351,7 +1279,7 @@ export const useImageManagement = (settings = null) => {
     try {
       await clearAppState();
     } catch (error) {
-      console.error('Failed to clear stored state:', error);
+
     }
     toast.success("Work area cleared");
   }, []);
@@ -1492,9 +1420,6 @@ export const useImageManagement = (settings = null) => {
     moveAllImagesBack,
     autoArrangePage,
     randomizePage,
-    randomizeLayout,
-    nextLayout,
-    previousLayout,
     selectLayout,
     updateImagePosition,
     moveImageToPreviousPage,

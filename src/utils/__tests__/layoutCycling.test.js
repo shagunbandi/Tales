@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
-  nextPageLayout,
-  previousPageLayout,
   resetPageLayoutState,
   reapplyCurrentLayout,
   getCurrentLayoutInfo,
@@ -116,40 +114,6 @@ describe("Layout Cycling", () => {
       );
 
       expect(result).toBe(mockImages);
-    });
-
-    it("should handle classic layout reapplication", async () => {
-      const settings = { designStyle: "classic" };
-      const { arrangeImages } = await import("../layoutUtils.js");
-      arrangeImages.mockResolvedValue([
-        { ...mockImages[0], x: 0, y: 0, previewWidth: 200, previewHeight: 200 },
-        {
-          ...mockImages[1],
-          x: 200,
-          y: 0,
-          previewWidth: 200,
-          previewHeight: 200,
-        },
-        {
-          ...mockImages[2],
-          x: 400,
-          y: 0,
-          previewWidth: 200,
-          previewHeight: 200,
-        },
-      ]);
-
-      // First establish a layout
-      await nextPageLayout(mockImages, settings, "test-page");
-
-      // Then reapply it
-      const result = await reapplyCurrentLayout(
-        mockImages,
-        settings,
-        "test-page",
-      );
-
-      expect(result).toBeDefined();
     });
   });
 

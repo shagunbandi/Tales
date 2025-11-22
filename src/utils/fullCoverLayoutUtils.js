@@ -84,7 +84,7 @@ async function arrangeImagesHardcoded(images, usableWidth, usableHeight, setting
   
   if (availableLayouts.length === 0) {
     // Fall back to simple grid layout if no hardcoded layout exists
-    console.warn(`No hardcoded layouts available for ${images.length} images, falling back to grid layout`);
+
     return await arrangeImagesGrid(images, usableWidth, usableHeight, settings, pageData);
   }
 
@@ -498,7 +498,7 @@ async function arrangeImagesFlexible(
   
   if (!bestLayout) {
     // Fallback to simple grid layout when flexible layouts fail
-    console.warn("Flexible layout failed, falling back to simple grid layout");
+
     return await arrangeImagesGrid(images, usableWidth, usableHeight, settings);
   }
   
@@ -823,7 +823,7 @@ function applyGridTemplate(images, template, pageWidth, pageHeight) {
   if (!verifyGridCoverage(template, layout)) {
     // Only warn in development, not in tests
     if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
-      console.warn("Grid coverage verification failed - empty cells detected");
+
     }
     return null;
   }
@@ -869,7 +869,7 @@ function generateDynamicGridTemplates(numImages) {
 function selectBestFlexibleLayout(layoutOptions, images) {
   if (layoutOptions.length === 0) {
     // No valid layouts available, return fallback layout
-    console.warn("No valid flexible layouts generated, falling back to simple grid");
+
     return null;
   }
   
@@ -935,11 +935,9 @@ function verifyGridCoverage(template, layout) {
     for (let r = assignment.startRow; r < assignment.endRow; r++) {
       for (let c = assignment.startCol; c < assignment.endCol; c++) {
         if (r >= rows || c >= cols) {
-          console.warn(`Assignment extends beyond grid bounds: (${r}, ${c})`);
           return false;
         }
         if (grid[r][c]) {
-          console.warn(`Overlapping assignment detected at (${r}, ${c})`);
           return false;
         }
         grid[r][c] = true;
@@ -951,7 +949,6 @@ function verifyGridCoverage(template, layout) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (!grid[r][c]) {
-        console.warn(`Empty cell detected at (${r}, ${c})`);
         return false;
       }
     }

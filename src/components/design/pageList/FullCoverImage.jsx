@@ -103,7 +103,7 @@ const FullCoverImage = ({
         originalSrc: originalSrc, // Preserve the original for future edits
       });
     } catch (error) {
-      console.error("Failed to crop image:", error);
+
       // Fallback to just updating the position data
       onUpdateImagePosition(pageId, index, editData);
     }

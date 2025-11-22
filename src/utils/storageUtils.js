@@ -55,7 +55,7 @@ class StorageManager {
         request.onsuccess = () => resolve();
       });
     } catch (error) {
-      console.error('Failed to save state to IndexedDB:', error);
+
       // Fallback to localStorage for settings only (without images)
       try {
         const lightState = {
@@ -65,7 +65,7 @@ class StorageManager {
         };
         localStorage.setItem('tales_settings_backup', JSON.stringify(lightState));
       } catch (fallbackError) {
-        console.error('Fallback to localStorage also failed:', fallbackError);
+
       }
     }
   }
@@ -96,7 +96,7 @@ class StorageManager {
         };
       });
     } catch (error) {
-      console.error('Failed to load state from IndexedDB:', error);
+
       // Try fallback from localStorage
       return this.loadFromLocalStorageFallback();
     }
@@ -116,7 +116,7 @@ class StorageManager {
         };
       }
     } catch (error) {
-      console.error('Failed to load from localStorage fallback:', error);
+
     }
     return null;
   }
@@ -133,14 +133,14 @@ class StorageManager {
         request.onsuccess = () => resolve();
       });
     } catch (error) {
-      console.error('Failed to clear state from IndexedDB:', error);
+
     }
     
     // Also clear localStorage fallback
     try {
       localStorage.removeItem('tales_settings_backup');
     } catch (error) {
-      console.error('Failed to clear localStorage fallback:', error);
+
     }
   }
 
@@ -165,7 +165,7 @@ class StorageManager {
         };
       });
     } catch (error) {
-      console.error('Failed to get storage size:', error);
+
       return { bytes: 0, mb: '0.00' };
     }
   }

@@ -24,7 +24,7 @@ const GeneratePDFButton = ({
   };
 
   const handleViewAlbum = () => {
-    console.log("View Album clicked! Pages:", pages?.length || 0);
+
     setIsAlbumViewOpen(true);
   };
 

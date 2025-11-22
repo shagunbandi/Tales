@@ -150,7 +150,7 @@ export async function exportProject(pages, availableImages, settings, onProgress
     
     try {
       if (!image.src || !image.src.startsWith('data:')) {
-        console.warn(`Skipping image ${image.id}: invalid data URL`);
+
       } else {
         // Use original image if available, otherwise use current src
         const imageSource = image.originalSrc || image.src;
@@ -161,7 +161,7 @@ export async function exportProject(pages, availableImages, settings, onProgress
         processedSuccessfully = true;
       }
     } catch (error) {
-      console.warn(`Failed to process image ${image.id}:`, error);
+
     }
     
     if (onProgress) {
@@ -286,7 +286,7 @@ export async function loadProject(file, onProgress = null) {
     images: await Promise.all(page.images.map(async imageMetadata => {
       const imageData = loadedImages.get(imageMetadata.id);
       if (!imageData) {
-        console.warn(`Image not found: ${imageMetadata.id}`);
+
         return null;
       }
       
@@ -320,7 +320,7 @@ export async function loadProject(file, onProgress = null) {
             }
           );
         } catch (error) {
-          console.warn(`Failed to apply cropping to image ${imageMetadata.id}:`, error);
+
           // Fallback to using the loaded image as-is
           processedImageSrc = imageData;
         }
@@ -353,7 +353,7 @@ export async function loadProject(file, onProgress = null) {
   const reconstructedAvailableImages = metadata.availableImages.map(imageMetadata => {
     const imageData = loadedImages.get(imageMetadata.id);
     if (!imageData) {
-      console.warn(`Available image not found: ${imageMetadata.id}`);
+
       return null;
     }
     

@@ -7,8 +7,6 @@ import {
   HiArrowLeft,
   HiRefresh,
   HiViewGrid,
-  HiChevronLeft,
-  HiChevronRight,
   HiChevronUp,
   HiChevronDown,
 } from "react-icons/hi";
@@ -29,9 +27,6 @@ const PagePreview = ({
   onMoveAllImagesBack,
   onAutoArrangePage,
   onRandomizePage,
-  onRandomizeLayout,
-  onNextLayout,
-  onPreviousLayout,
   onSelectLayout,
   onUpdateImagePosition,
   onMoveImageToPreviousPage,
@@ -199,47 +194,18 @@ const PagePreview = ({
                 <HiRefresh className="h-3 w-3" />
                 {isPageBusy ? "Shuffling..." : "Shuffle Images"}
               </Button>
-              {settings?.designStyle === "full_cover" ? (
-                <Button
-                  size="xs"
-                  color="purple"
-                  onClick={handleOpenLayoutModal}
-                  disabled={isPageBusy}
-                  className="flex items-center gap-1"
-                  title="Choose from available layout templates"
-                  data-testid={`choose-layout-${pageIndex}`}
-                >
-                  <HiViewGrid className="h-3 w-3" />
-                  {isPageBusy ? "Processing..." : "Choose Layout"}
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    size="xs"
-                    color="purple"
-                    onClick={() => onPreviousLayout(page.id)}
-                    disabled={isPageBusy}
-                    className="flex items-center gap-1"
-                    title="Switch to previous layout structure"
-                    data-testid={`prev-layout-${pageIndex}`}
-                  >
-                    <HiChevronLeft className="h-3 w-3" />
-                    {isPageBusy ? "Switching..." : "Previous Layout"}
-                  </Button>
-                  <Button
-                    size="xs"
-                    color="purple"
-                    onClick={() => onNextLayout(page.id)}
-                    disabled={isPageBusy}
-                    className="flex items-center gap-1"
-                    title="Switch to next layout structure"
-                    data-testid={`next-layout-${pageIndex}`}
-                  >
-                    <HiChevronRight className="h-3 w-3" />
-                    {isPageBusy ? "Switching..." : "Next Layout"}
-                  </Button>
-                </>
-              )}
+              <Button
+                size="xs"
+                color="purple"
+                onClick={handleOpenLayoutModal}
+                disabled={isPageBusy}
+                className="flex items-center gap-1"
+                title="Choose from available layout templates"
+                data-testid={`choose-layout-${pageIndex}`}
+              >
+                <HiViewGrid className="h-3 w-3" />
+                {isPageBusy ? "Processing..." : "Choose Layout"}
+              </Button>
             </>
           )}
           </div>
@@ -473,7 +439,6 @@ const PageImage = ({
   };
 
   // Use object-cover for full cover layout to crop images for display
-  // Use object-contain for classic layout to maintain aspect ratios
   const objectFitClass = isFullCover ? "object-cover" : "object-contain";
 
   const currentPage = pages.find((p) => p.id === pageId);

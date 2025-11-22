@@ -9,7 +9,7 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
 
   useEffect(() => {
     if (isOpen && image) {
-      console.log("SimpleImageEditModal opening with:", image);
+
       setScale(image.scale || 1);
       setOffsetX(image.cropOffsetX || 0);
       setOffsetY(image.cropOffsetY || 0);
@@ -17,11 +17,7 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
   }, [isOpen, image]);
 
   const handleSave = () => {
-    console.log("SimpleImageEditModal saving:", {
-      scale,
-      cropOffsetX: offsetX,
-      cropOffsetY: offsetY,
-    });
+
     onSave({
       scale,
       cropOffsetX: offsetX,
@@ -37,11 +33,9 @@ const SimpleImageEditModal = ({ isOpen, onClose, onSave, image }) => {
   };
 
   if (!isOpen) {
-    console.log("SimpleImageEditModal not open");
+
     return null;
   }
-
-  console.log("SimpleImageEditModal rendering");
 
   return (
     <div

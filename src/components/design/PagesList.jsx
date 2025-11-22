@@ -16,9 +16,6 @@ const PagesList = ({
   onMoveAllImagesBack,
   onAutoArrangePage,
   onRandomizePage,
-  onRandomizeLayout,
-  onNextLayout,
-  onPreviousLayout,
   onSelectLayout,
   onUpdateImagePosition,
   onMoveImageToPreviousPage,
@@ -58,9 +55,6 @@ const PagesList = ({
               onMoveAllImagesBack={onMoveAllImagesBack}
               onAutoArrangePage={onAutoArrangePage}
               onRandomizePage={onRandomizePage}
-              onRandomizeLayout={onRandomizeLayout}
-              onNextLayout={onNextLayout}
-              onPreviousLayout={onPreviousLayout}
               onSelectLayout={onSelectLayout}
               onUpdateImagePosition={onUpdateImagePosition}
               onMoveImageToPreviousPage={onMoveImageToPreviousPage}

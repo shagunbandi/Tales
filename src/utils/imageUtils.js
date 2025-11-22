@@ -137,7 +137,7 @@ export const processFiles = async (
       });
     } catch (err) {
       // With robust loadImage, this should rarely happen
-      console.warn(`Failed to load image ${file.name}:`, err);
+
     }
   }
 

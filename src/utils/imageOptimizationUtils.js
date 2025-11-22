@@ -194,7 +194,7 @@ export const batchOptimizeImagesForPDF = async (
         optimized: true,
       });
     } catch (error) {
-      console.warn(`Failed to optimize image ${i + 1}:`, error);
+
       // Keep original image if optimization fails
       optimizedImages.push(image);
     }

@@ -34,11 +34,11 @@ export async function shuffleImagesInLayout(images, settings, pageId = null) {
       
       return rearranged;
     } catch (error) {
-      console.error("Failed to rearrange, falling back to old layout:", error);
+      // Failed to rearrange, falling back to old layout
     }
   }
 
-  // Fallback for classic mode or if full cover fails:
+  // Fallback if full cover fails:
   // Extract the current layout positions (x, y, width, height, rowIndex, colIndex)
   const layoutPositions = images.map((img) => ({
     x: img.x,
@@ -201,7 +201,6 @@ async function arrangeImagesWithForcedLayout(
 
     return result;
   } catch (error) {
-    console.error("Error in arrangeImagesWithForcedLayout:", error);
     // Fallback to regular arrangement if there's an error
     return await arrangeImages(images, previewWidth, previewHeight, settings);
   }

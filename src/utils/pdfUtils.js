@@ -209,10 +209,7 @@ export const generatePDF = async (
                 pdf.rect(imgX, imgY, allocatedWidth, allocatedHeight);
               }
             } catch (error) {
-              console.warn(
-                "Failed to crop image for PDF, using standard crop:",
-                error,
-              );
+
               // Fallback to standard cropping
             }
           } else {
@@ -256,12 +253,12 @@ export const generatePDF = async (
                 pdf.rect(imgX, imgY, allocatedWidth, allocatedHeight);
               }
             } catch (error) {
-              console.warn("Failed to crop standard image for PDF:", error);
+
               // Fallback to original image processing
             }
           }
         } else {
-          // For classic layout, calculate aspect ratio preserving dimensions
+          // Calculate aspect ratio preserving dimensions
           const originalAspectRatio =
             image.originalWidth / image.originalHeight;
           const allocatedAspectRatio = allocatedWidth / allocatedHeight;
@@ -294,7 +291,7 @@ export const generatePDF = async (
           );
         }
       } catch (err) {
-        console.warn(`Failed to add image to PDF:`, err);
+
       }
     }
 

@@ -214,35 +214,6 @@ describe("useImageManagement - Layout Preservation", () => {
       // Should still be called
       expect(reapplyCurrentLayout).toHaveBeenCalled();
     });
-
-    it("should handle classic design style layout preservation", async () => {
-      const classicSettings = { ...mockSettings, designStyle: "classic" };
-      const { reapplyCurrentLayout } = await import(
-        "../../utils/layoutCycling.js"
-      );
-      const mockImages = createMockImages(3);
-
-      reapplyCurrentLayout.mockResolvedValue(mockImages);
-
-      const { result } = renderHook(() => useImageManagement(classicSettings));
-
-      const mockAlbumData = {
-        pages: [{ id: "page-1", images: mockImages, color: "#000000" }],
-        availableImages: [],
-      };
-
-      await act(async () => {
-        result.current.loadAlbumData(mockAlbumData);
-      });
-
-      await act(async () => {
-        await result.current.swapImagesInPage("page-1", 0, 1);
-      });
-
-      // Just verify that the hook doesn't crash and the function was invoked
-      // The exact call pattern may vary based on implementation details
-      expect(result.current.pages).toBeDefined();
-    });
   });
 
   describe("Edge cases in layout preservation", () => {

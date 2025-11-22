@@ -132,7 +132,7 @@ export async function autoArrangeImages(
     };
   }
 
-  // For classic mode, use the original logic
+  // Use the original logic for non-full-cover layouts
   // Step 2: Calculate maximum images per page based on both grid and per-page settings
   const maxImagesFromGrid = settings.maxImagesPerRow * settings.maxNumberOfRows;
   const maxImagesPerPage = Math.min(

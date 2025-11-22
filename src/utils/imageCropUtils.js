@@ -491,7 +491,7 @@ export const cropImagesForGrid = async (
         previewHeight: cellHeight,
       });
     } catch (error) {
-      console.warn(`Failed to crop image: ${error.message}`);
+
       // Fallback to original image
       croppedImages.push({
         ...image,

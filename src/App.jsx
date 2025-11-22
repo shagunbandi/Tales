@@ -25,13 +25,13 @@ function App() {
       try {
         const storedState = await loadAppState();
         if (storedState && storedState.settings) {
-          setSettings({ ...DEFAULT_SETTINGS, ...storedState.settings });
-        }
-        // Small delay to ensure loading indicator is visible
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        console.error('Failed to load stored settings:', error);
-      } finally {
+        setSettings({ ...DEFAULT_SETTINGS, ...storedState.settings });
+      }
+      // Small delay to ensure loading indicator is visible
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (error) {
+      // Failed to load stored settings
+    } finally {
         setIsLoadingSettings(false);
       }
     };
@@ -70,9 +70,6 @@ function App() {
     moveAllImagesBack,
     autoArrangePage,
     randomizePage,
-    randomizeLayout,
-    nextLayout,
-    previousLayout,
     selectLayout,
     updateImagePosition,
     moveImageToPreviousPage,
@@ -155,9 +152,6 @@ function App() {
             onMoveAllImagesBack={moveAllImagesBack}
             onAutoArrangePage={autoArrangePage}
             onRandomizePage={randomizePage}
-            onRandomizeLayout={randomizeLayout}
-            onNextLayout={nextLayout}
-            onPreviousLayout={previousLayout}
             onSelectLayout={selectLayout}
             onUpdateImagePosition={updateImagePosition}
             onMoveImageToPreviousPage={moveImageToPreviousPage}
@@ -169,6 +163,7 @@ function App() {
             onAddSelectedToPage={addSelectedToPage}
             onExportProject={handleExportProject}
             onLoadProject={handleLoadProjectWithSettings}
+            onClearAll={clearCurrentWork}
           />
         </div>
       </DndContext>

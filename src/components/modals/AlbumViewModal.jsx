@@ -109,8 +109,6 @@ const AlbumViewModal = ({
   const leftPage = leftPageIndex >= 0 ? pages[leftPageIndex] : null;
   const rightPage = rightPageIndex < pages.length ? pages[rightPageIndex] : null;
 
-  console.log("AlbumViewModal render:", { isOpen, pagesCount: pages?.length || 0 });
-  
   if (!isOpen) return null;
 
   const modalContent = (

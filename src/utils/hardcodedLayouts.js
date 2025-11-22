@@ -516,6 +516,18 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 3, row: 3, col: 0, rowSpan: 1, colSpan: 1 },
           { imageIndex: 4, row: 4, col: 0, rowSpan: 1, colSpan: 1 }
         ]
+      },
+      {
+        id: "5-four-top-one-bottom",
+        name: "4 Top + 1 Bottom Wide",
+        grid: { rows: 2, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 1, row: 0, col: 1, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 2, row: 0, col: 2, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 3, row: 0, col: 3, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 4, row: 1, col: 0, rowSpan: 1, colSpan: 4 } // Full-width bottom
+        ]
       }
     ],
 
