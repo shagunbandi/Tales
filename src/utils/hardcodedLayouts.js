@@ -1682,15 +1682,50 @@ export const SUPPORTED_PAPER_SIZES = ["A4", "A3", "Letter", "Legal"];
  * Get layout options for a specific paper size and number of images
  * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @param {number} imageCount - Number of images
+ * @param {boolean} isPortrait - Whether to transpose layouts for portrait orientation
  * @returns {Array} Array of layout options
  */
-export function getLayoutOptions(paperSize = "A4", imageCount = 1) {
+export function getLayoutOptions(paperSize = "A4", imageCount = 1, isPortrait = false) {
   const layouts = HARDCODED_LAYOUTS[paperSize];
   if (!layouts) {
     return [];
   }
 
-  return layouts[imageCount] || [];
+  const baseLayouts = layouts[imageCount] || [];
+  
+  // If portrait orientation, transpose the layouts (swap rows/cols)
+  if (isPortrait) {
+    return baseLayouts.map(layout => transposeLayout(layout));
+  }
+  
+  return baseLayouts;
+}
+
+/**
+ * Transpose a layout for portrait orientation (swap rows and columns)
+ * @param {Object} layout - Layout configuration
+ * @returns {Object} Transposed layout
+ */
+function transposeLayout(layout) {
+  // For portrait orientation, we swap width and height
+  // This means rows become columns and columns become rows
+  return {
+    ...layout,
+    id: `${layout.id}-portrait`,
+    // Keep the name as-is without the suffix for cleaner UI
+    name: layout.name,
+    grid: {
+      rows: layout.grid.cols,
+      cols: layout.grid.rows
+    },
+    positions: layout.positions.map(pos => ({
+      imageIndex: pos.imageIndex,
+      row: pos.col,
+      col: pos.row,
+      rowSpan: pos.colSpan,
+      colSpan: pos.rowSpan
+    }))
+  };
 }
 
 /**
@@ -1751,10 +1786,11 @@ export function convertToFullCoverFormat(layout, images, pageWidth, pageHeight, 
  * Get layout names and IDs for UI selection
  * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @param {number} imageCount - Number of images
+ * @param {boolean} isPortrait - Whether to transpose layouts for portrait orientation
  * @returns {Array} Array of {id, name} objects for UI display
  */
-export function getLayoutSelectionOptions(paperSize = "A4", imageCount = 1) {
-  const layouts = getLayoutOptions(paperSize, imageCount);
+export function getLayoutSelectionOptions(paperSize = "A4", imageCount = 1, isPortrait = false) {
+  const layouts = getLayoutOptions(paperSize, imageCount, isPortrait);
   return layouts.map(layout => ({
     id: layout.id,
     name: layout.name,
@@ -1766,10 +1802,11 @@ export function getLayoutSelectionOptions(paperSize = "A4", imageCount = 1) {
  * Check if hardcoded layouts are available for given parameters
  * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
  * @param {number} imageCount - Number of images
+ * @param {boolean} isPortrait - Whether to transpose layouts for portrait orientation
  * @returns {boolean} True if layouts are available
  */
-export function hasHardcodedLayouts(paperSize = "A4", imageCount = 1) {
-  const layouts = getLayoutOptions(paperSize, imageCount);
+export function hasHardcodedLayouts(paperSize = "A4", imageCount = 1, isPortrait = false) {
+  const layouts = getLayoutOptions(paperSize, imageCount, isPortrait);
   return layouts.length > 0;
 }
 
@@ -1850,14 +1887,15 @@ export { HARDCODED_LAYOUTS };
  * Get current layout ID from positioned images (reverse engineering)
  * @param {Array} images - Array of positioned images
  * @param {string} paperSize - Paper size (A4, A3, Letter, Legal)
+ * @param {boolean} isPortrait - Whether to transpose layouts for portrait orientation
  * @returns {string|null} Layout ID if detected, null otherwise
  */
-export function detectCurrentLayoutId(images, paperSize = "A4") {
+export function detectCurrentLayoutId(images, paperSize = "A4", isPortrait = false) {
   if (!images || images.length === 0) {
     return null;
   }
 
-  const layouts = getLayoutOptions(paperSize, images.length);
+  const layouts = getLayoutOptions(paperSize, images.length, isPortrait);
   
   // For now, return null as layout detection is complex
   // This could be enhanced in the future to reverse-engineer the current layout

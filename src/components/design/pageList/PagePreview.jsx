@@ -301,7 +301,8 @@ const PagePreview = ({
                   width: previewDimensions.width,
                   height: previewDimensions.height,
                   maxWidth: "100%",
-                  maxHeight: "400px",
+                  // Dynamic maxHeight based on orientation
+                  maxHeight: settings?.orientation === "portrait" ? "600px" : "400px",
                 }}
                 data-testid={`page-droppable-${pageIndex}`}
               >

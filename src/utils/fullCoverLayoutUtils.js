@@ -78,9 +78,10 @@ async function arrangeImagesHardcoded(images, usableWidth, usableHeight, setting
 
   // Get paper size from settings
   const pageSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
+  const isPortrait = settings?.orientation === "portrait";
   
   // Get available layouts for this paper size and number of images
-  const availableLayouts = getLayoutOptions(pageSize, images.length);
+  const availableLayouts = getLayoutOptions(pageSize, images.length, isPortrait);
   
   if (availableLayouts.length === 0) {
     // Fall back to simple grid layout if no hardcoded layout exists

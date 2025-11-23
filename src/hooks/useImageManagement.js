@@ -36,6 +36,7 @@ export const useImageManagement = (settings = null) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(true);
   const [previousBorderWidth, setPreviousBorderWidth] = useState(settings?.pageBorderWidth || 0);
+  const [previousOrientation, setPreviousOrientation] = useState(settings?.orientation || "landscape");
 
   // Load state from storage on initialization
   useEffect(() => {
@@ -112,6 +113,45 @@ export const useImageManagement = (settings = null) => {
       }
     }
   }, [settings?.pageBorderWidth, settings?.designStyle, previousBorderWidth, isInitialized, pages.length, pages]);
+
+  // Auto re-arrange when orientation changes (landscape/portrait)
+  useEffect(() => {
+    const currentOrientation = settings?.orientation || "landscape";
+    
+    if (isInitialized && currentOrientation !== previousOrientation) {
+      setPreviousOrientation(currentOrientation);
+      
+      // Re-arrange all pages with images to apply new orientation
+      if (pages.length > 0) {
+        setPages((currentPages) => {
+          // Process each page asynchronously
+          currentPages.forEach(async (page) => {
+            if (page.images.length === 0) return;
+            
+            try {
+              const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+              const rearranged = await arrangeImages(
+                page.images,
+                previewWidth,
+                previewHeight,
+                settings
+              );
+              
+              setPages((p) =>
+                p.map((pg) =>
+                  pg.id === page.id ? { ...pg, images: rearranged } : pg
+                )
+              );
+            } catch (error) {
+              // Failed to re-arrange page
+            }
+          });
+          
+          return currentPages;
+        });
+      }
+    }
+  }, [settings?.orientation, previousOrientation, isInitialized, pages.length, pages]);
 
   /**
    * Detect the current layout structure from positioned images
@@ -1127,11 +1167,12 @@ export const useImageManagement = (settings = null) => {
           // Arrange both pages. For full cover, switch to hardcoded layouts for new counts to avoid gaps/overlaps
           if (settings.designStyle === "full_cover") {
             const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
+            const isPortrait = settings?.orientation === "portrait";
             const { width, height } = getPreviewDimensions(settings);
 
             let sourceArrangedImages = [];
             if (sourceNewImages.length > 0) {
-              const sourceLayouts = getLayoutOptions(paperSize, sourceNewImages.length);
+              const sourceLayouts = getLayoutOptions(paperSize, sourceNewImages.length, isPortrait);
               const sourceSelected = sourceLayouts[0] || null;
               sourceArrangedImages = sourceSelected
                 ? applyHardcodedLayout(sourceSelected, sourceNewImages, width, height)
@@ -1141,7 +1182,7 @@ export const useImageManagement = (settings = null) => {
               }
             }
 
-            const destLayouts = getLayoutOptions(paperSize, destNewImages.length);
+            const destLayouts = getLayoutOptions(paperSize, destNewImages.length, isPortrait);
             const destSelected = destLayouts[0] || null;
             const destArrangedImages = destSelected
               ? applyHardcodedLayout(destSelected, destNewImages, width, height)

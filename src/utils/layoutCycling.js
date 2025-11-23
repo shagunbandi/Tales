@@ -31,6 +31,7 @@ function ensureFullCoverState(pageId, images, settings) {
 
   const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
   const imageCount = images?.length || 0;
+  const isPortrait = settings?.orientation === "portrait";
 
   const state = {
     currentIndex: 0,
@@ -39,7 +40,7 @@ function ensureFullCoverState(pageId, images, settings) {
 
   if (imageCount > 0) {
     // GRID options from hardcoded layouts
-    const hardcodedLayouts = getLayoutOptions(paperSize, imageCount) || [];
+    const hardcodedLayouts = getLayoutOptions(paperSize, imageCount, isPortrait) || [];
     for (const layout of hardcodedLayouts) {
       state.layouts.push({ type: FULL_COVER_LAYOUT_TYPES.GRID, layout });
     }
@@ -253,7 +254,8 @@ function isLayoutApplied(layout, images, settings) {
 
 function getCurrentFullCoverLayoutInfo(pageId, images, settings) {
   const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
-  const hardcodedLayouts = getLayoutOptions(paperSize, images.length);
+  const isPortrait = settings?.orientation === "portrait";
+  const hardcodedLayouts = getLayoutOptions(paperSize, images.length, isPortrait);
   
   if (hardcodedLayouts.length === 0) {
     return { currentIndex: 0, totalLayouts: 0, currentLayoutName: null, currentLayout: null };

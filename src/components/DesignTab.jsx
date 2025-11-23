@@ -359,6 +359,7 @@ const DesignTab = ({
                 availableImages={availableImages}
                 totalImages={totalImages}
                 onAutoArrange={onAutoArrange}
+                settings={settings}
               />
 
               {/* Settings Button */}

@@ -19,7 +19,8 @@ const LayoutSelectionModal = ({
   useEffect(() => {
     if (isOpen && images && images.length > 0) {
       const paperSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
-      const layouts = getLayoutOptions(paperSize, images.length);
+      const isPortrait = settings?.orientation === "portrait";
+      const layouts = getLayoutOptions(paperSize, images.length, isPortrait);
       setAvailableLayouts(layouts);
       
       // Set initial selection to current layout or first available
