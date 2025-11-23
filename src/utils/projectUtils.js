@@ -1,6 +1,8 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { cropImageWithScaleAndPosition } from './imageCropUtils.js';
+import { recalculatePositionsPreservingLayout } from './fullCoverLayoutUtils.js';
+import { getPreviewDimensions } from '../constants.js';
 
 /**
  * Convert base64 data URL to blob
@@ -52,29 +54,17 @@ function createProjectMetadata(pages, availableImages, settings) {
       color: page.color,
       imageBorderColor: page.imageBorderColor || "#FFFFFF",
       enablePageBorder: page.enablePageBorder !== false, // Default to true for backward compatibility
+      layoutId: page.layoutId || null, // Store layout ID for hardcoded layouts
       images: page.images.map(image => ({
         id: image.id,
         filename: `image_${image.id}.${getExtensionFromMimeType(image.src.split(';')[0].split(':')[1])}`,
         originalIndex: image.originalIndex,
-        position: {
-          x: image.x,
-          y: image.y,
-          rowIndex: image.rowIndex,
-          colIndex: image.colIndex
-        },
-        dimensions: {
-          previewWidth: image.previewWidth,
-          previewHeight: image.previewHeight,
-          originalWidth: image.width,
-          originalHeight: image.height
-        },
         cropping: {
           scale: image.scale || 1,
           cropOffsetX: image.cropOffsetX || 0,
           cropOffsetY: image.cropOffsetY || 0,
           hasOriginalImage: !!image.originalSrc
         },
-        fullCoverMode: image.fullCoverMode || false,
         originalFileName: image.name || '',
         uploadTimestamp: image.uploadTimestamp || null
       }))
@@ -283,6 +273,7 @@ export async function loadProject(file, onProgress = null) {
     color: page.color,
     imageBorderColor: page.imageBorderColor || "#FFFFFF", // Default to white if not present (for backward compatibility)
     enablePageBorder: page.enablePageBorder !== false, // Default to true if not present (for backward compatibility)
+    layoutId: page.layoutId || null, // Restore layout ID for hardcoded layouts
     images: await Promise.all(page.images.map(async imageMetadata => {
       const imageData = loadedImages.get(imageMetadata.id);
       if (!imageData) {
@@ -290,6 +281,11 @@ export async function loadProject(file, onProgress = null) {
         return null;
       }
       
+      // Check if this is the old format (has position/dimensions) or new format (layout ID based)
+      const isOldFormat = imageMetadata.position && imageMetadata.dimensions;
+      
+      // For old format with cropping already applied, load as-is
+      // For new format, keep original and apply cropping after layout calculation
       const hasCropping = imageMetadata.cropping && (
         imageMetadata.cropping.cropOffsetX !== 0 || 
         imageMetadata.cropping.cropOffsetY !== 0 || 
@@ -299,13 +295,8 @@ export async function loadProject(file, onProgress = null) {
       let processedImageSrc = imageData;
       let originalSrc = undefined;
       
-      // If the image has cropping data and we stored the original, apply cropping
-      // For new format: only apply cropping if hasOriginalImage is true
-      // For old format: don't apply cropping as the stored image is already processed
-      const isNewFormat = imageMetadata.cropping && typeof imageMetadata.cropping.hasOriginalImage === 'boolean';
-      const shouldApplyCropping = hasCropping && isNewFormat && imageMetadata.cropping.hasOriginalImage;
-      
-      if (shouldApplyCropping) {
+      // Only apply cropping now for OLD format that has dimensions
+      if (isOldFormat && hasCropping && imageMetadata.cropping.hasOriginalImage) {
         try {
           // The loaded imageData is the original, so we need to apply cropping to get the display version
           originalSrc = imageData;
@@ -324,28 +315,47 @@ export async function loadProject(file, onProgress = null) {
           // Fallback to using the loaded image as-is
           processedImageSrc = imageData;
         }
+      } else if (hasCropping && imageMetadata.cropping.hasOriginalImage) {
+        // New format - keep original for cropping after layout calculation
+        originalSrc = imageData;
+        processedImageSrc = imageData;
       }
       
-      return {
+      // Build image object - handle both old and new formats
+      const imageObject = {
         id: imageMetadata.id,
         src: processedImageSrc,
         originalSrc: originalSrc,
         name: imageMetadata.originalFileName,
         originalIndex: imageMetadata.originalIndex,
-        x: imageMetadata.position.x,
-        y: imageMetadata.position.y,
-        rowIndex: imageMetadata.position.rowIndex,
-        colIndex: imageMetadata.position.colIndex,
-        previewWidth: imageMetadata.dimensions.previewWidth,
-        previewHeight: imageMetadata.dimensions.previewHeight,
-        width: imageMetadata.dimensions.originalWidth,
-        height: imageMetadata.dimensions.originalHeight,
         scale: imageMetadata.cropping.scale,
         cropOffsetX: imageMetadata.cropping.cropOffsetX,
         cropOffsetY: imageMetadata.cropping.cropOffsetY,
-        fullCoverMode: imageMetadata.fullCoverMode,
         uploadTimestamp: imageMetadata.uploadTimestamp
       };
+      
+      // Include position data if present (old format) - will be recalculated if layout ID exists
+      if (imageMetadata.position) {
+        imageObject.x = imageMetadata.position.x;
+        imageObject.y = imageMetadata.position.y;
+        imageObject.rowIndex = imageMetadata.position.rowIndex;
+        imageObject.colIndex = imageMetadata.position.colIndex;
+      }
+      
+      // Include dimension data if present
+      if (imageMetadata.dimensions) {
+        imageObject.previewWidth = imageMetadata.dimensions.previewWidth;
+        imageObject.previewHeight = imageMetadata.dimensions.previewHeight;
+        imageObject.width = imageMetadata.dimensions.originalWidth;
+        imageObject.height = imageMetadata.dimensions.originalHeight;
+      }
+      
+      // Include fullCoverMode if present (old format)
+      if (imageMetadata.fullCoverMode !== undefined) {
+        imageObject.fullCoverMode = imageMetadata.fullCoverMode;
+      }
+      
+      return imageObject;
     })).then(results => results.filter(Boolean))
   })));
   
@@ -377,8 +387,49 @@ export async function loadProject(file, onProgress = null) {
     });
   }
   
+  // Recalculate positions for pages with layout IDs and apply cropping where needed
+  const pagesWithRecalculatedPositions = await Promise.all(reconstructedPages.map(async page => {
+    if (page.layoutId && page.images.length > 0 && metadata.settings) {
+      const { width, height } = getPreviewDimensions(metadata.settings);
+      const recalculatedImages = recalculatePositionsPreservingLayout(
+        page.images,
+        width,
+        height,
+        metadata.settings,
+        page
+      );
+      
+      // Now apply cropping to images that need it (have originalSrc and cropping params)
+      const imagesWithCropping = await Promise.all(recalculatedImages.map(async (img) => {
+        if (img.originalSrc && (img.scale !== 1 || img.cropOffsetX !== 0 || img.cropOffsetY !== 0)) {
+          try {
+            const croppedSrc = await cropImageWithScaleAndPosition(
+              img.originalSrc,
+              img.previewWidth,
+              img.previewHeight,
+              {
+                scale: img.scale,
+                cropOffsetX: img.cropOffsetX,
+                cropOffsetY: img.cropOffsetY,
+                format: "image/png"
+              }
+            );
+            return { ...img, src: croppedSrc };
+          } catch (error) {
+            console.error('Failed to apply cropping during import:', error);
+            return img;
+          }
+        }
+        return img;
+      }));
+      
+      return { ...page, images: imagesWithCropping };
+    }
+    return page;
+  }));
+  
   return {
-    pages: reconstructedPages,
+    pages: pagesWithRecalculatedPositions,
     availableImages: reconstructedAvailableImages,
     settings: metadata.settings || null,
     version: metadata.version,

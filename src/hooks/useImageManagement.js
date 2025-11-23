@@ -28,6 +28,7 @@ import {
 import { COLOR_PALETTE, getPreviewDimensions, getHardcodedLayoutsKey, getPreviewBorderWidth } from "../constants.js";
 import { exportProject, loadProject } from "../utils/projectUtils.js";
 import { debouncedSaveAppState, loadAppState, clearAppState } from "../utils/storageUtils.js";
+import { recalculatePositionsPreservingLayout } from "../utils/fullCoverLayoutUtils.js";
 
 export const useImageManagement = (settings = null) => {
   const [pages, setPages] = useState([]);
@@ -605,7 +606,7 @@ export const useImageManagement = (settings = null) => {
       prev.map((page) => ({ ...page, enablePageBorder: enable }))
     );
 
-    // Re-arrange all pages with images that have borders enabled
+    // Recalculate positions for all pages with images while preserving layout
     if (pages.length > 0) {
       pages.forEach(async (page) => {
         if (page.images.length === 0) return;
@@ -619,16 +620,21 @@ export const useImageManagement = (settings = null) => {
             pictureBorderWidth: 0,
           };
           
-          const rearranged = await arrangeImages(
+          // Use the page data with the new border state
+          const pageData = { ...page, enablePageBorder: enable };
+          
+          // Recalculate positions while preserving rowIndex and colIndex
+          const recalculated = recalculatePositionsPreservingLayout(
             page.images,
             previewWidth,
             previewHeight,
-            modifiedSettings
+            modifiedSettings,
+            pageData
           );
           
           setPages((p) =>
             p.map((pg) =>
-              pg.id === page.id ? { ...pg, images: rearranged, enablePageBorder: enable } : pg
+              pg.id === page.id ? { ...pg, images: recalculated, enablePageBorder: enable } : pg
             )
           );
         } catch (error) {
@@ -655,7 +661,7 @@ export const useImageManagement = (settings = null) => {
       return;
     }
 
-    // Re-arrange the page with border settings based on new state
+    // Recalculate positions while preserving layout structure
     try {
       const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
       
@@ -666,16 +672,21 @@ export const useImageManagement = (settings = null) => {
         pictureBorderWidth: 0,
       };
       
-      const rearranged = await arrangeImages(
+      // Use the page data with the new border state
+      const pageData = { ...targetPage, enablePageBorder: newEnableState };
+      
+      // Recalculate positions while preserving rowIndex and colIndex
+      const recalculated = recalculatePositionsPreservingLayout(
         targetPage.images,
         previewWidth,
         previewHeight,
-        modifiedSettings
+        modifiedSettings,
+        pageData
       );
       
       setPages((p) =>
         p.map((pg) =>
-          pg.id === pageId ? { ...pg, images: rearranged, enablePageBorder: newEnableState } : pg
+          pg.id === pageId ? { ...pg, images: recalculated, enablePageBorder: newEnableState } : pg
         )
       );
     } catch (error) {
@@ -1096,7 +1107,7 @@ export const useImageManagement = (settings = null) => {
 
         setPages((currentPages) =>
           currentPages.map((page) =>
-            page.id === pageId ? { ...page, images: newLayoutImages } : page,
+            page.id === pageId ? { ...page, images: newLayoutImages, layoutId: selectedLayout.id } : page,
           ),
         );
       } catch (error) {

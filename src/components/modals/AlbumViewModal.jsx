@@ -81,8 +81,8 @@ const AlbumViewModal = ({
   
   const albumScale = albumPageWidth / previewDimensions.width;
 
-  // Calculate total spreads (2 pages per spread, with page 1 starting on the right)
-  const totalSpreads = Math.max(1, Math.ceil((pages.length + 1) / 2));
+  // Calculate total spreads (2 pages per spread, with page 1 starting on the left)
+  const totalSpreads = Math.max(1, Math.ceil(pages.length / 2));
 
   const handlePrevious = useCallback(() => {
     setCurrentSpread(prev => Math.max(0, prev - 1));
@@ -103,10 +103,10 @@ const AlbumViewModal = ({
   }, [handlePrevious, handleNext, onClose]);
 
   // Get current pages for the spread
-  // Page 1 starts on the right side (like opening a book cover)
-  const leftPageIndex = currentSpread * 2 - 1;
-  const rightPageIndex = currentSpread * 2;
-  const leftPage = leftPageIndex >= 0 ? pages[leftPageIndex] : null;
+  // Page 1 starts on the left side (standard book layout)
+  const leftPageIndex = currentSpread * 2;
+  const rightPageIndex = currentSpread * 2 + 1;
+  const leftPage = leftPageIndex < pages.length ? pages[leftPageIndex] : null;
   const rightPage = rightPageIndex < pages.length ? pages[rightPageIndex] : null;
 
   if (!isOpen) return null;
@@ -336,7 +336,7 @@ const AlbumViewModal = ({
                           }
                     }
                   >
-                    {currentSpread === 0 ? "Cover" : "Empty page"}
+                    Empty page
                   </div>
                 )}
               </div>
@@ -449,7 +449,7 @@ const AlbumViewModal = ({
                           }
                     }
                   >
-                    {pages.length % 2 === 1 && leftPageIndex === pages.length - 1 ? "Back cover" : "Empty page"}
+                    Empty page
                   </div>
                 )}
               </div>

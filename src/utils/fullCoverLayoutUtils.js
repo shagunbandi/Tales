@@ -69,6 +69,109 @@ export async function arrangeImagesFullCover(
 }
 
 /**
+ * Recalculates image positions and dimensions while preserving the existing layout structure
+ * Used when only border settings change, not the actual layout arrangement
+ * @param {Array} images - Array of images with existing layout data (rowIndex, colIndex, gridSpan)
+ * @param {number} totalWidth - Total width of the page
+ * @param {number} totalHeight - Total height of the page
+ * @param {Object} settings - Layout settings
+ * @param {Object} pageData - Page-specific data like border settings and layoutId
+ * @returns {Array} Array of images with recalculated positions while preserving layout structure
+ */
+export function recalculatePositionsPreservingLayout(
+  images,
+  totalWidth,
+  totalHeight,
+  settings,
+  pageData = null,
+) {
+  if (!images || images.length === 0) {
+    return [];
+  }
+
+  // Calculate new border offset
+  const borderEnabled = pageData?.enablePageBorder !== false;
+  const borderWidth = getPreviewBorderWidth(settings, borderEnabled);
+  
+  // Calculate new usable dimensions
+  const usableWidth = totalWidth - (2 * borderWidth);
+  const usableHeight = totalHeight - (2 * borderWidth);
+
+  // If page has a layout ID, use that to get the correct hardcoded layout template
+  if (pageData?.layoutId) {
+    const pageSize = getHardcodedLayoutsKey(settings?.pageSize || "a4");
+    const isPortrait = settings?.orientation === "portrait";
+    const availableLayouts = getLayoutOptions(pageSize, images.length, isPortrait);
+    
+    const layout = availableLayouts.find(l => l.id === pageData.layoutId);
+    if (layout) {
+      // Use the hardcoded layout template to recalculate positions
+      return convertToFullCoverFormat(layout, images, usableWidth, usableHeight, borderWidth);
+    }
+  }
+
+  // Check if images have gridSpan data (hardcoded layouts without layout ID)
+  const hasGridSpan = images[0]?.gridSpan;
+
+  if (hasGridSpan) {
+    // For hardcoded layouts with grid spans, recalculate based on grid
+    const maxRow = Math.max(...images.map(img => img.gridSpan.rowEnd));
+    const maxCol = Math.max(...images.map(img => img.gridSpan.colEnd));
+    
+    const cellWidth = usableWidth / maxCol;
+    const cellHeight = usableHeight / maxRow;
+
+    return images.map(image => {
+      const { gridSpan } = image;
+      const rowSpan = gridSpan.rowEnd - gridSpan.rowStart;
+      const colSpan = gridSpan.colEnd - gridSpan.colStart;
+      
+      return {
+        ...image,
+        x: gridSpan.colStart * cellWidth + borderWidth,
+        y: gridSpan.rowStart * cellHeight + borderWidth,
+        previewWidth: colSpan * cellWidth,
+        previewHeight: rowSpan * cellHeight,
+        // Preserve existing rowIndex, colIndex from image
+      };
+    });
+  } else {
+    // For simple grid layouts, recalculate based on rowIndex and colIndex
+    // First, determine the grid structure from existing images
+    const maxRow = Math.max(...images.map(img => img.rowIndex || 0));
+    const numRows = maxRow + 1;
+    
+    // Group images by row to find how many columns per row
+    const imagesByRow = {};
+    images.forEach(img => {
+      const row = img.rowIndex || 0;
+      if (!imagesByRow[row]) {
+        imagesByRow[row] = [];
+      }
+      imagesByRow[row].push(img);
+    });
+
+    const rowHeight = usableHeight / numRows;
+
+    return images.map(image => {
+      const rowIdx = image.rowIndex || 0;
+      const colIdx = image.colIndex || 0;
+      const imagesInRow = imagesByRow[rowIdx].length;
+      const cellWidth = usableWidth / imagesInRow;
+
+      return {
+        ...image,
+        x: colIdx * cellWidth + borderWidth,
+        y: rowIdx * rowHeight + borderWidth,
+        previewWidth: cellWidth,
+        previewHeight: rowHeight,
+        // Preserve existing rowIndex, colIndex from image
+      };
+    });
+  }
+}
+
+/**
  * Hardcoded layout arrangement using predefined templates
  */
 async function arrangeImagesHardcoded(images, usableWidth, usableHeight, settings, pageData = null) {
