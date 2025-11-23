@@ -1268,12 +1268,26 @@ export const useImageManagement = (settings = null) => {
       ];
 
       try {
-        // Use correct layout method based on design style
-        const arrangedImages = await arrangeImagesWithCorrectLayout(
-          newImages,
-          true,
-          pageId,
-        );
+        let arrangedImages;
+        
+        // If page has a layout ID, preserve that layout structure
+        if (targetPage.layoutId && settings.designStyle === "full_cover") {
+          const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+          arrangedImages = recalculatePositionsPreservingLayout(
+            newImages,
+            previewWidth,
+            previewHeight,
+            settings,
+            targetPage
+          );
+        } else {
+          // Use correct layout method based on design style
+          arrangedImages = await arrangeImagesWithCorrectLayout(
+            newImages,
+            true,
+            pageId,
+          );
+        }
 
         setPages((prev) =>
           prev.map((page) =>
@@ -1284,7 +1298,7 @@ export const useImageManagement = (settings = null) => {
 
       }
     },
-    [pages, arrangeImagesWithCorrectLayout],
+    [pages, arrangeImagesWithCorrectLayout, settings],
   );
 
   const handleGeneratePDF = useCallback(
