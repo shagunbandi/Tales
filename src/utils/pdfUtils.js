@@ -95,59 +95,73 @@ export const generatePDF = async (
     });
   }
 
+  // Calculate combined page dimensions (double width for side-by-side layout)
+  const singlePageWidth =
+    orientation === "landscape" ? pageSize.width : pageSize.height;
+  const singlePageHeight =
+    orientation === "landscape" ? pageSize.height : pageSize.width;
+  const combinedPageWidth = singlePageWidth * 2;
+  const combinedPageHeight = singlePageHeight;
+
   const pdf = new jsPDF({
-    orientation: orientation,
+    orientation: "landscape", // Always landscape for side-by-side pages
     unit: "mm",
-    format: settings?.pageSize || "a4",
+    format: [combinedPageWidth, combinedPageHeight], // Custom format for double-width pages
     compress: false, // Disable compression for better quality
   });
 
-  const totalSteps = optimizedPages.length;
+  const totalSteps = Math.ceil(optimizedPages.length / 2); // Now processing pairs of pages
   let currentStep = 0;
 
-  for (let pageIndex = 0; pageIndex < optimizedPages.length; pageIndex++) {
-    const page = optimizedPages[pageIndex];
+  // Process pages in pairs
+  for (let pairIndex = 0; pairIndex < optimizedPages.length; pairIndex += 2) {
+    const leftPage = optimizedPages[pairIndex];
+    const rightPage = optimizedPages[pairIndex + 1]; // May be undefined if odd number of pages
 
     if (onProgress) {
       const progress = 50 + (currentStep / totalSteps) * 50; // Second 50% for PDF creation
+      const pageText = rightPage 
+        ? `pages ${pairIndex + 1} and ${pairIndex + 2}` 
+        : `page ${pairIndex + 1}`;
       onProgress({
         step: Math.round(progress),
         total: 100,
-        message: `Adding page ${pageIndex + 1} of ${optimizedPages.length} to PDF...`,
+        message: `Adding ${pageText} of ${optimizedPages.length} to PDF...`,
         percentage: Math.round(progress),
       });
     }
 
-    if (pageIndex > 0) {
+    if (pairIndex > 0) {
       pdf.addPage();
     }
 
-    pdf.setFillColor(page.color.color);
-    const pageWidth =
-      orientation === "landscape" ? pageSize.width : pageSize.height;
-    const pageHeight =
-      orientation === "landscape" ? pageSize.height : pageSize.width;
-    pdf.rect(0, 0, pageWidth, pageHeight, "F");
+    // Helper function to render a single page at a given x-offset
+    const renderPage = async (page, xOffset) => {
+      if (!page) return; // Skip if no page (odd number case)
 
-    // Allow UI to update
-    await new Promise((resolve) => setTimeout(resolve, 10));
+      // Fill background for this page
+      pdf.setFillColor(page.color.color);
+      pdf.rect(xOffset, 0, singlePageWidth, singlePageHeight, "F");
 
-    for (const image of page.images) {
-      try {
-        // Convert preview dimensions to mm with proper dimension types
-        // Note: image positions already include border offset from layout calculation
-        const allocatedWidth = previewToMm(
-          image.previewWidth,
-          settings,
-          "width",
-        );
-        const allocatedHeight = previewToMm(
-          image.previewHeight,
-          settings,
-          "height",
-        );
-        const imgX = previewToMm(image.x, settings, "x");
-        const imgY = previewToMm(image.y, settings, "y");
+      // Allow UI to update
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      for (const image of page.images) {
+        try {
+          // Convert preview dimensions to mm with proper dimension types
+          // Note: image positions already include border offset from layout calculation
+          const allocatedWidth = previewToMm(
+            image.previewWidth,
+            settings,
+            "width",
+          );
+          const allocatedHeight = previewToMm(
+            image.previewHeight,
+            settings,
+            "height",
+          );
+          const imgX = previewToMm(image.x, settings, "x") + xOffset; // Add x-offset for side-by-side layout
+          const imgY = previewToMm(image.y, settings, "y");
 
         // Determine image format from the base64 data
         const imageFormat = getImageFormat(image.src);
@@ -290,9 +304,18 @@ export const generatePDF = async (
             0, // rotation
           );
         }
-      } catch (err) {
+        } catch (err) {
 
+        }
       }
+    };
+
+    // Render left page (first page in the pair) at x-offset 0
+    await renderPage(leftPage, 0);
+
+    // Render right page (second page in the pair) at x-offset singlePageWidth
+    if (rightPage) {
+      await renderPage(rightPage, singlePageWidth);
     }
 
     currentStep++;

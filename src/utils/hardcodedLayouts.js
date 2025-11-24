@@ -212,6 +212,26 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 1, row: 1, col: 0, rowSpan: 1, colSpan: 2 },
           { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 2 }
         ]
+      },
+      {
+        id: "3-large-top-left-2-bottom",
+        name: "Large Top-Left + 2 Bottom",
+        grid: { rows: 3, cols: 2 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 2, colSpan: 2 }, // Image 1 - Large top (2 rows, 2 cols)
+          { imageIndex: 1, row: 2, col: 0, rowSpan: 1, colSpan: 1 }, // Image 2 - Bottom-left
+          { imageIndex: 2, row: 2, col: 1, rowSpan: 1, colSpan: 1 }  // Image 3 - Bottom-right
+        ]
+      },
+      {
+        id: "3-large-tall-top-2-bottom",
+        name: "Large Tall Top + 2 Bottom",
+        grid: { rows: 5, cols: 2 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 3, colSpan: 2 }, // Image 1 - Large tall top (3 rows, 2 cols)
+          { imageIndex: 1, row: 3, col: 0, rowSpan: 2, colSpan: 1 }, // Image 2 - Bottom-left (2 rows)
+          { imageIndex: 2, row: 3, col: 1, rowSpan: 2, colSpan: 1 }  // Image 3 - Bottom-right (2 rows)
+        ]
       }
     ],
 
@@ -674,6 +694,19 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 3, row: 2, col: 1, rowSpan: 1, colSpan: 1 }, // Image 4 - Bottom-middle-left
           { imageIndex: 4, row: 2, col: 2, rowSpan: 1, colSpan: 1 }, // Image 5 - Bottom-middle-right
           { imageIndex: 5, row: 2, col: 3, rowSpan: 1, colSpan: 1 }  // Image 6 - Bottom-right
+        ]
+      },
+      {
+        id: "6-large-left-four-right",
+        name: "Large Left + 4 Right + Wide Bottom",
+        grid: { rows: 3, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 3, colSpan: 2 }, // Image 1 - Large left (all 3 rows, cols 0-1)
+          { imageIndex: 1, row: 0, col: 2, rowSpan: 1, colSpan: 1 }, // Image 2 - Top-right
+          { imageIndex: 2, row: 0, col: 3, rowSpan: 1, colSpan: 1 }, // Image 3 - Top-far-right
+          { imageIndex: 3, row: 1, col: 2, rowSpan: 1, colSpan: 1 }, // Image 4 - Middle-right
+          { imageIndex: 4, row: 1, col: 3, rowSpan: 1, colSpan: 1 }, // Image 5 - Middle-far-right
+          { imageIndex: 5, row: 2, col: 2, rowSpan: 1, colSpan: 2 }  // Image 6 - Wide bottom-right (cols 2-3)
         ]
       }
     ],
