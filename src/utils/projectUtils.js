@@ -435,4 +435,81 @@ export async function loadProject(file, onProgress = null) {
     version: metadata.version,
     exportDate: metadata.exportDate
   };
+}
+
+/**
+ * Merge/extend a project with another project from a zip file
+ * Keeps settings from the current project, but adds pages and images from the loaded project
+ * @param {File} file - Zip file to load and merge
+ * @param {Array} currentPages - Current pages in the project
+ * @param {Array} currentAvailableImages - Current available images
+ * @param {Object} currentSettings - Current settings to preserve
+ * @param {Function} onProgress - Progress callback
+ * @returns {Promise<Object>} - Promise that resolves with merged project data
+ */
+export async function mergeProject(file, currentPages, currentAvailableImages, currentSettings, onProgress = null) {
+  // First load the project to merge
+  const loadedProject = await loadProject(file, onProgress);
+  
+  // Find the highest ID in current pages and images to avoid conflicts
+  const maxPageId = currentPages.length > 0 
+    ? Math.max(...currentPages.map(p => parseInt(p.id) || 0))
+    : 0;
+  
+  const allCurrentImageIds = [
+    ...currentPages.flatMap(p => p.images.map(img => img.id)),
+    ...currentAvailableImages.map(img => img.id)
+  ];
+  const maxImageId = allCurrentImageIds.length > 0
+    ? Math.max(...allCurrentImageIds.map(id => parseInt(id) || 0))
+    : 0;
+  
+  // Create ID mapping for the loaded images to avoid conflicts
+  const imageIdMapping = new Map();
+  let nextImageId = maxImageId + 1;
+  
+  // First pass: create ID mapping for all images in loaded project
+  loadedProject.pages.forEach(page => {
+    page.images.forEach(img => {
+      if (!imageIdMapping.has(img.id)) {
+        imageIdMapping.set(img.id, nextImageId.toString());
+        nextImageId++;
+      }
+    });
+  });
+  
+  loadedProject.availableImages.forEach(img => {
+    if (!imageIdMapping.has(img.id)) {
+      imageIdMapping.set(img.id, nextImageId.toString());
+      nextImageId++;
+    }
+  });
+  
+  // Remap page IDs and image IDs in loaded pages
+  const remappedPages = loadedProject.pages.map((page, index) => ({
+    ...page,
+    id: (maxPageId + index + 1).toString(),
+    images: page.images.map(img => ({
+      ...img,
+      id: imageIdMapping.get(img.id) || img.id
+    }))
+  }));
+  
+  // Remap image IDs in available images
+  const remappedAvailableImages = loadedProject.availableImages.map(img => ({
+    ...img,
+    id: imageIdMapping.get(img.id) || img.id
+  }));
+  
+  // Merge pages and available images
+  const mergedPages = [...currentPages, ...remappedPages];
+  const mergedAvailableImages = [...currentAvailableImages, ...remappedAvailableImages];
+  
+  return {
+    pages: mergedPages,
+    availableImages: mergedAvailableImages,
+    settings: currentSettings, // Keep current settings
+    version: loadedProject.version,
+    exportDate: loadedProject.exportDate
+  };
 } 

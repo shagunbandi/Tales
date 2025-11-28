@@ -79,6 +79,7 @@ function App() {
     clearCurrentWork,
     handleExportProject,
     handleLoadProject,
+    handleMergeProject,
     isPageProcessing,
   } = useImageManagement(settings);
 
@@ -105,6 +106,10 @@ function App() {
     await handleLoadProject(file, (loadedSettings) => {
       setSettings(loadedSettings);
     });
+  };
+
+  const handleMergeProjectKeepSettings = async (file) => {
+    await handleMergeProject(file);
   };
 
   // Show loading overlay while app is initializing
@@ -163,6 +168,7 @@ function App() {
             onAddSelectedToPage={addSelectedToPage}
             onExportProject={handleExportProject}
             onLoadProject={handleLoadProjectWithSettings}
+            onMergeProject={handleMergeProjectKeepSettings}
             onClearAll={clearCurrentWork}
           />
         </div>

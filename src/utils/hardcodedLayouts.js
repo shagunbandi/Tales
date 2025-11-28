@@ -282,6 +282,17 @@ const HARDCODED_LAYOUTS_RAW = {
         ]
       },
       {
+        id: "4-large-left-75-25",
+        name: "Large Left 75% + 3 Right",
+        grid: { rows: 3, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 3, colSpan: 3 },
+          { imageIndex: 1, row: 0, col: 3, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 2, row: 1, col: 3, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 3, row: 2, col: 3, rowSpan: 1, colSpan: 1 }
+        ]
+      },
+      {
         id: "4-large-right",
         name: "3 Left + Large Right",
         grid: { rows: 3, cols: 2 },
@@ -290,6 +301,17 @@ const HARDCODED_LAYOUTS_RAW = {
           { imageIndex: 1, row: 1, col: 0, rowSpan: 1, colSpan: 1 },
           { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 1 },
           { imageIndex: 3, row: 0, col: 1, rowSpan: 3, colSpan: 1 }
+        ]
+      },
+      {
+        id: "4-large-right-75-25",
+        name: "3 Left + Large Right 75%",
+        grid: { rows: 3, cols: 4 },
+        positions: [
+          { imageIndex: 0, row: 0, col: 0, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 1, row: 1, col: 0, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 2, row: 2, col: 0, rowSpan: 1, colSpan: 1 },
+          { imageIndex: 3, row: 0, col: 1, rowSpan: 3, colSpan: 3 }
         ]
       },
       {

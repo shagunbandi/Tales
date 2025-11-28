@@ -260,6 +260,7 @@ const DesignTab = ({
   onAddSelectedToPage,
   onExportProject,
   onLoadProject,
+  onMergeProject,
   onClearAll,
 }) => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -268,6 +269,7 @@ const DesignTab = ({
   const [showBulkColorPicker, setShowBulkColorPicker] = useState(false);
   const [tempBulkColor, setTempBulkColor] = useState("#FFFFFF");
   const projectFileInputRef = React.useRef(null);
+  const mergeProjectFileInputRef = React.useRef(null);
 
   const handleLoadProjectClick = () => {
     if (projectFileInputRef.current) {
@@ -276,10 +278,27 @@ const DesignTab = ({
     }
   };
 
+  const handleMergeProjectClick = () => {
+    if (mergeProjectFileInputRef.current) {
+      mergeProjectFileInputRef.current.value = "";
+      mergeProjectFileInputRef.current.click();
+    }
+  };
+
   const handleProjectFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (file && file.name.toLowerCase().endsWith('.zip')) {
       await onLoadProject(file);
+    } else if (file) {
+      // Show error for invalid file type
+      // The hook will show the error toast, so we don't need alert here
+    }
+  };
+
+  const handleMergeProjectFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (file && file.name.toLowerCase().endsWith('.zip')) {
+      await onMergeProject(file);
     } else if (file) {
       // Show error for invalid file type
       // The hook will show the error toast, so we don't need alert here
@@ -304,12 +323,19 @@ const DesignTab = ({
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      {/* Hidden file input for project loading */}
+      {/* Hidden file inputs for project loading and merging */}
       <input
         ref={projectFileInputRef}
         type="file"
         accept=".zip"
         onChange={handleProjectFileChange}
+        className="hidden"
+      />
+      <input
+        ref={mergeProjectFileInputRef}
+        type="file"
+        accept=".zip"
+        onChange={handleMergeProjectFileChange}
         className="hidden"
       />
       
@@ -385,6 +411,16 @@ const DesignTab = ({
                   >
                     <HiUpload className="mr-2 h-4 w-4" />
                     Load Project
+                  </Button>
+                  <Button
+                    onClick={handleMergeProjectClick}
+                    size="sm"
+                    color="purple"
+                    disabled={isProcessing}
+                    data-testid="merge-project-button"
+                  >
+                    <HiUpload className="mr-2 h-4 w-4" />
+                    Merge Project
                   </Button>
                   <Button
                     onClick={onExportProject}

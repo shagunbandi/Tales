@@ -26,7 +26,7 @@ import {
   hasHardcodedLayouts,
 } from "../utils/hardcodedLayouts.js";
 import { COLOR_PALETTE, getPreviewDimensions, getHardcodedLayoutsKey, getPreviewBorderWidth } from "../constants.js";
-import { exportProject, loadProject } from "../utils/projectUtils.js";
+import { exportProject, loadProject, mergeProject } from "../utils/projectUtils.js";
 import { debouncedSaveAppState, loadAppState, clearAppState } from "../utils/storageUtils.js";
 import { recalculatePositionsPreservingLayout } from "../utils/fullCoverLayoutUtils.js";
 
@@ -1459,6 +1459,67 @@ export const useImageManagement = (settings = null) => {
     [],
   );
 
+  const handleMergeProject = useCallback(
+    async (file) => {
+      if (!file) {
+        toast.error("No file selected");
+        return;
+      }
+
+      if (!file.name.toLowerCase().endsWith('.zip')) {
+        toast.error("Please select a valid Tales project file (.zip)");
+        return;
+      }
+
+      setIsProcessing(true);
+      
+      let progressToast = null;
+
+      try {
+        const mergedData = await mergeProject(
+          file,
+          pages,
+          availableImages,
+          settings,
+          (progress) => {
+            const progressElement = React.createElement(ProgressToast, {
+              current: progress.current,
+              total: progress.total,
+              message: progress.message,
+              currentFileName: progress.currentFileName,
+            });
+
+            if (!progressToast) {
+              progressToast = toast.custom(progressElement, {
+                id: "merge-processing",
+                duration: 0,
+              });
+            } else {
+              toast.custom(progressElement, {
+                id: "merge-processing",
+                duration: 0,
+              });
+            }
+          }
+        );
+
+        toast.dismiss("merge-processing");
+
+        // Merge pages and available images (keep current settings)
+        setPages(mergedData.pages);
+        setAvailableImages(mergedData.availableImages);
+
+        toast.success("Project merged successfully!");
+      } catch (err) {
+        toast.dismiss("merge-processing");
+        toast.error(`Merge failed: ${err.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [pages, availableImages, settings],
+  );
+
   const totalImages =
     (pages || []).reduce((sum, page) => sum + (page?.images?.length || 0), 0) +
     (availableImages?.length || 0);
@@ -1495,6 +1556,7 @@ export const useImageManagement = (settings = null) => {
     clearCurrentWork,
     handleExportProject,
     handleLoadProject,
+    handleMergeProject,
 
     // Per-page processing helper
     isPageProcessing: (pageId) => pageProcessing.has(pageId),
