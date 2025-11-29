@@ -3,6 +3,7 @@ import { PAGE_SIZES } from "../constants.js";
 import { previewToMm } from "./layoutUtils.js";
 import { batchOptimizeImagesForPDF } from "./imageOptimizationUtils.js";
 import { getPreviewDimensions } from "../constants.js";
+import { getImageBorderEdges } from "./imageBorderUtils.js";
 
 /**
  * Determines the image format from base64 data
@@ -210,17 +211,57 @@ export const generatePDF = async (
               );
 
               // Add border if configured and enabled for this page - use page background color
+              // Only apply borders to edges adjacent to other images, not page boundaries
               const borderEnabled = page.enablePageBorder !== false;
               if (borderEnabled && settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
                 const borderWidthMm = settings.pictureBorderWidth; // Already in mm
                 const borderColor = page.color.color || "#FFFFFF"; // Use page background color
+                
+                // Determine which edges should have borders
+                const pageDimensions = {
+                  width: singlePageWidth,
+                  height: singlePageHeight
+                };
+                
+                // Convert image dimensions to mm for comparison
+                const imageMm = {
+                  id: image.id,
+                  x: previewToMm(image.x, settings, "x"),
+                  y: previewToMm(image.y, settings, "y"),
+                  previewWidth: allocatedWidth,
+                  previewHeight: allocatedHeight
+                };
+                
+                const allImagesMm = page.images.map(img => ({
+                  id: img.id,
+                  x: previewToMm(img.x, settings, "x"),
+                  y: previewToMm(img.y, settings, "y"),
+                  previewWidth: previewToMm(img.previewWidth, settings, "width"),
+                  previewHeight: previewToMm(img.previewHeight, settings, "height")
+                }));
+                
+                const borderEdges = getImageBorderEdges(imageMm, allImagesMm, pageDimensions, 0.1);
+                
                 // Convert hex color to RGB
                 const r = parseInt(borderColor.slice(1, 3), 16);
                 const g = parseInt(borderColor.slice(3, 5), 16);
                 const b = parseInt(borderColor.slice(5, 7), 16);
                 pdf.setDrawColor(r, g, b);
                 pdf.setLineWidth(borderWidthMm);
-                pdf.rect(imgX, imgY, allocatedWidth, allocatedHeight);
+                
+                // Draw only the borders that should be visible (between images)
+                if (borderEdges.top) {
+                  pdf.line(imgX, imgY, imgX + allocatedWidth, imgY);
+                }
+                if (borderEdges.right) {
+                  pdf.line(imgX + allocatedWidth, imgY, imgX + allocatedWidth, imgY + allocatedHeight);
+                }
+                if (borderEdges.bottom) {
+                  pdf.line(imgX, imgY + allocatedHeight, imgX + allocatedWidth, imgY + allocatedHeight);
+                }
+                if (borderEdges.left) {
+                  pdf.line(imgX, imgY, imgX, imgY + allocatedHeight);
+                }
               }
             } catch (error) {
 
@@ -254,17 +295,57 @@ export const generatePDF = async (
               );
 
               // Add border if configured and enabled for this page - use page background color
+              // Only apply borders to edges adjacent to other images, not page boundaries
               const borderEnabled = page.enablePageBorder !== false;
               if (borderEnabled && settings.pictureBorderWidth && settings.pictureBorderWidth > 0) {
                 const borderWidthMm = settings.pictureBorderWidth; // Already in mm
                 const borderColor = page.color.color || "#FFFFFF"; // Use page background color
+                
+                // Determine which edges should have borders
+                const pageDimensions = {
+                  width: singlePageWidth,
+                  height: singlePageHeight
+                };
+                
+                // Convert image dimensions to mm for comparison
+                const imageMm = {
+                  id: image.id,
+                  x: previewToMm(image.x, settings, "x"),
+                  y: previewToMm(image.y, settings, "y"),
+                  previewWidth: allocatedWidth,
+                  previewHeight: allocatedHeight
+                };
+                
+                const allImagesMm = page.images.map(img => ({
+                  id: img.id,
+                  x: previewToMm(img.x, settings, "x"),
+                  y: previewToMm(img.y, settings, "y"),
+                  previewWidth: previewToMm(img.previewWidth, settings, "width"),
+                  previewHeight: previewToMm(img.previewHeight, settings, "height")
+                }));
+                
+                const borderEdges = getImageBorderEdges(imageMm, allImagesMm, pageDimensions, 0.1);
+                
                 // Convert hex color to RGB
                 const r = parseInt(borderColor.slice(1, 3), 16);
                 const g = parseInt(borderColor.slice(3, 5), 16);
                 const b = parseInt(borderColor.slice(5, 7), 16);
                 pdf.setDrawColor(r, g, b);
                 pdf.setLineWidth(borderWidthMm);
-                pdf.rect(imgX, imgY, allocatedWidth, allocatedHeight);
+                
+                // Draw only the borders that should be visible (between images)
+                if (borderEdges.top) {
+                  pdf.line(imgX, imgY, imgX + allocatedWidth, imgY);
+                }
+                if (borderEdges.right) {
+                  pdf.line(imgX + allocatedWidth, imgY, imgX + allocatedWidth, imgY + allocatedHeight);
+                }
+                if (borderEdges.bottom) {
+                  pdf.line(imgX, imgY + allocatedHeight, imgX + allocatedWidth, imgY + allocatedHeight);
+                }
+                if (borderEdges.left) {
+                  pdf.line(imgX, imgY, imgX, imgY + allocatedHeight);
+                }
               }
             } catch (error) {
 

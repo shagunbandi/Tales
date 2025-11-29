@@ -10,6 +10,7 @@ import {
 import ImageEditModal from "../../modals/ImageEditModal.jsx";
 import { cropImageWithScaleAndPosition } from "../../../utils/imageCropUtils.js";
 import { getPreviewDimensions, PAGE_SIZES } from "../../../constants.js";
+import { getImageBorderEdges, getBorderStyleObject } from "../../../utils/imageBorderUtils.js";
 
 const FullCoverImage = ({
   image,
@@ -128,13 +129,21 @@ const FullCoverImage = ({
     borderWidthPx = borderWidthMm * mmToPreviewPx;
   }
 
+  // Determine which edges should have borders (only edges adjacent to other images)
+  const previewDimensions = getPreviewDimensions(settings);
+  const borderEdges = borderWidthPx > 0 
+    ? getImageBorderEdges(image, page?.images || [], previewDimensions, 1)
+    : { top: false, right: false, bottom: false, left: false };
+  
+  const borderStyles = getBorderStyleObject(borderEdges, borderWidthPx, borderColor);
+
   const containerStyle = {
     left: image.x ?? 0,
     top: image.y ?? 0,
     width: image.previewWidth ?? 100,
     height: image.previewHeight ?? 100,
-    border: borderWidthPx > 0 ? `${borderWidthPx}px solid ${borderColor}` : "none",
     boxSizing: "border-box",
+    ...borderStyles,
   };
 
   const currentPage = pages.find((p) => p.id === pageId);
