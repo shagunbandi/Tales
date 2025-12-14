@@ -601,7 +601,7 @@ export const useImageManagement = (settings = null) => {
     );
   }, []);
 
-  const enableAllPageBorders = useCallback(async (enable) => {
+  const enableAllImageBorders = useCallback(async (enable) => {
     setPages((prev) =>
       prev.map((page) => ({ ...page, enablePageBorder: enable }))
     );
@@ -648,50 +648,425 @@ export const useImageManagement = (settings = null) => {
     const targetPage = pages.find((page) => page.id === pageId);
     if (!targetPage) return;
     
-    // Toggle the flag
+    // Toggle the flag - this only controls picture borders (borders between images)
     const newEnableState = !targetPage.enablePageBorder;
+    
+    // Just toggle the flag, no need to recalculate positions since picture borders don't affect layout
+    setPages((prev) =>
+      prev.map((page) =>
+        page.id === pageId ? { ...page, enablePageBorder: newEnableState } : page,
+      ),
+    );
+  }, [pages]);
+
+  const toggleTopPageBorder = useCallback(async (pageId) => {
+    const targetPage = pages.find((page) => page.id === pageId);
+    if (!targetPage) return;
+    
+    const newState = !targetPage.enableTopPageBorder;
     
     // If no images, just toggle
     if (targetPage.images.length === 0) {
       setPages((prev) =>
         prev.map((page) =>
-          page.id === pageId ? { ...page, enablePageBorder: newEnableState } : page,
+          page.id === pageId ? { ...page, enableTopPageBorder: newState } : page,
         ),
       );
       return;
     }
-
+    
     // Recalculate positions while preserving layout structure
     try {
       const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+      const pageData = { ...targetPage, enableTopPageBorder: newState };
       
-      // Create modified settings with borders disabled if toggling off
-      const modifiedSettings = newEnableState ? settings : {
-        ...settings,
-        pageBorderWidth: 0,
-        pictureBorderWidth: 0,
-      };
-      
-      // Use the page data with the new border state
-      const pageData = { ...targetPage, enablePageBorder: newEnableState };
-      
-      // Recalculate positions while preserving rowIndex and colIndex
       const recalculated = recalculatePositionsPreservingLayout(
         targetPage.images,
         previewWidth,
         previewHeight,
-        modifiedSettings,
+        settings,
         pageData
       );
       
       setPages((p) =>
         p.map((pg) =>
-          pg.id === pageId ? { ...pg, images: recalculated, enablePageBorder: newEnableState } : pg
+          pg.id === pageId ? { ...pg, images: recalculated, enableTopPageBorder: newState } : pg
         )
       );
     } catch (error) {
-
+      // Fallback to just toggling
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enableTopPageBorder: newState } : page,
+        ),
+      );
     }
+  }, [pages, settings]);
+
+  const toggleRightPageBorder = useCallback(async (pageId) => {
+    const targetPage = pages.find((page) => page.id === pageId);
+    if (!targetPage) return;
+    
+    const newState = !targetPage.enableRightPageBorder;
+    
+    // If no images, just toggle
+    if (targetPage.images.length === 0) {
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enableRightPageBorder: newState } : page,
+        ),
+      );
+      return;
+    }
+    
+    // Recalculate positions while preserving layout structure
+    try {
+      const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+      const pageData = { ...targetPage, enableRightPageBorder: newState };
+      
+      const recalculated = recalculatePositionsPreservingLayout(
+        targetPage.images,
+        previewWidth,
+        previewHeight,
+        settings,
+        pageData
+      );
+      
+      setPages((p) =>
+        p.map((pg) =>
+          pg.id === pageId ? { ...pg, images: recalculated, enableRightPageBorder: newState } : pg
+        )
+      );
+    } catch (error) {
+      // Fallback to just toggling
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enableRightPageBorder: newState } : page,
+        ),
+      );
+    }
+  }, [pages, settings]);
+
+  const toggleBottomPageBorder = useCallback(async (pageId) => {
+    const targetPage = pages.find((page) => page.id === pageId);
+    if (!targetPage) return;
+    
+    const newState = !targetPage.enableBottomPageBorder;
+    
+    // If no images, just toggle
+    if (targetPage.images.length === 0) {
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enableBottomPageBorder: newState } : page,
+        ),
+      );
+      return;
+    }
+    
+    // Recalculate positions while preserving layout structure
+    try {
+      const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+      const pageData = { ...targetPage, enableBottomPageBorder: newState };
+      
+      const recalculated = recalculatePositionsPreservingLayout(
+        targetPage.images,
+        previewWidth,
+        previewHeight,
+        settings,
+        pageData
+      );
+      
+      setPages((p) =>
+        p.map((pg) =>
+          pg.id === pageId ? { ...pg, images: recalculated, enableBottomPageBorder: newState } : pg
+        )
+      );
+    } catch (error) {
+      // Fallback to just toggling
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enableBottomPageBorder: newState } : page,
+        ),
+      );
+    }
+  }, [pages, settings]);
+
+  const toggleLeftPageBorder = useCallback(async (pageId) => {
+    const targetPage = pages.find((page) => page.id === pageId);
+    if (!targetPage) return;
+    
+    const newState = !targetPage.enableLeftPageBorder;
+    
+    // If no images, just toggle
+    if (targetPage.images.length === 0) {
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enableLeftPageBorder: newState } : page,
+        ),
+      );
+      return;
+    }
+    
+    // Recalculate positions while preserving layout structure
+    try {
+      const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+      const pageData = { ...targetPage, enableLeftPageBorder: newState };
+      
+      const recalculated = recalculatePositionsPreservingLayout(
+        targetPage.images,
+        previewWidth,
+        previewHeight,
+        settings,
+        pageData
+      );
+      
+      setPages((p) =>
+        p.map((pg) =>
+          pg.id === pageId ? { ...pg, images: recalculated, enableLeftPageBorder: newState } : pg
+        )
+      );
+    } catch (error) {
+      // Fallback to just toggling
+      setPages((prev) =>
+        prev.map((page) =>
+          page.id === pageId ? { ...page, enableLeftPageBorder: newState } : page,
+        ),
+      );
+    }
+  }, [pages, settings]);
+
+  const toggleCenterSpineBorder = useCallback(async () => {
+    if (pages.length === 0) return;
+    
+    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+    
+    // Process each page
+    const updatedPages = await Promise.all(pages.map(async (page, index) => {
+      const pageNumber = index + 1;
+      const isOddPage = pageNumber % 2 === 1;
+      
+      // Odd pages get right border, even pages get left border
+      const newRightBorder = isOddPage ? true : page.enableRightPageBorder;
+      const newLeftBorder = !isOddPage ? true : page.enableLeftPageBorder;
+      
+      // If page has images, recalculate layout
+      if (page.images.length > 0) {
+        try {
+          const pageData = { 
+            ...page, 
+            enableRightPageBorder: newRightBorder,
+            enableLeftPageBorder: newLeftBorder
+          };
+          
+          const recalculated = recalculatePositionsPreservingLayout(
+            page.images,
+            previewWidth,
+            previewHeight,
+            settings,
+            pageData
+          );
+          
+          return {
+            ...page,
+            images: recalculated,
+            enableRightPageBorder: newRightBorder,
+            enableLeftPageBorder: newLeftBorder,
+          };
+        } catch (error) {
+          // Fallback to just setting borders
+          return {
+            ...page,
+            enableRightPageBorder: newRightBorder,
+            enableLeftPageBorder: newLeftBorder,
+          };
+        }
+      } else {
+        // No images, just set borders
+        return {
+          ...page,
+          enableRightPageBorder: newRightBorder,
+          enableLeftPageBorder: newLeftBorder,
+        };
+      }
+    }));
+    
+    setPages(updatedPages);
+  }, [pages, settings]);
+
+  const disableCenterSpineBorder = useCallback(async () => {
+    if (pages.length === 0) return;
+    
+    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+    
+    // Process each page - remove spine borders
+    const updatedPages = await Promise.all(pages.map(async (page, index) => {
+      const pageNumber = index + 1;
+      const isOddPage = pageNumber % 2 === 1;
+      
+      // Remove spine borders: odd pages remove right, even pages remove left
+      const newRightBorder = isOddPage ? false : page.enableRightPageBorder;
+      const newLeftBorder = !isOddPage ? false : page.enableLeftPageBorder;
+      
+      // If page has images, recalculate layout
+      if (page.images.length > 0) {
+        try {
+          const pageData = { 
+            ...page, 
+            enableRightPageBorder: newRightBorder,
+            enableLeftPageBorder: newLeftBorder
+          };
+          
+          const recalculated = recalculatePositionsPreservingLayout(
+            page.images,
+            previewWidth,
+            previewHeight,
+            settings,
+            pageData
+          );
+          
+          return {
+            ...page,
+            images: recalculated,
+            enableRightPageBorder: newRightBorder,
+            enableLeftPageBorder: newLeftBorder,
+          };
+        } catch (error) {
+          // Fallback to just setting borders
+          return {
+            ...page,
+            enableRightPageBorder: newRightBorder,
+            enableLeftPageBorder: newLeftBorder,
+          };
+        }
+      } else {
+        // No images, just set borders
+        return {
+          ...page,
+          enableRightPageBorder: newRightBorder,
+          enableLeftPageBorder: newLeftBorder,
+        };
+      }
+    }));
+    
+    setPages(updatedPages);
+  }, [pages, settings]);
+
+  const enableAllPageBorders = useCallback(async () => {
+    if (pages.length === 0) return;
+    
+    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+    
+    // Enable all 4 page borders for all pages
+    const updatedPages = await Promise.all(pages.map(async (page) => {
+      // If page has images, recalculate layout
+      if (page.images.length > 0) {
+        try {
+          const pageData = { 
+            ...page, 
+            enableTopPageBorder: true,
+            enableRightPageBorder: true,
+            enableBottomPageBorder: true,
+            enableLeftPageBorder: true,
+          };
+          
+          const recalculated = recalculatePositionsPreservingLayout(
+            page.images,
+            previewWidth,
+            previewHeight,
+            settings,
+            pageData
+          );
+          
+          return {
+            ...page,
+            images: recalculated,
+            enableTopPageBorder: true,
+            enableRightPageBorder: true,
+            enableBottomPageBorder: true,
+            enableLeftPageBorder: true,
+          };
+        } catch (error) {
+          // Fallback to just setting borders
+          return {
+            ...page,
+            enableTopPageBorder: true,
+            enableRightPageBorder: true,
+            enableBottomPageBorder: true,
+            enableLeftPageBorder: true,
+          };
+        }
+      } else {
+        // No images, just set borders
+        return {
+          ...page,
+          enableTopPageBorder: true,
+          enableRightPageBorder: true,
+          enableBottomPageBorder: true,
+          enableLeftPageBorder: true,
+        };
+      }
+    }));
+    
+    setPages(updatedPages);
+  }, [pages, settings]);
+
+  const disableAllPageBorders = useCallback(async () => {
+    if (pages.length === 0) return;
+    
+    const { width: previewWidth, height: previewHeight } = getPreviewDimensions(settings);
+    
+    // Disable all 4 page borders for all pages
+    const updatedPages = await Promise.all(pages.map(async (page) => {
+      // If page has images, recalculate layout
+      if (page.images.length > 0) {
+        try {
+          const pageData = { 
+            ...page, 
+            enableTopPageBorder: false,
+            enableRightPageBorder: false,
+            enableBottomPageBorder: false,
+            enableLeftPageBorder: false,
+          };
+          
+          const recalculated = recalculatePositionsPreservingLayout(
+            page.images,
+            previewWidth,
+            previewHeight,
+            settings,
+            pageData
+          );
+          
+          return {
+            ...page,
+            images: recalculated,
+            enableTopPageBorder: false,
+            enableRightPageBorder: false,
+            enableBottomPageBorder: false,
+            enableLeftPageBorder: false,
+          };
+        } catch (error) {
+          // Fallback to just setting borders
+          return {
+            ...page,
+            enableTopPageBorder: false,
+            enableRightPageBorder: false,
+            enableBottomPageBorder: false,
+            enableLeftPageBorder: false,
+          };
+        }
+      } else {
+        // No images, just set borders
+        return {
+          ...page,
+          enableTopPageBorder: false,
+          enableRightPageBorder: false,
+          enableBottomPageBorder: false,
+          enableLeftPageBorder: false,
+        };
+      }
+    }));
+    
+    setPages(updatedPages);
   }, [pages, settings]);
 
   const removeAvailableImage = useCallback((index) => {
@@ -1538,8 +1913,16 @@ export const useImageManagement = (settings = null) => {
     changePageColor,
     changeImageBorderColor,
     togglePageBorder,
-    setAllPageColors,
+    toggleTopPageBorder,
+    toggleRightPageBorder,
+    toggleBottomPageBorder,
+    toggleLeftPageBorder,
+    toggleCenterSpineBorder,
+    disableCenterSpineBorder,
     enableAllPageBorders,
+    disableAllPageBorders,
+    setAllPageColors,
+    enableAllImageBorders,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,

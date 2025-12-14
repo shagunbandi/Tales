@@ -33,29 +33,34 @@ export async function arrangeImagesFullCover(
     return [];
   }
 
-  // Calculate page border offset - reduces usable space on all sides
-  // Check if this page has borders enabled (default to true if not specified)
-  const borderEnabled = pageData?.enablePageBorder !== false;
-  const borderWidth = getPreviewBorderWidth(settings, borderEnabled);
+  // Calculate page border offset for each side individually
+  const borderWidthPx = settings?.pageBorderWidth > 0 ? getPreviewBorderWidth(settings, true) : 0;
   
-  // For full cover, we use the entire page (no margins or gaps)
-  // But subtract border space if page border is enabled
-  const usableWidth = totalWidth - (2 * borderWidth);
-  const usableHeight = totalHeight - (2 * borderWidth);
+  const topBorder = pageData?.enableTopPageBorder === true ? borderWidthPx : 0;
+  const rightBorder = pageData?.enableRightPageBorder === true ? borderWidthPx : 0;
+  const bottomBorder = pageData?.enableBottomPageBorder === true ? borderWidthPx : 0;
+  const leftBorder = pageData?.enableLeftPageBorder === true ? borderWidthPx : 0;
+  
+  // Calculate usable dimensions and offsets
+  const usableWidth = totalWidth - leftBorder - rightBorder;
+  const usableHeight = totalHeight - topBorder - bottomBorder;
+  const offsetX = leftBorder;
+  const offsetY = topBorder;
 
   // Check which layout type to use
   const layoutType =
     settings?._fullCoverLayoutType || FULL_COVER_LAYOUT_TYPES.HARDCODED;
 
+  let arrangedImages;
   if (layoutType === FULL_COVER_LAYOUT_TYPES.FLEXIBLE) {
-    return await arrangeImagesFlexible(
+    arrangedImages = await arrangeImagesFlexible(
       images,
       usableWidth,
       usableHeight,
       settings,
     );
   } else if (layoutType === FULL_COVER_LAYOUT_TYPES.HARDCODED) {
-    return await arrangeImagesHardcoded(
+    arrangedImages = await arrangeImagesHardcoded(
       images,
       usableWidth,
       usableHeight,
@@ -64,8 +69,15 @@ export async function arrangeImagesFullCover(
     );
   } else {
     // Default grid layout
-    return await arrangeImagesGrid(images, usableWidth, usableHeight, settings, pageData);
+    arrangedImages = await arrangeImagesGrid(images, usableWidth, usableHeight, settings, pageData);
   }
+  
+  // Apply offsets to all images
+  return arrangedImages.map(img => ({
+    ...img,
+    x: img.x + offsetX,
+    y: img.y + offsetY,
+  }));
 }
 
 /**
@@ -89,13 +101,19 @@ export function recalculatePositionsPreservingLayout(
     return [];
   }
 
-  // Calculate new border offset
-  const borderEnabled = pageData?.enablePageBorder !== false;
-  const borderWidth = getPreviewBorderWidth(settings, borderEnabled);
+  // Calculate page border offset for each side individually
+  const borderWidthPx = settings?.pageBorderWidth > 0 ? getPreviewBorderWidth(settings, true) : 0;
   
-  // Calculate new usable dimensions
-  const usableWidth = totalWidth - (2 * borderWidth);
-  const usableHeight = totalHeight - (2 * borderWidth);
+  const topBorder = pageData?.enableTopPageBorder === true ? borderWidthPx : 0;
+  const rightBorder = pageData?.enableRightPageBorder === true ? borderWidthPx : 0;
+  const bottomBorder = pageData?.enableBottomPageBorder === true ? borderWidthPx : 0;
+  const leftBorder = pageData?.enableLeftPageBorder === true ? borderWidthPx : 0;
+  
+  // Calculate usable dimensions and offsets
+  const usableWidth = totalWidth - leftBorder - rightBorder;
+  const usableHeight = totalHeight - topBorder - bottomBorder;
+  const offsetX = leftBorder;
+  const offsetY = topBorder;
 
   // If page has a layout ID, use that to get the correct hardcoded layout template
   if (pageData?.layoutId) {
@@ -106,7 +124,13 @@ export function recalculatePositionsPreservingLayout(
     const layout = availableLayouts.find(l => l.id === pageData.layoutId);
     if (layout) {
       // Use the hardcoded layout template to recalculate positions
-      return convertToFullCoverFormat(layout, images, usableWidth, usableHeight, borderWidth);
+      const arrangedImages = convertToFullCoverFormat(layout, images, usableWidth, usableHeight, 0);
+      // Apply offsets
+      return arrangedImages.map(img => ({
+        ...img,
+        x: img.x + offsetX,
+        y: img.y + offsetY,
+      }));
     }
   }
 
@@ -128,8 +152,8 @@ export function recalculatePositionsPreservingLayout(
       
       return {
         ...image,
-        x: gridSpan.colStart * cellWidth + borderWidth,
-        y: gridSpan.rowStart * cellHeight + borderWidth,
+        x: gridSpan.colStart * cellWidth + offsetX,
+        y: gridSpan.rowStart * cellHeight + offsetY,
         previewWidth: colSpan * cellWidth,
         previewHeight: rowSpan * cellHeight,
         // Preserve existing rowIndex, colIndex from image
@@ -161,8 +185,8 @@ export function recalculatePositionsPreservingLayout(
 
       return {
         ...image,
-        x: colIdx * cellWidth + borderWidth,
-        y: rowIdx * rowHeight + borderWidth,
+        x: colIdx * cellWidth + offsetX,
+        y: rowIdx * rowHeight + offsetY,
         previewWidth: cellWidth,
         previewHeight: rowHeight,
         // Preserve existing rowIndex, colIndex from image

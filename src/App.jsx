@@ -61,8 +61,16 @@ function App() {
     changePageColor,
     changeImageBorderColor,
     togglePageBorder,
-    setAllPageColors,
+    toggleTopPageBorder,
+    toggleRightPageBorder,
+    toggleBottomPageBorder,
+    toggleLeftPageBorder,
+    toggleCenterSpineBorder,
+    disableCenterSpineBorder,
     enableAllPageBorders,
+    disableAllPageBorders,
+    setAllPageColors,
+    enableAllImageBorders,
     removeAvailableImage,
     addSelectedToPage,
     autoArrangeImagesToPages,
@@ -147,8 +155,16 @@ function App() {
             onChangePageColor={changePageColor}
             onChangeImageBorderColor={changeImageBorderColor}
             onTogglePageBorder={togglePageBorder}
-            onSetAllPageColors={setAllPageColors}
+            onToggleTopPageBorder={toggleTopPageBorder}
+            onToggleRightPageBorder={toggleRightPageBorder}
+            onToggleBottomPageBorder={toggleBottomPageBorder}
+            onToggleLeftPageBorder={toggleLeftPageBorder}
+            onToggleCenterSpineBorder={toggleCenterSpineBorder}
+            onDisableCenterSpineBorder={disableCenterSpineBorder}
             onEnableAllPageBorders={enableAllPageBorders}
+            onDisableAllPageBorders={disableAllPageBorders}
+            onSetAllPageColors={setAllPageColors}
+            onEnableAllImageBorders={enableAllImageBorders}
             onRemoveAvailableImage={removeAvailableImage}
             onAddMoreImages={addMoreImages}
             onGeneratePDF={handleGeneratePDF}

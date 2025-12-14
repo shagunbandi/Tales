@@ -54,6 +54,10 @@ function createProjectMetadata(pages, availableImages, settings) {
       color: page.color,
       imageBorderColor: page.imageBorderColor || "#FFFFFF",
       enablePageBorder: page.enablePageBorder !== false, // Default to true for backward compatibility
+      enableTopPageBorder: page.enableTopPageBorder === true,
+      enableRightPageBorder: page.enableRightPageBorder === true,
+      enableBottomPageBorder: page.enableBottomPageBorder === true,
+      enableLeftPageBorder: page.enableLeftPageBorder === true,
       layoutId: page.layoutId || null, // Store layout ID for hardcoded layouts
       images: page.images.map(image => ({
         id: image.id,
@@ -273,6 +277,10 @@ export async function loadProject(file, onProgress = null) {
     color: page.color,
     imageBorderColor: page.imageBorderColor || "#FFFFFF", // Default to white if not present (for backward compatibility)
     enablePageBorder: page.enablePageBorder !== false, // Default to true if not present (for backward compatibility)
+    enableTopPageBorder: page.enableTopPageBorder === true,
+    enableRightPageBorder: page.enableRightPageBorder === true,
+    enableBottomPageBorder: page.enableBottomPageBorder === true,
+    enableLeftPageBorder: page.enableLeftPageBorder === true,
     layoutId: page.layoutId || null, // Restore layout ID for hardcoded layouts
     images: await Promise.all(page.images.map(async imageMetadata => {
       const imageData = loadedImages.get(imageMetadata.id);

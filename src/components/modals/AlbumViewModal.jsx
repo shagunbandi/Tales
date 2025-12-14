@@ -308,6 +308,76 @@ const AlbumViewModal = ({
                           />
                         );
                       })}
+                      
+                      {/* Page borders - render each side independently if enabled */}
+                      {(() => {
+                        const pageBorderInset = calculatePageBorderInset(leftPage);
+                        const borderColor = leftPage.color?.color ?? "#FFFFFF";
+                        
+                        if (pageBorderInset > 0) {
+                          return (
+                            <>
+                              {leftPage.enableTopPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                              {leftPage.enableRightPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    width: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                              {leftPage.enableBottomPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                              {leftPage.enableLeftPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    bottom: 0,
+                                    width: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                            </>
+                          );
+                        }
+                        return null;
+                      })()}
                   </div>
                 ) : (
                   <div
@@ -421,6 +491,76 @@ const AlbumViewModal = ({
                           />
                         );
                       })}
+                      
+                      {/* Page borders - render each side independently if enabled */}
+                      {(() => {
+                        const pageBorderInset = calculatePageBorderInset(rightPage);
+                        const borderColor = rightPage.color?.color ?? "#FFFFFF";
+                        
+                        if (pageBorderInset > 0) {
+                          return (
+                            <>
+                              {rightPage.enableTopPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                              {rightPage.enableRightPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    width: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                              {rightPage.enableBottomPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                              {rightPage.enableLeftPageBorder === true && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    bottom: 0,
+                                    width: `${pageBorderInset}px`,
+                                    backgroundColor: borderColor,
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                  }}
+                                />
+                              )}
+                            </>
+                          );
+                        }
+                        return null;
+                      })()}
                   </div>
                 ) : (
                   <div

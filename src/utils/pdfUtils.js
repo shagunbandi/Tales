@@ -389,6 +389,63 @@ export const generatePDF = async (
 
         }
       }
+      
+      // Render page borders (all 4 sides independently) if enabled
+      if (settings.pageBorderWidth && settings.pageBorderWidth > 0) {
+        const borderWidthMm = settings.pageBorderWidth;
+        const borderColor = page.color.color || "#FFFFFF";
+        
+        // Convert hex color to RGB
+        const r = parseInt(borderColor.slice(1, 3), 16);
+        const g = parseInt(borderColor.slice(3, 5), 16);
+        const b = parseInt(borderColor.slice(5, 7), 16);
+        
+        pdf.setFillColor(r, g, b);
+        
+        // Top border
+        if (page.enableTopPageBorder === true) {
+          pdf.rect(
+            xOffset,
+            0,
+            singlePageWidth,
+            borderWidthMm,
+            "F"
+          );
+        }
+        
+        // Right border
+        if (page.enableRightPageBorder === true) {
+          pdf.rect(
+            xOffset + singlePageWidth - borderWidthMm,
+            0,
+            borderWidthMm,
+            singlePageHeight,
+            "F"
+          );
+        }
+        
+        // Bottom border
+        if (page.enableBottomPageBorder === true) {
+          pdf.rect(
+            xOffset,
+            singlePageHeight - borderWidthMm,
+            singlePageWidth,
+            borderWidthMm,
+            "F"
+          );
+        }
+        
+        // Left border
+        if (page.enableLeftPageBorder === true) {
+          pdf.rect(
+            xOffset,
+            0,
+            borderWidthMm,
+            singlePageHeight,
+            "F"
+          );
+        }
+      }
     };
 
     // Render left page (first page in the pair) at x-offset 0

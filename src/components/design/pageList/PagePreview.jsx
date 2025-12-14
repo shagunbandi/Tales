@@ -22,6 +22,10 @@ const PagePreview = ({
   onChangeColor,
   onChangeImageBorderColor,
   onTogglePageBorder,
+  onToggleTopPageBorder,
+  onToggleRightPageBorder,
+  onToggleBottomPageBorder,
+  onToggleLeftPageBorder,
   onRemovePage,
   onMoveImageBack,
   onMoveAllImagesBack,
@@ -45,9 +49,8 @@ const PagePreview = ({
   });
 
   const previewDimensions = getPreviewDimensions(settings);
-  // Only apply borders if enabled for this page
-  const borderEnabled = page.enablePageBorder !== false;
-  const previewBorderWidth = getPreviewBorderWidth(settings, borderEnabled);
+  // Page border width for right border (uses pageBorderWidth, always calculated from settings)
+  const pageBorderWidth = settings?.pageBorderWidth > 0 ? getPreviewBorderWidth(settings, true) : 0;
   const imageCount = page.images.length;
   const layoutInfo = getCurrentLayoutInfo(page.id, page.images, settings);
 
@@ -149,12 +152,12 @@ const PagePreview = ({
         {/* Action buttons line */}
 
         <div className="flex justify-between items-center gap-2">
-          <div className="flex items-center gap-2">
-            {/* Border Toggle - Only show in Full Cover mode when borders are configured */}
-            {settings?.designStyle === "full_cover" && (settings?.pageBorderWidth > 0 || settings?.pictureBorderWidth > 0) && (
-              <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Picture Border Toggle - Only show in Full Cover mode when picture borders are configured */}
+            {settings?.designStyle === "full_cover" && settings?.pictureBorderWidth > 0 && (
+              <div className="flex items-center gap-1.5">
                 <label className="text-xs font-medium text-gray-700 dark:text-gray-200">
-                  Borders:
+                  Picture Borders:
                 </label>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -165,6 +168,61 @@ const PagePreview = ({
                   />
                   <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                 </label>
+              </div>
+            )}
+            
+            {/* Page Border Toggles - Compact horizontal layout */}
+            {settings?.designStyle === "full_cover" && settings?.pageBorderWidth > 0 && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Page:</span>
+                
+                <button
+                  onClick={() => onToggleTopPageBorder && onToggleTopPageBorder(page.id)}
+                  className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                    page.enableTopPageBorder === true
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300'
+                  }`}
+                  title="Toggle top border"
+                >
+                  T
+                </button>
+                
+                <button
+                  onClick={() => onToggleRightPageBorder && onToggleRightPageBorder(page.id)}
+                  className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                    page.enableRightPageBorder === true
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300'
+                  }`}
+                  title="Toggle right border"
+                >
+                  R
+                </button>
+                
+                <button
+                  onClick={() => onToggleBottomPageBorder && onToggleBottomPageBorder(page.id)}
+                  className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                    page.enableBottomPageBorder === true
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300'
+                  }`}
+                  title="Toggle bottom border"
+                >
+                  B
+                </button>
+                
+                <button
+                  onClick={() => onToggleLeftPageBorder && onToggleLeftPageBorder(page.id)}
+                  className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                    page.enableLeftPageBorder === true
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300'
+                  }`}
+                  title="Toggle left border"
+                >
+                  L
+                </button>
               </div>
             )}
           </div>
@@ -306,6 +364,74 @@ const PagePreview = ({
                 }}
                 data-testid={`page-droppable-${pageIndex}`}
               >
+                {/* Page borders - render each side independently if enabled */}
+                {settings?.designStyle === "full_cover" && pageBorderWidth > 0 && (
+                  <>
+                    {/* Top border */}
+                    {page.enableTopPageBorder === true && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: `${pageBorderWidth}px`,
+                          backgroundColor: page.color.color,
+                          pointerEvents: 'none',
+                          zIndex: 10,
+                        }}
+                      />
+                    )}
+                    
+                    {/* Right border */}
+                    {page.enableRightPageBorder === true && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: `${pageBorderWidth}px`,
+                          backgroundColor: page.color.color,
+                          pointerEvents: 'none',
+                          zIndex: 10,
+                        }}
+                      />
+                    )}
+                    
+                    {/* Bottom border */}
+                    {page.enableBottomPageBorder === true && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: `${pageBorderWidth}px`,
+                          backgroundColor: page.color.color,
+                          pointerEvents: 'none',
+                          zIndex: 10,
+                        }}
+                      />
+                    )}
+                    
+                    {/* Left border */}
+                    {page.enableLeftPageBorder === true && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          bottom: 0,
+                          width: `${pageBorderWidth}px`,
+                          backgroundColor: page.color.color,
+                          pointerEvents: 'none',
+                          zIndex: 10,
+                        }}
+                      />
+                    )}
+                  </>
+                )}
                 {page.images.map((image, index) => {
                   const isFullCover =
                     settings?.designStyle === "full_cover" ||

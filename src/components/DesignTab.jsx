@@ -239,8 +239,16 @@ const DesignTab = ({
   onChangePageColor,
   onChangeImageBorderColor,
   onTogglePageBorder,
-  onSetAllPageColors,
+  onToggleTopPageBorder,
+  onToggleRightPageBorder,
+  onToggleBottomPageBorder,
+  onToggleLeftPageBorder,
+  onToggleCenterSpineBorder,
+  onDisableCenterSpineBorder,
   onEnableAllPageBorders,
+  onDisableAllPageBorders,
+  onSetAllPageColors,
+  onEnableAllImageBorders,
   onRemoveAvailableImage,
   onAddMoreImages,
   onGeneratePDF,
@@ -388,20 +396,22 @@ const DesignTab = ({
                 settings={settings}
               />
 
-              {/* Settings Button */}
-              <div className="flex flex-wrap gap-2">
+              {/* Settings and Project Management */}
+              <div className="space-y-3 pb-4">
+                {/* Settings Button */}
                 <Button
                   onClick={() => setShowSettingsModal(true)}
                   size="sm"
                   color="gray"
                   data-testid="settings-button"
+                  className="w-full"
                 >
                   <HiCog className="mr-2 h-4 w-4" />
                   Settings
                 </Button>
-              </div>
-              <div className="space-y-3 pb-4">
-                <div className="flex flex-wrap gap-2">
+                
+                {/* Project Management Buttons */}
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={handleLoadProjectClick}
                     size="sm"
@@ -409,7 +419,7 @@ const DesignTab = ({
                     disabled={isProcessing}
                     data-testid="load-project-button"
                   >
-                    <HiUpload className="mr-2 h-4 w-4" />
+                    <HiUpload className="mr-1.5 h-3.5 w-3.5" />
                     Load Project
                   </Button>
                   <Button
@@ -419,7 +429,7 @@ const DesignTab = ({
                     disabled={isProcessing}
                     data-testid="merge-project-button"
                   >
-                    <HiUpload className="mr-2 h-4 w-4" />
+                    <HiUpload className="mr-1.5 h-3.5 w-3.5" />
                     Merge Project
                   </Button>
                   <Button
@@ -429,7 +439,7 @@ const DesignTab = ({
                     disabled={isProcessing || (pages.length === 0 && availableImages.length === 0)}
                     data-testid="export-project-button"
                   >
-                    <HiDownload className="mr-2 h-4 w-4" />
+                    <HiDownload className="mr-1.5 h-3.5 w-3.5" />
                     Export Project
                   </Button>
                   <Button
@@ -439,48 +449,121 @@ const DesignTab = ({
                     disabled={isProcessing || (pages.length === 0 && availableImages.length === 0)}
                     data-testid="start-fresh-button"
                   >
-                    <HiTrash className="mr-2 h-4 w-4" />
+                    <HiTrash className="mr-1.5 h-3.5 w-3.5" />
                     Start Fresh
                   </Button>
                 </div>
-                
-                {/* Bulk Border Operations */}
-                {pages.length > 0 && (
-                  <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              </div>
+              
+              {/* Bulk Border Operations */}
+              {pages.length > 0 && (
+                  <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                    <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                       Bulk Operations
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        onClick={() => setShowBulkColorPicker(!showBulkColorPicker)}
-                        size="xs"
-                        color="light"
-                        disabled={isProcessing}
-                      >
-                        <HiColorSwatch className="mr-1 h-3 w-3" />
-                        Set Color for All Pages
-                      </Button>
-                      <Button
-                        onClick={() => onEnableAllPageBorders(true)}
-                        size="xs"
-                        color="light"
-                        disabled={isProcessing}
-                      >
-                        Enable All Borders
-                      </Button>
-                      <Button
-                        onClick={() => onEnableAllPageBorders(false)}
-                        size="xs"
-                        color="light"
-                        disabled={isProcessing}
-                      >
-                        Disable All Borders
-                      </Button>
-                    </div>
-
+                    
+                    {/* Set Color */}
+                    <Button
+                      onClick={() => setShowBulkColorPicker(!showBulkColorPicker)}
+                      size="xs"
+                      color="light"
+                      disabled={isProcessing}
+                      className="w-full"
+                    >
+                      <HiColorSwatch className="mr-1.5 h-3.5 w-3.5" />
+                      Set Color for All Pages
+                    </Button>
+                    
+                    {/* Image Borders (picture borders between images) */}
+                    {settings?.designStyle === "full_cover" && settings?.pictureBorderWidth > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                          Image Borders
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={() => onEnableAllImageBorders(true)}
+                            size="xs"
+                            color="gray"
+                            disabled={isProcessing}
+                            className="w-full"
+                          >
+                            Enable All
+                          </Button>
+                          <Button
+                            onClick={() => onEnableAllImageBorders(false)}
+                            size="xs"
+                            color="gray"
+                            disabled={isProcessing}
+                            className="w-full"
+                          >
+                            Disable All
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Page Borders (frame around page) */}
+                    {settings?.designStyle === "full_cover" && settings?.pageBorderWidth > 0 && (
+                      <>
+                        <div className="space-y-1.5">
+                          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                            Page Borders
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={onEnableAllPageBorders}
+                              size="xs"
+                              color="gray"
+                              disabled={isProcessing}
+                              className="w-full"
+                            >
+                              Enable All
+                            </Button>
+                            <Button
+                              onClick={onDisableAllPageBorders}
+                              size="xs"
+                              color="gray"
+                              disabled={isProcessing}
+                              className="w-full"
+                            >
+                              Disable All
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Spine Border Controls */}
+                        <div className="space-y-1.5">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Spine Center Border
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={onToggleCenterSpineBorder}
+                              size="xs"
+                              color="gray"
+                              disabled={isProcessing}
+                              className="w-full"
+                            >
+                              Enable
+                            </Button>
+                            <Button
+                              onClick={onDisableCenterSpineBorder}
+                              size="xs"
+                              color="gray"
+                              disabled={isProcessing}
+                              className="w-full"
+                            >
+                              Disable
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    
                     {/* Bulk Color Picker */}
                     {showBulkColorPicker && (
-                      <div className="mt-2 rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-900">
+                      <div className="rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-900">
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div>
@@ -538,7 +621,7 @@ const DesignTab = ({
                     )}
                   </div>
                 )}
-              </div>
+              
               <div className="border-t border-gray-200 pt-4 dark:border-gray-700"></div>
 
               <PagesList
@@ -548,6 +631,10 @@ const DesignTab = ({
                 onChangePageColor={onChangePageColor}
                 onChangeImageBorderColor={onChangeImageBorderColor}
                 onTogglePageBorder={onTogglePageBorder}
+                onToggleTopPageBorder={onToggleTopPageBorder}
+                onToggleRightPageBorder={onToggleRightPageBorder}
+                onToggleBottomPageBorder={onToggleBottomPageBorder}
+                onToggleLeftPageBorder={onToggleLeftPageBorder}
                 onAddPage={onAddPage}
                 onMoveImageBack={onMoveImageBack}
                 onMoveAllImagesBack={onMoveAllImagesBack}
