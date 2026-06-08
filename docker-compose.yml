@@ -9,7 +9,7 @@ services:
     stop_grace_period: 1s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tales.rule=Host(`tales.geekynavigator.com`)"
+      - "traefik.http.routers.tales.rule=Host(`tales.shagunbandi.com`)"
       - "traefik.http.routers.tales.tls=true"
       - "traefik.http.services.tales.loadbalancer.server.port=80"
       - "traefik.http.routers.tales.tls.certresolver=cloudflare"
